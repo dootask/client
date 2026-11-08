@@ -1,0 +1,62 @@
+# DooTask Client
+
+DooTask 的全端客户端：一套 Expo + react-native-web 代码，出 iOS、Android、Web、桌面（Electron）四端，最终替换主仓库的 Vue 2 前端和 `resources/app`。
+
+## 必读
+
+- `docs/architecture.md`：架构、选型、分层、各项已定决议。动手前先读，决议有变要先改这份文档
+- `docs/performance.md`：性能硬规则和验收清单。**性能是本项目最大的难点**，规则从第一行代码起执行
+- `docs/m0-plan.md`：当前阶段的范围和验收标准
+- 环境相关的地址、端口、设备放在 `CLAUDE.local.md`（不进 git）
+
+## 语言
+
+- 回复、文档、代码注释一律用简体中文
+- 需要用户决定时，同时给出建议选项
+
+## 相关仓库（只读参考，除非下面另有说明）
+
+- 主仓库 `/home/coder/workspaces/dootask`：后端（Laravel）、旧 Vue 前端、Electron、ai-kb、`routes/api-map.md`、`language/translate.json`
+- App 工程 `/home/coder/workspaces/dootask/resources/app`：可复制的 RN 代码来源；`feature/rn-next` 分支是上一轮底座代码
+- happy-app `/home/coder/workspaces/happy-next/packages/happy-app`：同类架构和性能经验参考
+
+**不要修改主仓库的前端和 `resources/app`**，它们只维护、不加功能。**后端可以改**，规则见 architecture.md 第 11 节：兼容的改动直接改；不兼容的大改宁可新增接口。后端改动在主仓库按主仓库的 `CLAUDE.md` 做（命令走 `./cmd`），和本项目分开提交。
+
+## 规矩
+
+- **分层**：`app → modules → sync / ui / i18n / platform / embed`，反向禁止；`sync/` 不引用 React
+- **平台差异**用 `.web.tsx` / `.native.tsx` 分文件，业务代码不写 `Platform.OS` 判断
+- **国际化**用 i18next 语义键，不写死任何用户可见文字；新增键先按中文原文到主仓库 `language/translate.json` 查现成译文
+- **颜色、字号、间距、圆角**只引用设计令牌，不写字面量
+- **原生代码只能用 Expo 的方式加**：本地模块放 `modules/`，改原生工程配置写 config plugin 放 `plugins/`；不手改 `ios/`、`android/`（生成产物）
+- **依赖**用 `npx expo install` 安装，版本与 `resources/app` 对齐；新增原生依赖先问用户
+- **代码要干净**：按规范重新写，不留冗余参数、兼容分支和重复实现；从 `resources/app` 复制的代码也按本项目规范改造
+- **功能不用 `__DEV__` 限制在开发包**，正式包直接生效
+
+## Expo 已变化，不要相信训练数据
+
+写 Expo / RN API 前，先查 `package.json` 里的 expo 主版本，再查对应文档 `https://docs.expo.dev/versions/v58.0.0/`（索引 https://docs.expo.dev/llms.txt ），或者直接读 `node_modules` 里的类型定义。
+
+## 质量门禁（改完代码必须自查）
+
+- `npm run check`：tsc、lint、vitest、翻译检查（W2 建好后以 `package.json` 为准）
+- 涉及原生代码时，`npx expo prebuild --clean --no-install` 能成功生成原生工程
+
+## 测试
+
+- **Web**：用 Playwright 在浏览器里亲自点过，截图和记录放 `tests/playwright-results/`
+- **Android**：用 Mac mini 上的安卓模拟器（通过 orchestrator 操作，细节见 `CLAUDE.local.md`）。Mac mini 上只构建和运行，不在上面改代码
+- **iOS**：交给用户自己验证
+- UI 和交互要自己逐屏验收，不要只看代码就说完成
+- **测试服数据可以随意增删改**（发消息、建任务、上传都不用请示）
+- **测试账号**见 `CLAUDE.local.md`。需要普通权限账号时，在主仓库执行 `./cmd repassword <账号>` 重置密码（会让该账号现有的登录失效）
+
+## Git
+
+- 不修改暂存区、不提交、不推送、不建分支，除非用户明确要求
+- 不要把账号密码、token、签名文件、具体环境域名写进会提交的文件；这些只能放在不提交的文件里（如 `CLAUDE.local.md`）
+
+## 安全
+
+- 含清空目录操作的脚本（如出包脚本）不能通过 stdin 执行，也不能拿来实测
+- 不读取、不打印 env 文件里的密钥和 token
