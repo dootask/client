@@ -137,3 +137,8 @@
 - 发现：**react-native-web 的 TextInput 会对所有按键 `stopPropagation`**，冒泡阶段的全局监听收不到输入框里的按键；快捷键监听改用捕获阶段
 - 未验：拖入文件夹（自动化无法模拟真实文件夹拖放，逻辑走 `webkitGetAsEntry().isDirectory`），等业务接入时手动验
 
+
+## M0 收尾
+
+- iOS 开发包（Debug，`com.dootask.task.dev`，对应 `dd3866d`）已放进下载页，团队开发证书签名（method `debugging`），等用户在真机上验收 W9 系统菜单、W10 嵌入页、W11 登录
+- 等用户决定：W6 新加密方案（主仓库讨论中）
