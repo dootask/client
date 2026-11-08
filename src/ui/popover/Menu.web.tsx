@@ -5,6 +5,7 @@ import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { Icon } from '../Icon';
 import { Touchable } from '../Touchable';
+import { shortcutLabel } from '../shortcuts';
 import { Layer, measureAnchor, pointAnchor, Positioned } from './Layer';
 import type { MenuAction, MenuEntry } from './menuModel';
 import type { Rect } from './position';
@@ -219,6 +220,7 @@ function MenuRow({ entry, active, ref, onHover, onPress }: { entry: MenuAction; 
       <Text style={styles.label(color)} numberOfLines={1}>
         {entry.label}
       </Text>
+      {entry.shortcut && !entry.children && <Text style={styles.shortcut}>{shortcutLabel(entry.shortcut)}</Text>}
       {entry.children && <Icon icon={ChevronRight} color={theme.colors.text3} size={theme.size.iconSmall} />}
     </Touchable>
   );
@@ -254,6 +256,10 @@ const styles = StyleSheet.create((theme) => ({
     flex: 1,
     color,
   }),
+  shortcut: {
+    ...theme.typography.footnote,
+    color: theme.colors.text3,
+  },
   separator: {
     height: StyleSheet.hairlineWidth,
     marginVertical: theme.spacing.xs,

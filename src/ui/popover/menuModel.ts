@@ -14,6 +14,8 @@ export interface MenuAction {
   checked?: boolean;
   /** 危险操作，文字用危险色 */
   destructive?: boolean;
+  /** 对应的快捷键（写法同 useShortcut），只在自绘菜单里靠右显示；快捷键本身由页面用 useShortcut 注册 */
+  shortcut?: string;
   children?: readonly MenuEntry[];
 }
 

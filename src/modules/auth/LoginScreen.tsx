@@ -6,6 +6,7 @@ import { StyleSheet } from 'react-native-unistyles';
 import { useT } from '../../i18n';
 import { userApi } from '../../sync/api';
 import { Button } from '../../ui/Button';
+import { Form } from '../../ui/Form';
 import { FormError } from '../../ui/FormError';
 import { TextField } from '../../ui/TextField';
 import { Touchable } from '../../ui/Touchable';
@@ -88,54 +89,56 @@ export function LoginScreen() {
         <Button variant="plain" label={t('modify')} onPress={() => router.push('/server')} />
       </View>
       {notice !== null && <Text style={styles.notice}>{notice || t('auth:login.authLost')}</Text>}
-      <TextField
-        value={email}
-        onChangeText={setEmail}
-        onBlur={checkNeedCode}
-        placeholder={t('auth:login.emailPlaceholder')}
-        accessibilityLabel={t('auth:login.email')}
-        keyboardType="email-address"
-        autoCapitalize="none"
-        autoCorrect={false}
-        autoComplete="email"
-        textContentType="username"
-        returnKeyType="next"
-        submitBehavior="submit"
-        onSubmitEditing={() => passwordRef.current?.focus()}
-      />
-      <TextField
-        ref={passwordRef}
-        value={password}
-        onChangeText={setPassword}
-        placeholder={t('auth:login.passwordPlaceholder')}
-        accessibilityLabel={t('auth:login.password')}
-        secureTextEntry
-        autoCapitalize="none"
-        autoComplete="current-password"
-        textContentType="password"
-        returnKeyType={captcha ? 'next' : 'go'}
-        submitBehavior={captcha ? 'submit' : 'blurAndSubmit'}
-        onSubmitEditing={() => (captcha ? codeRef.current?.focus() : submit())}
-      />
-      {captcha && (
+      <Form>
         <TextField
-          ref={codeRef}
-          value={code}
-          onChangeText={setCode}
-          placeholder={t('auth:login.codePlaceholder')}
-          accessibilityLabel={t('auth:login.code')}
+          value={email}
+          onChangeText={setEmail}
+          onBlur={checkNeedCode}
+          placeholder={t('auth:login.emailPlaceholder')}
+          accessibilityLabel={t('auth:login.email')}
+          keyboardType="email-address"
           autoCapitalize="none"
           autoCorrect={false}
-          autoComplete="off"
-          returnKeyType="go"
-          onSubmitEditing={submit}
-          right={
-            <Touchable accessibilityRole="button" accessibilityLabel={t('refresh')} onPress={loadCaptcha}>
-              <Image source={{ uri: captcha.img }} style={styles.captcha} resizeMode="contain" />
-            </Touchable>
-          }
+          autoComplete="email"
+          textContentType="username"
+          returnKeyType="next"
+          submitBehavior="submit"
+          onSubmitEditing={() => passwordRef.current?.focus()}
         />
-      )}
+        <TextField
+          ref={passwordRef}
+          value={password}
+          onChangeText={setPassword}
+          placeholder={t('auth:login.passwordPlaceholder')}
+          accessibilityLabel={t('auth:login.password')}
+          secureTextEntry
+          autoCapitalize="none"
+          autoComplete="current-password"
+          textContentType="password"
+          returnKeyType={captcha ? 'next' : 'go'}
+          submitBehavior={captcha ? 'submit' : 'blurAndSubmit'}
+          onSubmitEditing={() => (captcha ? codeRef.current?.focus() : submit())}
+        />
+        {captcha && (
+          <TextField
+            ref={codeRef}
+            value={code}
+            onChangeText={setCode}
+            placeholder={t('auth:login.codePlaceholder')}
+            accessibilityLabel={t('auth:login.code')}
+            autoCapitalize="none"
+            autoCorrect={false}
+            autoComplete="off"
+            returnKeyType="go"
+            onSubmitEditing={submit}
+            right={
+              <Touchable accessibilityRole="button" accessibilityLabel={t('refresh')} onPress={loadCaptcha}>
+                <Image source={{ uri: captcha.img }} style={styles.captcha} resizeMode="contain" />
+              </Touchable>
+            }
+          />
+        )}
+      </Form>
       <FormError>{error}</FormError>
       <Button label={t('auth:login.title')} onPress={submit} loading={busy} />
     </AuthPage>

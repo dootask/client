@@ -7,6 +7,7 @@ import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { initI18n } from '../i18n';
 import { ProfilePrompt, refreshSession, useSession } from '../modules/session';
 import { restorePreferences } from '../modules/setting';
+import { BrowserDefaults } from '../ui/BrowserDefaults';
 import { TooltipHost } from '../ui/popover';
 import { ThemeEffects } from '../ui/theme';
 
@@ -29,6 +30,7 @@ export default function RootLayout() {
       <View style={styles.root}>
         <NavigationTheme>
           <ThemeEffects />
+          <BrowserDefaults />
           <Routes />
           <ProfilePrompt />
           {/* 全页共用的悬停提示层（只在 Web 上有内容），放在最上面 */}

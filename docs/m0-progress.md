@@ -16,7 +16,7 @@
 | W9 弹出层 | ✅ | 见 git log |
 | W10 嵌入页协议 | ✅ | 见 git log |
 | W11 登录与主框架 | ✅ | 见 git log |
-| W12 桌面浏览器交互 | 未开始 | — |
+| W12 桌面浏览器交互 | ✅ | 见 git log |
 
 ## W1 工程初始化
 
@@ -121,5 +121,19 @@
 - 发现 / 待定：
   - `MIN_SERVER_VERSION` 暂定为开发时对接的 `1.10.38`，正式值等新客户端首个正式版发布时定
   - 后端：`User::auth()` 里"身份已失效,请重新登录"没有按 `language` 请求头翻译（"请登录后继续..."有），英文界面会显示中文原因；translate.json 里有现成译文。未改后端
-  - Web 上密码框不在 `<form>` 里，浏览器的密码管理器不一定会提示保存；放到 W12（桌面浏览器交互）一起处理
+  - Web 上密码框不在 `<form>` 里，浏览器的密码管理器不一定会提示保存；W12 已处理（见下）
   - 文档里多处引用的 `docs/ui-spec.md` 不存在
+
+## W12 桌面浏览器交互
+
+- 快捷键 `src/ui/shortcuts`：`useShortcut(combo, handler, { enabled })`、`shortcutLabel(combo)`。全页一个 `keydown` 监听，有快捷键注册时才挂；字母数字按物理键位匹配（不受输入法、键盘布局影响）；输入法合成中不触发；弹出层（`aria-modal`）打开时暂停；输入框里只响应带 Ctrl / Alt / Command 的组合。菜单项加了 `shortcut` 字段，自绘菜单靠右显示（Mac 上 `⇧⌘K`，其他系统 `Ctrl+Shift+K`）
+- 拖拽上传 `src/ui/DropZone`：只认从系统拖进来的文件，进出子元素不闪，松手交出 `File[]`，文件夹忽略并通知调用方；`BrowserDefaults`（根布局）拦住拖放区外松手打开文件
+- 文本选择：界面文字默认不能选中（`BrowserDefaults` 设 `body` 的 `user-select`），内容文字用 `<Text selectable>`；输入框照常可选
+- 悬停：`Touchable` 的悬停态、指针样式（react-native-web 的 Pressable 自带）、全页共用的悬停提示（W9）；右键菜单见 W9
+- 登录页账号密码包进 `<form>`（`src/ui/Form`，`display: contents` 不影响布局，表单自身提交被拦掉），密码管理器能认出登录表单
+- vitest：快捷键解析、匹配（物理键位、修饰键完全一致）、输入框规则、显示文字
+- Web 验收（Chrome，截图 `tests/playwright-results/w12-*`）：Ctrl+K / Ctrl+S / `/` / Esc 在页面上触发；输入框里打 `/`、按 Esc 不触发且字照常输入，Ctrl+S 触发并拦住浏览器的"保存网页"；合成中的按键不触发；暂停后不触发；右键菜单打开时 Ctrl+K 不触发，Esc 只关菜单；菜单显示快捷键、方向键 + 回车选中；界面文字双击不选中，内容文字拖选整段，输入框全选正常；悬停底色、指针、提示；拖两个文件进来蒙层出现、进出子元素不闪、松手收到文件名和大小、拖出去蒙层消失、拖文字不出蒙层、拖放区外松手被拦；登录表单在 `<form>` 里、回车提交不刷新页面、布局不变
+- 安卓：新组件在 App 上是空操作，开发包启动、登录页渲染正常
+- 发现：**react-native-web 的 TextInput 会对所有按键 `stopPropagation`**，冒泡阶段的全局监听收不到输入框里的按键；快捷键监听改用捕获阶段
+- 未验：拖入文件夹（自动化无法模拟真实文件夹拖放，逻辑走 `webkitGetAsEntry().isDirectory`），等业务接入时手动验
+
