@@ -2,7 +2,17 @@ import { currentLanguage } from '../../i18n';
 import { API_PLATFORM, APP_VERSION } from '../../platform';
 import { type ApiClientOptions, createApiClient } from '../../sync/api';
 import { requestProfile } from './profilePrompt';
+import { socket } from './socket';
 import { clearLogin, useSession } from './store';
+
+type GoneHandler = NonNullable<NonNullable<ApiClientOptions['hooks']>['onGone']>;
+const goneHandlers = new Set<GoneHandler>();
+
+/** 订阅「资源已不存在或无权访问」（会话、项目、任务），各模块据此清理本地数据 */
+export function onGone(fn: GoneHandler): () => void {
+  goneHandlers.add(fn);
+  return () => goneHandlers.delete(fn);
+}
 
 const base: Pick<ApiClientOptions, 'language' | 'version' | 'platform'> = {
   language: currentLanguage,
@@ -15,12 +25,14 @@ export const api = createApiClient({
   ...base,
   getServer: () => useSession.getState().server,
   getToken: () => useSession.getState().token,
+  getFd: () => socket.fd,
   hooks: {
     onAuthLost: (msg, token) => {
       // 换号前发出、换号后才回来的请求不算
       if (token && token === useSession.getState().token) clearLogin(msg);
     },
     onNeedProfile: requestProfile,
+    onGone: (kind, id, data) => goneHandlers.forEach((fn) => fn(kind, id, data)),
   },
 });
 

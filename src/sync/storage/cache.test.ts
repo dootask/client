@@ -87,6 +87,16 @@ describe.each(backends)('StructuredCache: $name', ({ open }) => {
     expect(await cache.get('messages', 1)).toBeUndefined();
   });
 
+  it('并发写入互不干扰（批量写不会嵌套事务）', async () => {
+    await Promise.all([
+      cache.putMany('messages', [{ id: 1, text: 'a' }, { id: 2, text: 'b' }]),
+      cache.putMany('messages', [{ id: 3, text: 'c' }]),
+      cache.put('messages', { id: 4, text: 'd' }),
+      cache.delete('messages', 2),
+    ]);
+    expect((await cache.query<Msg>('messages')).map((m) => m.id)).toEqual([1, 3, 4]);
+  });
+
   it('getMany 按传入顺序返回，跳过不存在的', async () => {
     await seed();
     const rows = await cache.getMany<Msg>('messages', [3, 99, 1]);

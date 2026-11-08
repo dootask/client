@@ -15,4 +15,8 @@ export const KV_KEYS = {
   themeMode: 'pref.themeMode',
   language: 'pref.language',
   listPaneWidth: (id: string) => `pref.listPaneWidth.${id}`,
+  /** 结构化缓存里数据所属的账号（服务器地址 + 用户 id），和当前登录对不上就清空缓存 */
+  cacheOwner: 'cache.owner',
+  /** 消息数据层按账号存的小数据：sync 同步时间、beyond 上次取列表外会话的时间、drafts 草稿、outbox 发送队列 */
+  messenger: (userid: number, name: 'sync' | 'beyond' | 'drafts' | 'outbox') => `messenger.${userid}.${name}`,
 } as const;

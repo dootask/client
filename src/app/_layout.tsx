@@ -5,6 +5,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { initI18n } from '../i18n';
+import { startMessengerService } from '../modules/messenger';
 import { entryHref, ProfilePrompt, refreshSession, useSession } from '../modules/session';
 import { restorePreferences } from '../modules/setting';
 import { BrowserDefaults } from '../ui/BrowserDefaults';
@@ -21,6 +22,9 @@ export default function RootLayout() {
     // 冷启动先按存下的登录状态渲染，后台核对服务器版本、刷新我的信息
     refreshSession().catch(() => {});
   }, []);
+
+  // 消息服务跟着登录状态启停（连 WebSocket、同步会话列表）
+  useEffect(() => startMessengerService(), []);
 
   if (!ready) return null;
 

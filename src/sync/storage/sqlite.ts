@@ -86,15 +86,27 @@ export async function openSqliteCache(driver: SqlDriver, schema: CacheSchema, ve
 
   const parse = <T>(rows: { v: string }[]) => rows.map((row) => JSON.parse(row.v) as T);
 
+  /**
+   * 写操作排队执行：同一个连接上事务不能嵌套，并发的 putMany 会撞上「事务里再开事务」，
+   * 单条写入插进别人的事务也会跟着回滚
+   */
+  let writes: Promise<unknown> = Promise.resolve();
+  function write(task: () => Promise<void>): Promise<void> {
+    const next = writes.then(task);
+    writes = next.catch(() => {});
+    return next;
+  }
+
   return {
     async put(collection, record) {
-      await upsert(collection, collectionOf(schema, collection), [record]);
+      const def = collectionOf(schema, collection);
+      await write(() => upsert(collection, def, [record]));
     },
     async putMany(collection, records) {
       const def = collectionOf(schema, collection);
       for (const record of records) primaryKeyOf(def, collection, record);
       if (records.length === 0) return;
-      await driver.transaction(() => upsert(collection, def, records));
+      await write(() => driver.transaction(() => upsert(collection, def, records)));
     },
     async get<T>(collection: string, key: CacheKey) {
       collectionOf(schema, collection);
@@ -110,7 +122,7 @@ export async function openSqliteCache(driver: SqlDriver, schema: CacheSchema, ve
     },
     async delete(collection, key) {
       collectionOf(schema, collection);
-      await driver.run(`DELETE FROM ${quote(collection)} WHERE ${KEY} = ?`, [key]);
+      await write(() => driver.run(`DELETE FROM ${quote(collection)} WHERE ${KEY} = ?`, [key]));
     },
     async query<T>(collection: string, query?: CacheQuery) {
       const { column, clause, params } = where(collection, query);
@@ -127,7 +139,7 @@ export async function openSqliteCache(driver: SqlDriver, schema: CacheSchema, ve
     },
     async clear(collection) {
       collectionOf(schema, collection);
-      await driver.run(`DELETE FROM ${quote(collection)}`, []);
+      await write(() => driver.run(`DELETE FROM ${quote(collection)}`, []));
     },
     async close() {
       await driver.close();

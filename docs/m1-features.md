@@ -27,26 +27,40 @@
 
 | # | 规则 | 状态 | 来源与说明 |
 | --- | --- | --- | --- |
-| R1 | 会话列表增量同步 | ⬜ | 〔旧前端〕`getDialogs`：`dialog/lists` 带 `timerange=上次更新时间,上次删除时间`（秒），`pagesize` 20–100，翻页直到最后一页；第 1 页的 `deleted_id` 要从本地删掉；同步时间按账号存。〔后端〕按 `top_at`、`last_at` 倒序 |
-| R2 | 打开列表时补最新消息 | ⬜ | 〔旧前端〕`getDialogLatestMsgs`：第 1 页拉完后，对有缓存的会话 POST `dialog/msg/latest`（`dialogs:[{id,latest_id}]`、`take`），每批 5 个；把漏掉的新消息补进缓存 |
-| R3 | 列表外的未读、待办会话 | ⬜ | 〔旧前端〕`getDialogBeyonds`：最多一小时一次，`dialog/beyond`（`unread_at`、`todo_at` 取已加载最早的 `last_at`），返回的会话并入列表 |
-| R4 | 会话合并 | ⬜ | 〔旧前端〕`saveDialog`：按 id 合并；传入的 `user_ms` 比本地旧时，丢掉 `unread`、`unread_one`、`mention`、`mention_ids`（用户态以较新的为准）；`last_at` 比本地旧且没有 `last_force` 时丢掉 `last_at`、`last_msg`；`mention_ids` 里本地已读的去掉 |
-| R5 | 最后一条消息 | ⬜ | 〔旧前端〕`updateDialogLastMsg`：更新 `last_msg`、`last_at`，同时置 `has_tag`/`has_todo`/`has_image`/`has_file`/`has_link`；会话不在本地时取 `dialog/one`。〔后端〕列表里的 `last_msg` 已是 `type=preview` 的摘要 |
-| R6 | 未读数的唯一来源 | ⬜ | 〔旧前端〕`getDialogNum = (免打扰 ? 0 : unread) \|\| mention \|\| mark_unread`；`getDialogUnread(d, 含免打扰) = (含免打扰或非免打扰 ? unread : 0) \|\| mark_unread`；`getDialogMention = mention`。会话行、分类、Tab 红点、App 角标、标签页标题全从同一组 selector 取 |
-| R7 | 分类未读 | ⬜ | 〔旧前端〕`msgUnread(type)`：项目 / 任务按 `group_type`；单聊 = `type=user` 且非机器人；群聊 = `type=group` 且不是项目、任务群；机器人 = `bot`；标注、@我不显示数字。都用 `getDialogNum` 累加 |
-| R8 | Tab 红点文字 | ⬜ | 〔旧前端〕`msgUnreadMention`：未读（不含免打扰）、@ 数、待办数组合成 `12`、`12·@3`、`@3·待办2`、`待办`（1 个时不带数字），各项超过 999 显示 `999+`、待办超过 99 显示 `99+` |
-| R9 | App 角标、桌面角标 | ⬜ | 〔旧前端〕`msgAllUnread` = 所有可见会话 `getDialogNum` 之和；Electron 角标再加逾期任务数（M1 只算消息，逾期任务随 M2） |
-| R10 | 列表显示哪些会话 | ⬜ | 〔旧前端〕`filterDialog`：正在看的、置顶的、有待办的、有未读的一定显示；否则 `name` 缺失、`dialog_delete=1`、`hide`、没有 `last_at` 的不显示；任务群完成 5 天、项目 / 任务群删除 2 天、归档 3 天后不显示（取与 `last_at` 的较晚者算）。〔旧前端〕`appAiHidden`：App 在系统配置 `app_ai_hidden=true` 时隐藏 AI 机器人单聊（上架审核用） |
-| R11 | 列表排序 | ⬜ | 〔旧前端〕`dialogSort`：置顶时间 → 待办数 → 有草稿 → `last_at`，都倒序 |
-| R12 | 推送 `dialog` 合并 | ⬜ | 〔旧前端〕WebSocket `type=dialog` 按 `mode`：`add`（别人发的：`unread+1`，被 @ 时 `mention+1`，带 `user_at/user_ms`；更新最后消息；弹通知）、`chat`（同 add 但不加未读）、`update`/`readed`（更新消息；待办变了重拉会话待办）、`delete`（删消息，最后消息用 `last_force` 覆盖，`update_read` 时取 `dialog/msg/unread`）、`groupAdd`/`groupJoin`/`groupRestore`（取 `dialog/one`）、`groupUpdate`（合并会话）、`groupExit`/`groupDelete`（从本地删掉）、`updateTopMsg`（置顶消息）。带 `msgId` 的推送回 `receipt`（M0 已做） |
-| R13 | 消息合并 | ⬜ | 〔旧前端〕`saveDialogMsg`：按 id 合并，本地已有 `read_at` 的保留；别人发的未读消息、会话没打开时把 `unread_one` 设成最小 id。按会话分页：`dialog/msg/list`（`msg_id`/`prev_id`/`next_id`/`position_id`，每页 25），返回 `time` 之前、不在本页里的旧消息要删掉（服务端已删除） |
-| R14 | 已读上报 | ⬜ | 〔旧前端〕`dialogMsgRead`：攒 50ms、每次最多 100 条，POST `dialog/msg/read`（`id: {消息id: 会话id}`）；成功后本会话 id ≥ 该条的消息标为已读，合并返回的会话数据，清 `unread_one`、`mention_ids`。〔App〕K6：服务端只标这条及更新的消息 |
-| R15 | 标记已读 / 未读、语音红点 | ⬜ | 〔旧前端〕`dialog/msg/mark`（`type=read/unread`，`after_msg_id`）；`dialog/msg/dot` 清语音未播放红点 |
-| R16 | 断线重连补齐 | ⬜ | 重连、回到前台后按 R1 增量拉列表，打开中的会话按 R13 拉最新一页；中间漏掉的推送靠这两步补齐 |
-| R17 | 结构化缓存 | ⬜ | 会话列表、联系人整表缓存；消息每个会话缓存最近若干页；冷启动先画缓存再按 R1 更新。〔架构〕§6 |
-| R18 | 发送 | ⬜ | `dialog/msg/sendtext` 等；先插一条本地消息（临时 id）显示发送中，成功后换成服务器消息；失败可重发、删除；断网时文本排队（写到存储，重启还在，网络恢复或每 30 秒按顺序补发，超过 24 小时转失败）。〔App〕C17、J6 |
-| R19 | 草稿 | ⬜ | 〔App〕D1：App 和网页共用草稿；本项目里草稿存本地键值（按账号、会话），影响列表排序（R11）和行内「[草稿]」 |
-| R20 | 正在看的会话 | ⬜ | 当前打开的会话收到新消息不加未读（由已读上报清掉），不弹通知（P4） |
+| R1 | 会话列表增量同步 | ✅ | 〔旧前端〕`getDialogs`：`dialog/lists` 带 `timerange=上次更新时间,上次删除时间`（秒），`pagesize` 20–100，翻页直到最后一页；第 1 页的 `deleted_id` 要从本地删掉；同步时间按账号存。〔后端〕按 `top_at`、`last_at` 倒序 |
+| R2 | 打开列表时补最新消息 | ✅ | 〔旧前端〕`getDialogLatestMsgs`：第 1 页拉完后，对有缓存的会话 POST `dialog/msg/latest`（`dialogs:[{id,latest_id}]`、`take`），每批 5 个；把漏掉的新消息补进缓存 |
+| R3 | 列表外的未读、待办会话 | ✅ | 〔旧前端〕`getDialogBeyonds`：最多一小时一次，`dialog/beyond`（`unread_at`、`todo_at` 取已加载最早的 `last_at`），返回的会话并入列表 |
+| R4 | 会话合并 | ✅ | 〔旧前端〕`saveDialog`：按 id 合并；传入的 `user_ms` 比本地旧时，丢掉 `unread`、`unread_one`、`mention`、`mention_ids`（用户态以较新的为准）；`last_at` 比本地旧且没有 `last_force` 时丢掉 `last_at`、`last_msg`；`mention_ids` 里本地已读的去掉 |
+| R5 | 最后一条消息 | ✅ | 〔旧前端〕`updateDialogLastMsg`：更新 `last_msg`、`last_at`，同时置 `has_tag`/`has_todo`/`has_image`/`has_file`/`has_link`；会话不在本地时取 `dialog/one`。〔后端〕列表里的 `last_msg` 已是 `type=preview` 的摘要 |
+| R6 | 未读数的唯一来源 | ✅ | 〔旧前端〕`getDialogNum = (免打扰 ? 0 : unread) \|\| mention \|\| mark_unread`；`getDialogUnread(d, 含免打扰) = (含免打扰或非免打扰 ? unread : 0) \|\| mark_unread`；`getDialogMention = mention`。会话行、分类、Tab 红点、App 角标、标签页标题全从同一组 selector 取 |
+| R7 | 分类未读 | ✅ | 〔旧前端〕`msgUnread(type)`：项目 / 任务按 `group_type`；单聊 = `type=user` 且非机器人；群聊 = `type=group` 且不是项目、任务群；机器人 = `bot`；标注、@我不显示数字。都用 `getDialogNum` 累加 |
+| R8 | Tab 红点文字 | ✅ | 〔旧前端〕`msgUnreadMention`：未读（不含免打扰）、@ 数、待办数组合成 `12`、`12·@3`、`@3·待办2`、`待办`（1 个时不带数字），各项超过 999 显示 `999+`、待办超过 99 显示 `99+` |
+| R9 | App 角标、桌面角标 | ✅ | 〔旧前端〕`msgAllUnread` = 所有可见会话 `getDialogNum` 之和；Electron 角标再加逾期任务数（M1 只算消息，逾期任务随 M2） |
+| R10 | 列表显示哪些会话 | ✅ | 〔旧前端〕`filterDialog`：正在看的、置顶的、有待办的、有未读的一定显示；否则 `name` 缺失、`dialog_delete=1`、`hide`、没有 `last_at` 的不显示；任务群完成 5 天、项目 / 任务群删除 2 天、归档 3 天后不显示（取与 `last_at` 的较晚者算）。〔旧前端〕`appAiHidden`：App 在系统配置 `app_ai_hidden=true` 时隐藏 AI 机器人单聊（上架审核用） |
+| R11 | 列表排序 | ✅ | 〔旧前端〕`dialogSort`：置顶时间 → 待办数 → 有草稿 → `last_at`，都倒序 |
+| R12 | 推送 `dialog` 合并 | 🟡 | 〔旧前端〕WebSocket `type=dialog` 按 `mode`：`add`（别人发的：`unread+1`，被 @ 时 `mention+1`，带 `user_at/user_ms`；更新最后消息；弹通知）、`chat`（同 add 但不加未读）、`update`/`readed`（更新消息；待办变了重拉会话待办）、`delete`（删消息，最后消息用 `last_force` 覆盖，`update_read` 时取 `dialog/msg/unread`）、`groupAdd`/`groupJoin`/`groupRestore`（取 `dialog/one`）、`groupUpdate`（合并会话）、`groupExit`/`groupDelete`（从本地删掉）、`updateTopMsg`（置顶消息）。带 `msgId` 的推送回 `receipt`（M0 已做） |
+| R13 | 消息合并 | ✅ | 〔旧前端〕`saveDialogMsg`：按 id 合并，本地已有 `read_at` 的保留；别人发的未读消息、会话没打开时把 `unread_one` 设成最小 id。按会话分页：`dialog/msg/list`（`msg_id`/`prev_id`/`next_id`/`position_id`，每页 25），返回 `time` 之前、不在本页里的旧消息要删掉（服务端已删除） |
+| R14 | 已读上报 | ✅ | 〔旧前端〕`dialogMsgRead`：攒 50ms、每次最多 100 条，POST `dialog/msg/read`（`id: {消息id: 会话id}`）；成功后本会话 id ≥ 该条的消息标为已读，合并返回的会话数据，清 `unread_one`、`mention_ids`。〔App〕K6：服务端只标这条及更新的消息 |
+| R15 | 标记已读 / 未读、语音红点 | ✅ | 〔旧前端〕`dialog/msg/mark`（`type=read/unread`，`after_msg_id`）；`dialog/msg/dot` 清语音未播放红点 |
+| R16 | 断线重连补齐 | ✅ | 重连、回到前台后按 R1 增量拉列表，打开中的会话按 R13 拉最新一页；中间漏掉的推送靠这两步补齐 |
+| R17 | 结构化缓存 | 🟡 | 会话列表、联系人整表缓存；消息每个会话缓存最近若干页；冷启动先画缓存再按 R1 更新。〔架构〕§6 |
+| R18 | 发送 | ✅ | `dialog/msg/sendtext` 等；先插一条本地消息（临时 id）显示发送中，成功后换成服务器消息；失败可重发、删除；断网时文本排队（写到存储，重启还在，网络恢复或每 30 秒按顺序补发，超过 24 小时转失败）。〔App〕C17、J6 |
+| R19 | 草稿 | ✅ | 〔App〕D1：App 和网页共用草稿；本项目里草稿存本地键值（按账号、会话），影响列表排序（R11）和行内「[草稿]」 |
+| R20 | 正在看的会话 | ✅ | 当前打开的会话收到新消息不加未读（由已读上报清掉），不弹通知（P4） |
+
+R12 里「待办变了重拉会话待办」随 N4 的待办功能做；R17 里联系人整表缓存随 N8 做，其余已完成。
+
+### N1 实现说明
+
+代码在 `src/sync/messenger/`（`rules.ts` 纯规则、`engine.ts` 数据层、`store.ts` 状态），`src/modules/messenger/` 跟着登录状态启停。和旧前端不同的地方：
+
+- **消息窗口**：每个会话在内存里只保留一段连续的消息（按 id 倒序），用两端的 `prev_id` / `next_id` 判断前面、后面还有没有。窗口停在最新一端时推送才往里加；翻到中间时推送只更新已有的消息，回到底部重新取最新一页。打开会话总是先出缓存、再取最新一页
+- **消息缓存**：每个会话只缓存最新的 50 条，缓存里最旧一条的 `prev_id` 记成窗口里再往前一条的 id，打开时能直接往前翻。会话记录上存本地字段 `cached_msg_id`（缓存里最新一条）；没打开的会话收到推送，只有 `cached_msg_id` 等于会话最后一条消息（缓存还连续）时才追加进缓存。R2 补最新消息时如果条数达到上限，可能和缓存之间有缺口，就整批换掉缓存，最旧一条的 `prev_id` 记 -1（前面还有、id 未知）
+- **同步时间**：`timerange` 的更新时间取服务端返回的最大 `user_at`（服务器时钟，不受本机时间偏差影响），删除时间取本次同步开始时的本机时间。首次全量同步每页 100 条、最多 10 页，更早的未读、待办会话靠 R3 补；增量同步翻到最后一页
+- **R4**：`user_ms` 较旧时连 `user_at` / `user_ms` 也不覆盖（旧前端会覆盖成旧值，下次比较就失准）；`last_at` 统一截到秒再比较（会话接口有时带微秒，消息时间不带）
+- **推送 `add`**：会话本地有就顺便取消隐藏（`hide: 0`），和服务端收到新消息时的行为一致
+- **账号隔离**：结构化缓存只存当前账号；键值存储记下缓存属于哪个账号（服务器地址 + 用户 id），登录的账号对不上先清空；退出登录清掉缓存和该账号的同步时间、草稿、发送队列
+- **SQLite 写入排队**：同一个连接上事务不能嵌套，缓存的写操作按顺序执行
 
 ## 2. 会话列表（N2）
 

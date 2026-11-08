@@ -43,5 +43,5 @@
 - **列表在开头插入数据时画面跳走**：根因是 VirtualizedList 条数不变时跳过状态更新，`resources/app/patches/@react-native+virtualized-lists+0.88.0.patch` 已修复，复制消息列表时一起带上；升级 RN 时先看上游是否已修
 - **RNGH 的 `activeOffsetX([a, b])`** 表示 dx ≤ a 或 dx ≥ b 即激活，不是区间。写成两个正数会让手势一碰就激活，吃掉内层的点击和长按；单向只写一个正数
 - **unistyles 样式只对经过它 babel 插件的组件生效**：`GestureHandlerRootView` 这类第三方组件传 unistyles 样式在 Web 上会丢；同一个 `Animated.View` 上同时放 unistyles 样式和 `useAnimatedStyle`，Web 上动画样式不生效。第三方组件只给普通样式，动画样式和 unistyles 样式分两层
-- **对测试服联调接口**：`LIVE_SERVER=<地址> LIVE_EMAIL=<账号> LIVE_PASSWORD=<密码> npx vitest run live`，不带这些变量时 `npm run check` 自动跳过；账号只放命令行环境变量，不写进文件
+- **对测试服联调接口**：`LIVE_SERVER=<地址> LIVE_EMAIL=<账号> LIVE_PASSWORD=<密码> npx vitest run live`，不带这些变量时 `npm run check` 自动跳过；账号只放命令行环境变量，不写进文件；消息数据层的联调还要第二个账号 `LIVE_EMAIL2` / `LIVE_PASSWORD2`（收发消息的另一方）
 - **不要向服务端发送格式非法的 token 做测试**：会让后端 Swoole worker 崩溃（已知问题，属主程序，暂不修）；合法但过期的 token 会正常返回 `-1`
