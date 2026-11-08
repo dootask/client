@@ -11,7 +11,12 @@
 | W8 国际化（提前和 W3 一起做） | ✅ | 见 git log |
 | W4 数据层 API | ✅ | 见 git log |
 | W5 数据层 WebSocket | ✅ | 见 git log |
-| W6、W7、W9–W12 | 未开始 | — |
+| W6 | 暂停：加密方案重新设计 | 不再沿用 PGP、不兼容旧前端，方案在主仓库讨论，定了再做。已知：Hermes 没有 `crypto`（无 `getRandomValues`、无 `subtle`），新方案也要解决随机数来源 |
+| W7 本地存储 | ✅ | 见 git log |
+| W9 弹出层 | ✅ | 见 git log |
+| W10 嵌入页协议 | ✅ | 见 git log |
+| W11 登录与主框架 | ✅ | 见 git log |
+| W12 桌面浏览器交互 | 未开始 | — |
 
 ## W1 工程初始化
 
@@ -76,3 +81,45 @@
 - `npm run i18n:find -- <中文原文>`：到主仓库 `language/translate.json` 查现成译文
 - 安卓：设备语言为中文时直接显示中文；切到 English 立即生效
 - Web 验收：9 种语言逐个切换立即生效，`<html lang>` 同步，语言包按需请求（截图 `tests/playwright-results/w8-*`）
+
+## W7 本地存储
+
+- `src/sync/storage`：键值存储（MMKV，同步读写，Web 落到 localStorage）存偏好和登录状态；缓存库按集合声明主键和索引（`appSchema.ts`），App 用 expo-sqlite、Web 用 IndexedDB，同一套接口（`get` / `put` / `putMany` / `query` / `remove`）
+- 主题模式、语言、列表栏宽度已持久化，冷启动在首屏渲染前恢复，不闪
+- vitest：两套实现跑同一组用例（Web 用 fake-indexeddb）
+- 安卓：键值存储冷启动后计数递增、缓存 1000 条消息冷启动后仍在
+- 发现：**`putMany` 逐条 `runAsync` 时安卓写 1000 条要 2.8~3.2 秒**（每条一次原生桥调用）。改成一条语句插多行（每条语句不超过 999 个绑定参数，自动分批），同一事务里写完，**降到 181~197ms**；补了"同批主键重复以后者为准""超过参数上限分批全部写入"两个用例
+
+## W9 弹出层
+
+- `src/ui/popover`：`Menu`（下拉 / 右键菜单）、`Confirm`（确认）、`Popover`（气泡）、`Tooltip`（悬停提示）
+  - Web / 桌面：自绘，锚在触发元素旁，键盘可操作（方向键、回车、Esc），点外面关闭，右键菜单跟随鼠标位置
+  - iOS：系统菜单（UIMenu，长按为系统上下文菜单）；安卓：本地模块 `modules/menu` 的 PopupMenu，跟随应用深浅色；确认用系统 Alert
+- 弹出层只在打开时渲染，不打开不挂任何监听（性能规范）
+- 发现：**出包时排除 `ios` / `android` 只能排除根目录**。原来的写法把 `modules/menu/android` 也排除了，安卓开发包编译通过，运行时报 `Can't find ViewManager 'ViewManagerAdapter_DooTaskMenu'`；已改 dev.md 和 app-build 技能的说明
+- 发现：**Expo 原生视图的事件不能叫 `onSelect`**。它和 RN 自带的冒泡事件 `topSelect` 重名，新架构下报 "Event cannot be both direct and bubbling"；本地模块的事件改名为 `onAction`（iOS、安卓同改）
+- 安卓验收（截图 `tests/playwright-results/w9-android-*`）：点按弹出系统 PopupMenu（禁用项置灰、分组分割线、子菜单箭头、危险项红色），选中回调正确；长按弹出上下文菜单；确认框见 W11 退出登录
+
+## W10 嵌入页协议
+
+- `src/embed`：宿主与嵌入页之间的消息协议（初始化、主题、语言、请求 / 回复、事件），Web 用 iframe + postMessage，App 用 react-native-webview；带 vitest
+- 验收页 `embed-check` + `public/embed-test.html`：初始化参数、主题和语言切换实时同步、嵌入页发给宿主的消息都收到
+- 安卓验收（截图 `tests/playwright-results/w10-android-*`）：WebView 收到初始化参数；切主题、切语言实时送达；navigate / title / changed / close 四种消息宿主都收到；嵌入页要求跳站外地址被拒；服务器与嵌入页跨源时不下发 token
+
+## W11 登录与主框架
+
+- 页面：服务器地址 → 登录 → 主框架；服务器版本低于最低要求时进升级提示页。路由守卫用 `Stack.Protected`，登录状态一变自动切换，已登录打开 `/login` 回主框架，退出后返回键不会回到主框架
+- 登录状态（`modules/session`）：服务器、token、我的信息存在键值存储里，模块加载时同步读出，冷启动直接按已登录渲染；后台核对服务器版本并刷新我的信息（服务端换发的 token 会存下）
+- 服务器地址：去掉结尾斜杠和 `/api`，没写协议先试 https 再试 http；取到版本号才算连上；换了服务器原登录作废。Web 部署在服务端 `/next` 下时，第一次打开静默试页面所在站点，成功就跳过填地址
+- 登录：邮箱失焦时问服务端要不要验证码，登录时服务端说要也会出；点图片换一张，带验证码失败后自动换一张并聚焦
+- 身份失效（-1）：只在失效的正是当前 token 时清登录（退出后迟到的旧请求不会误伤新登录），登录页显示服务端给的原因
+- 补填昵称 / 电话（-2 / -3）：全局对话框，填好后原请求自动重试；昵称、电话都缺时依次弹出；取消则原请求得到服务端的错误
+- 设置页加了当前账号和退出登录（确认后退出；不等服务端返回，断网也能退）
+- vitest：地址规范化、登录状态存取（换服务器、换发 token、清登录）
+- Web 验收（截图 `tests/playwright-results/w11-*`）：页面所在站点试连失败回落到填地址、无效地址提示、填测试服地址（带 `/api/`）连上、错误密码、验证码（测试服临时打开 `login_code`，验完改回）、登录、冷启动不闪登录页、退出、身份失效、补填昵称和电话（临时清空管理员资料，用弹窗填回原值）、中文输入法合成中按回车不提交、升级提示（临时调高最低版本）、深色 + 中文、窄 / 中 / 宽三档
+- 安卓验收：填服务器、登录、冷启动直接进主框架、设置里退出（系统确认框）、退出后返回键退出应用
+- 发现 / 待定：
+  - `MIN_SERVER_VERSION` 暂定为开发时对接的 `1.10.38`，正式值等新客户端首个正式版发布时定
+  - 后端：`User::auth()` 里"身份已失效,请重新登录"没有按 `language` 请求头翻译（"请登录后继续..."有），英文界面会显示中文原因；translate.json 里有现成译文。未改后端
+  - Web 上密码框不在 `<form>` 里，浏览器的密码管理器不一定会提示保存；放到 W12（桌面浏览器交互）一起处理
+  - 文档里多处引用的 `docs/ui-spec.md` 不存在

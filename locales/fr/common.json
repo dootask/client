@@ -1,5 +1,17 @@
 {
   "wip": "En développement",
   "back": "Retour",
-  "close": "Fermer"
+  "close": "Fermer",
+  "confirm": "Confirmer",
+  "cancel": "Annuler",
+  "error": {
+    "network": "La connexion réseau a échoué, veuillez vérifier les paramètres réseau.",
+    "invalid": "Le serveur a renvoyé des données non valides",
+    "server": "Échec de la demande",
+    "unknown": "Erreur inconnue",
+    "noServer": "Veuillez entrer l'adresse du serveur"
+  },
+  "save": "Enregistrer",
+  "modify": "Modifier",
+  "refresh": "Actualiser"
 }

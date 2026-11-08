@@ -35,8 +35,11 @@ export interface ApiEncryptor {
 
 /** 特殊返回码的全局处理，由上层注入，数据层本身不碰界面 */
 export interface ApiHooks {
-  /** msg 是服务端提示，可能为空，由界面层兜底 */
-  onAuthLost?(msg: string): void;
+  /**
+   * msg 是服务端提示，可能为空，由界面层兜底；token 是这个请求带的 token，
+   * 上层据此忽略换号前发出、换号后才回来的旧请求
+   */
+  onAuthLost?(msg: string, token: string): void;
   /** 需要补填昵称或电话；resolve 后自动重试原请求，reject 则原样抛出服务端错误 */
   onNeedProfile?(field: 'nickname' | 'tel'): Promise<void>;
   /** 资源已不存在或无权访问，上层据此清理本地缓存 */
@@ -171,7 +174,7 @@ export function createApiClient(options: ApiClientOptions) {
 
     if (ret === RET.SUCCESS) return { data, msg };
 
-    if (ret === RET.AUTH_LOST && opts.checkAuth !== false) hooks.onAuthLost?.(msg);
+    if (ret === RET.AUTH_LOST && opts.checkAuth !== false) hooks.onAuthLost?.(msg, headers['dootask-token']);
     if ((ret === RET.NEED_NICKNAME || ret === RET.NEED_TEL) && opts.checkProfile !== false && hooks.onNeedProfile) {
       const filled = await hooks.onNeedProfile(ret === RET.NEED_NICKNAME ? 'nickname' : 'tel').then(
         () => true,

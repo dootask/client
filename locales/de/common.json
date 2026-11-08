@@ -1,5 +1,17 @@
 {
   "wip": "In Entwicklung",
   "back": "Zurück",
-  "close": "Schließen"
+  "close": "Schließen",
+  "confirm": "Bestätigen",
+  "cancel": "Abbrechen",
+  "error": {
+    "network": "Netzwerkverbindung fehlgeschlagen, bitte überprüfen Sie die Netzwerkeinstellungen.",
+    "invalid": "Der Server hat ungültige Daten zurückgegeben",
+    "server": "Anforderung fehlgeschlagen",
+    "unknown": "Unbekannter Fehler",
+    "noServer": "Bitte geben Sie die Serveradresse ein"
+  },
+  "save": "Speichern",
+  "modify": "Ändern",
+  "refresh": "Aktualisieren"
 }

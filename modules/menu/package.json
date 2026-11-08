@@ -1,0 +1,7 @@
+{
+  "name": "dootask-menu",
+  "version": "1.0.0",
+  "description": "DooTask 系统原生菜单：iOS UIMenu、Android PopupMenu，从触发元素位置弹出",
+  "private": true,
+  "license": "MIT"
+}

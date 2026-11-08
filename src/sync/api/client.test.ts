@@ -104,7 +104,7 @@ describe('全局返回码', () => {
     const { client } = setup([{ ret: -1, msg: '请登录' }, { ret: -1, msg: '' }], { hooks: { onAuthLost } });
     await expect(client.request('x')).rejects.toMatchObject({ kind: 'server', ret: RET.AUTH_LOST });
     await expect(client.request('x', { checkAuth: false })).rejects.toBeInstanceOf(ApiError);
-    expect(onAuthLost.mock.calls).toEqual([['请登录']]);
+    expect(onAuthLost.mock.calls).toEqual([['请登录', 'tok']]);
   });
 
   it('-2 补填昵称后自动重试', async () => {

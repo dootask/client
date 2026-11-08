@@ -63,6 +63,11 @@ export async function setLanguage(language: Language): Promise<void> {
   applyDocumentLanguage(language);
 }
 
+/** 当前界面语言，组件外用（如请求头 language） */
+export function currentLanguage(): Language {
+  return resolveLanguage(i18n.resolvedLanguage ?? i18n.language ?? null, null);
+}
+
 /**
  * 取翻译函数：所有命名空间都可用，键写成 'ns:key'（common 可以省略前缀），写错键编译不过。
  * 语言切换时重渲染

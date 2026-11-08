@@ -1,5 +1,17 @@
 {
   "wip": "In development",
   "back": "Back",
-  "close": "Close"
+  "close": "Close",
+  "confirm": "Confirm",
+  "cancel": "Cancel",
+  "error": {
+    "network": "Network connection failed, please check network settings.",
+    "invalid": "The server returned invalid data",
+    "server": "Request failed",
+    "unknown": "Unknown error",
+    "noServer": "Please enter the server address"
+  },
+  "save": "Save",
+  "modify": "Modify",
+  "refresh": "Refresh"
 }

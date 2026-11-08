@@ -1,5 +1,17 @@
 {
   "wip": "開發中",
   "back": "返回",
-  "close": "關閉"
+  "close": "關閉",
+  "confirm": "確定",
+  "cancel": "取消",
+  "error": {
+    "network": "網絡連接失敗，請檢查網絡設置。",
+    "invalid": "服務器返回數據異常",
+    "server": "請求失敗",
+    "unknown": "未知錯誤",
+    "noServer": "請輸入服務器地址"
+  },
+  "save": "保存",
+  "modify": "修改",
+  "refresh": "刷新"
 }

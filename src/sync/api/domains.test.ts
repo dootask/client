@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { ApiError } from './errors';
 import { compareVersion, serverVersion, systemSetting } from './system';
-import { captcha, login, loginErrorCode, myInfo, needCode } from './user';
+import { captcha, editData, login, loginErrorCode, myInfo, needCode } from './user';
 import { setup } from './fakeFetch';
 
 const user = {
@@ -32,6 +32,15 @@ describe('user api', () => {
     expect(res.department).toEqual([3, 5]);
     expect(res.token).toBe('new-token');
     expect(res.extra_field).toBe('kept');
+  });
+
+  it('editData 用 POST 只提交传入的字段', async () => {
+    const { client, calls } = setup([{ ret: 1, msg: '修改成功', data: { ...user, tel: '13800000000' } }]);
+    const res = await editData(client, { tel: '13800000000' });
+    expect(calls[0].url).toBe('https://demo.example.com/api/users/editdata');
+    expect(calls[0].init.method).toBe('POST');
+    expect(JSON.parse(calls[0].init.body as string)).toEqual({ tel: '13800000000' });
+    expect(res.tel).toBe('13800000000');
   });
 
   it('login 失败时可读出 data.code，且不触发身份丢失', async () => {

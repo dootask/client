@@ -108,6 +108,12 @@ export async function myInfo(client: ApiClient) {
   return data;
 }
 
+/** 修改我的资料（只列出用到的字段）；返回修改后的用户对象 */
+export async function editData(client: ApiClient, data: { nickname?: string; tel?: string }) {
+  const { data: user } = await requestParsed(client, 'users/editdata', userInfoSchema, { method: 'post', data });
+  return user;
+}
+
 export async function logout(client: ApiClient) {
   await client.request('users/logout', { checkAuth: false });
 }

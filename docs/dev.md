@@ -21,7 +21,7 @@
 ### 安卓
 
 - 开发包（`APP_VARIANT=development`，包名 `com.dootask.task.dev`）装到模拟器后连本机 Metro 实时开发；原生代码或原生依赖没变时，只改 JS 不用重新出包
-- 模拟器开发包流程：本机打源码包（不含 `node_modules`、`ios`、`android`、`.git`、`dist`、`tests`）→ 传到 Mac mini 解包 → `export APP_VARIANT=development`，`npm install`，`npx expo prebuild --platform android --clean --no-install` → `cd android && ./gradlew :app:assembleDebug` → `adb install -r` → 用 `adb shell am start -a android.intent.action.VIEW -d "exp+dootask-dev://expo-development-client/?url=<URL 编码的 Metro 外网地址>"` 打开并连上 Metro
+- 模拟器开发包流程：本机打源码包（不含 `node_modules`、根目录的 `ios`、`android`，以及 `.git`、`dist`、`tests`；只排除根目录，`modules/*/android`、`modules/*/ios` 是本地模块的原生代码，必须带上，tar 写 `--exclude=./ios --exclude=./android`）→ 传到 Mac mini 解包 → `export APP_VARIANT=development`，`npm install`，`npx expo prebuild --platform android --clean --no-install` → `cd android && ./gradlew :app:assembleDebug` → `adb install -r` → 用 `adb shell am start -a android.intent.action.VIEW -d "exp+dootask-dev://expo-development-client/?url=<URL 编码的 Metro 外网地址>"` 打开并连上 Metro
 - 开发版包名与 `resources/app` 的开发版相同，会覆盖设备上旧的 DooTask (dev)，用户已同意
 - 出包流程可参考 `resources/app/scripts/mac-build.sh` 和 `resources/app/docs/dev.md`，本项目的脚本自己写
 - **正式签名**不进仓库，放在 Mac mini 本地（位置见 `CLAUDE.local.md`），构建时通过环境变量或 config plugin 注入

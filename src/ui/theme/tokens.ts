@@ -86,8 +86,8 @@ const typography = {
   caption2: font(11, 13, '500'),
 } satisfies Record<string, TextStyle>;
 
-/** 按下态：图标按钮降透明度，主按钮略降（docs/ui-spec.md 第 4 节） */
-const opacity = { pressedIcon: 0.5, pressedPrimary: 0.85 };
+/** 按下态：图标按钮降透明度，主按钮略降（docs/ui-spec.md 第 4 节）；不可用的按钮 */
+const opacity = { pressedIcon: 0.5, pressedPrimary: 0.85, disabled: 0.4 };
 
 const spacing = { xs: 4, sm: 8, md: 12, lg: 16, xl: 20, xxl: 24, page: 16 };
 
@@ -122,6 +122,21 @@ const size = {
   grabberWidth: 36,
   grabberHeight: 5,
   iconSmall: 18,
+  /** 自绘菜单（Web / 桌面）的行高和宽度范围 */
+  menuRow: 32,
+  menuMinWidth: 180,
+  menuMaxWidth: 320,
+  /** 确认气泡、悬停提示的最大宽度 */
+  bubbleMaxWidth: 280,
+  tooltipMaxWidth: 240,
+  /** 输入框、整行按钮的高度 */
+  control: 48,
+  /** 登录类页面表单的最大宽度（宽屏上居中） */
+  formMaxWidth: 360,
+  /** 登录页的应用图标 */
+  logo: 72,
+  /** 图形验证码的显示宽度（高度同输入框） */
+  captchaWidth: 120,
   ...platformSize,
 };
 

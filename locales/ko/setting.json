@@ -8,5 +8,7 @@
   },
   "language": {
     "title": "언어"
-  }
+  },
+  "logout": "로그아웃",
+  "logoutConfirm": "시스템에서 로그아웃하시겠습니까?"
 }

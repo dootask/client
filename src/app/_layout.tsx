@@ -5,14 +5,20 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { initI18n } from '../i18n';
+import { ProfilePrompt, refreshSession, useSession } from '../modules/session';
+import { restorePreferences } from '../modules/setting';
+import { TooltipHost } from '../ui/popover';
 import { ThemeEffects } from '../ui/theme';
 
 export default function RootLayout() {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    // 用户选过的语言在 W7 接入键值存储后传进来
-    void initI18n(null).then(() => setReady(true));
+    // 键值存储是同步的：深浅色在首屏渲染前恢复，语言包加载完再渲染
+    const { language } = restorePreferences();
+    void initI18n(language).then(() => setReady(true));
+    // 冷启动先按存下的登录状态渲染，后台核对服务器版本、刷新我的信息
+    refreshSession().catch(() => {});
   }, []);
 
   if (!ready) return null;
@@ -23,10 +29,28 @@ export default function RootLayout() {
       <View style={styles.root}>
         <NavigationTheme>
           <ThemeEffects />
-          <Stack screenOptions={{ headerShown: false }} />
+          <Routes />
+          <ProfilePrompt />
+          {/* 全页共用的悬停提示层（只在 Web 上有内容），放在最上面 */}
+          <TooltipHost />
         </NavigationTheme>
       </View>
     </GestureHandlerRootView>
+  );
+}
+
+/** 按登录状态守卫路由：没登录（或服务器版本过低）进不了主框架，登录了进不了登录页，状态一变自动切换 */
+function Routes() {
+  const inside = useSession((state) => state.token !== '' && state.outdated === null);
+  return (
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Protected guard={inside}>
+        <Stack.Screen name="(main)" />
+      </Stack.Protected>
+      <Stack.Protected guard={!inside}>
+        <Stack.Screen name="(auth)" />
+      </Stack.Protected>
+    </Stack>
   );
 }
 

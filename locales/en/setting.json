@@ -8,5 +8,7 @@
   },
   "language": {
     "title": "Language"
-  }
+  },
+  "logout": "Log Out",
+  "logoutConfirm": "Are you sure you want to log out of the system?"
 }

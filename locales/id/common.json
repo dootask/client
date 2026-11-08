@@ -1,5 +1,17 @@
 {
   "wip": "Sedang dikembangkan",
   "back": "Kembali",
-  "close": "Tutup"
+  "close": "Tutup",
+  "confirm": "Konfirmasi",
+  "cancel": "Batal",
+  "error": {
+    "network": "Koneksi jaringan gagal, silakan periksa pengaturan jaringan.",
+    "invalid": "Server mengembalikan data yang tidak valid",
+    "server": "Permintaan gagal",
+    "unknown": "Kesalahan tidak diketahui",
+    "noServer": "Silakan masukkan alamat server"
+  },
+  "save": "Simpan",
+  "modify": "Ubah",
+  "refresh": "Segarkan"
 }

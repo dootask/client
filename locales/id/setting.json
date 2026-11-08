@@ -8,5 +8,7 @@
   },
   "language": {
     "title": "Bahasa"
-  }
+  },
+  "logout": "Keluar",
+  "logoutConfirm": "Apakah Anda yakin ingin keluar dari sistem?"
 }

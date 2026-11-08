@@ -8,5 +8,7 @@
   },
   "language": {
     "title": "语言"
-  }
+  },
+  "logout": "退出登录",
+  "logoutConfirm": "你确定要登出系统吗？"
 }

@@ -40,7 +40,7 @@ export function MainNav({ variant }: { variant: NavVariant }) {
   );
 }
 
-function NavItem({ tab, variant, isFocused = false, ...trigger }: TabTriggerSlotProps & { tab: MainTab; variant: NavVariant }) {
+function NavItem({ tab, variant, isFocused = false, ...trigger }: Omit<TabTriggerSlotProps, 'ref'> & { tab: MainTab; variant: NavVariant }) {
   const t = useT();
   const { theme } = useUnistyles();
   const label = t(tab.label);

@@ -3,6 +3,7 @@ import { View } from 'react-native';
 import { GestureDetector, usePanGesture } from 'react-native-gesture-handler';
 import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
+import { scheduleOnRN } from 'react-native-worklets';
 
 import { useBreakpoint } from '../theme';
 import { resizeCursor } from './resizeCursor';
@@ -18,23 +19,34 @@ export function useSplitView(): boolean {
  * - 中屏：左边固定宽度的列表栏
  * - 宽屏：列表栏可以拖动右边缘调宽
  * children 的位置固定，切换断点时路由栈不会重新挂载
+ *
+ * width / onResize：宽屏下拖出来的宽度，由调用方负责存取；拖完松手时回调一次
  */
-export function ListDetail({ list, children }: { list: ReactNode; children: ReactNode }) {
+export function ListDetail({ list, children, width, onResize }: { list: ReactNode; children: ReactNode; width?: number; onResize?: (width: number) => void }) {
   const breakpoint = useBreakpoint();
   return (
     <View style={styles.root}>
-      {breakpoint !== 'xs' && <ListPane resizable={breakpoint === 'lg'}>{list}</ListPane>}
+      {breakpoint !== 'xs' && (
+        <ListPane resizable={breakpoint === 'lg'} initialWidth={width} onResize={onResize}>
+          {list}
+        </ListPane>
+      )}
       <View style={styles.detail}>{children}</View>
     </View>
   );
 }
 
-function ListPane({ resizable, children }: { resizable: boolean; children: ReactNode }) {
+function ListPane({ resizable, initialWidth, onResize, children }: { resizable: boolean; initialWidth?: number; onResize?: (width: number) => void; children: ReactNode }) {
   const { theme } = useUnistyles();
   const { listPane, listPaneMin, listPaneMax } = theme.size;
+  const clamp = (value: number) => {
+    'worklet';
+    return Math.min(listPaneMax, Math.max(listPaneMin, value));
+  };
   // 拖动中的宽度只走 shared value，不触发重渲染
-  const width = useSharedValue<number>(listPane);
-  const start = useSharedValue<number>(listPane);
+  const initial = clamp(initialWidth ?? listPane);
+  const width = useSharedValue<number>(initial);
+  const start = useSharedValue<number>(initial);
 
   const pan = usePanGesture({
     enabled: resizable,
@@ -46,7 +58,11 @@ function ListPane({ resizable, children }: { resizable: boolean; children: React
     },
     onUpdate: (event) => {
       'worklet';
-      width.set(Math.min(listPaneMax, Math.max(listPaneMin, start.get() + event.translationX)));
+      width.set(clamp(start.get() + event.translationX));
+    },
+    onDeactivate: () => {
+      'worklet';
+      if (onResize && width.get() !== start.get()) scheduleOnRN(onResize, width.get());
     },
   });
 

@@ -3,7 +3,8 @@ import { StyleSheet } from 'react-native-unistyles';
 
 import { useT } from '../../i18n';
 import { ListRow } from '../../ui/ListRow';
-import { setThemeMode, THEME_MODES, useThemeMode } from '../../ui/theme';
+import { THEME_MODES, useThemeMode } from '../../ui/theme';
+import { changeThemeMode } from './preferences';
 
 const LABELS = { system: 'setting:theme.system', light: 'setting:theme.light', dark: 'setting:theme.dark' } as const;
 
@@ -14,7 +15,7 @@ export function AppearanceSettings() {
   return (
     <ScrollView style={styles.root}>
       {THEME_MODES.map((item) => (
-        <ListRow key={item} title={t(LABELS[item])} accessory={item === mode ? 'check' : 'none'} onPress={() => setThemeMode(item)} />
+        <ListRow key={item} title={t(LABELS[item])} accessory={item === mode ? 'check' : 'none'} onPress={() => changeThemeMode(item)} />
       ))}
     </ScrollView>
   );

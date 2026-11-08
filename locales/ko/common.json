@@ -1,5 +1,17 @@
 {
   "wip": "개발 중",
   "back": "뒤로",
-  "close": "닫기"
+  "close": "닫기",
+  "confirm": "확인",
+  "cancel": "취소",
+  "error": {
+    "network": "네트워크 연결에 실패했습니다. 네트워크 설정을 확인하세요.",
+    "invalid": "서버가 잘못된 데이터를 반환했습니다",
+    "server": "요청 실패",
+    "unknown": "알 수 없는 오류",
+    "noServer": "서버 주소를 입력하세요"
+  },
+  "save": "저장",
+  "modify": "수정",
+  "refresh": "새로고침"
 }

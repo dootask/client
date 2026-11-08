@@ -8,5 +8,7 @@
   },
   "language": {
     "title": "Langue"
-  }
+  },
+  "logout": "Déconnexion",
+  "logoutConfirm": "Êtes-vous sûr de vouloir vous déconnecter du système ?"
 }

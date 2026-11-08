@@ -57,7 +57,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     output: 'single',
     favicon: './assets/favicon.png',
   },
-  plugins: ['expo-router', 'expo-status-bar'],
+  plugins: ['expo-router', 'expo-status-bar', 'expo-sqlite'],
   experiments: {
     // Web 部署在服务端的 /next 子路径下，与旧前端并存
     baseUrl: '/next',
