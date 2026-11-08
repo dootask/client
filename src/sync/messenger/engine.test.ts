@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ApiError } from '../api';
 import type { Dialog, Msg } from '../api/dialog';
 import type { SocketMessage } from '../ws';
-import { createMessenger, type MessengerApi, type MessengerDeps } from './engine';
+import { createMessenger, type MessengerApi, type MessengerDeps, toggledEmoji } from './engine';
 import { memoryCache, memoryKv } from './testing';
 
 const ME = 1;
@@ -62,6 +62,8 @@ function fakeApi(over: Partial<MessengerApi> = {}): MessengerApi {
     silence: vi.fn(),
     color: vi.fn(),
     sendText: vi.fn(),
+    withdraw: vi.fn(async () => {}),
+    emoji: vi.fn(),
     ...over,
   } as MessengerApi;
 }
@@ -142,7 +144,7 @@ describe('推送', () => {
     const incoming = vi.fn();
     m.onIncoming(incoming);
     socket.push('add', { ...msg(100, { mention: 1 }), user_at: '2026-11-08 10:00:05.000', user_ms: 5000 }, { silence: 0 });
-    expect(s().dialogs[10]).toMatchObject({ unread: 1, mention: 1, hide: 0, last_msg: { id: 100 }, user_ms: 5000 });
+    expect(s().dialogs[10]).toMatchObject({ unread: 1, mention: 1, mention_ids: [100], unread_one: 100, hide: 0, last_msg: { id: 100 }, user_ms: 5000 });
     expect(incoming).toHaveBeenCalledWith({ msg: expect.objectContaining({ id: 100 }), silence: false });
     m.stop();
   });
@@ -154,6 +156,28 @@ describe('推送', () => {
     socket.push('add', msg(100));
     expect(s().dialogs[10]).toMatchObject({ unread: 0, last_msg: { id: 100 } });
     expect(s().windows[10]!.list[0]!.id).toBe(100);
+    m.stop();
+  });
+
+  it('打开期间来过新消息：关闭时先报已读，再取服务端未读（没看到的不能丢）', async () => {
+    const msgUnread = vi.fn(async (id: number) => ({ id, unread: 3, unread_one: 100, mention: 0, mention_ids: [], user_at: '2026-11-08 10:00:01.000', user_ms: 2000 }));
+    const api = fakeApi({ msgList: vi.fn(async () => ({ list: page([90], 0), time: 1 })), msgUnread });
+    const { m, socket, s } = await started(api);
+    await m.openDialog(10);
+    m.markRead(msg(90));
+    socket.push('add', msg(100));
+    m.closeDialog(10);
+    await settle(0);
+    expect(api.msgRead).toHaveBeenCalled();
+    expect(msgUnread).toHaveBeenCalledWith(10);
+    expect(s().dialogs[10]).toMatchObject({ unread: 3, unread_one: 100 });
+
+    // 没来新消息的会话关闭时不多发请求
+    msgUnread.mockClear();
+    await m.openDialog(10);
+    m.closeDialog(10);
+    await settle(0);
+    expect(msgUnread).not.toHaveBeenCalled();
     m.stop();
   });
 
@@ -279,6 +303,7 @@ describe('发送队列', () => {
     await settle(30_000);
     expect(sendText.mock.calls.map((c) => c[0].text)).toEqual(['a', 'a', 'b']);
     expect(s().outbox).toEqual([]);
+    expect(Object.keys(s().sentKeys)).toEqual(['300', '301']);
     m.stop();
   });
 
@@ -329,4 +354,63 @@ describe('重连', () => {
     expect(s().windows[10]!.synced).toBe(false);
     m.stop();
   });
+});
+
+describe('编辑、撤回、表情回应', () => {
+  async function opened(api: MessengerApi) {
+    const ctx = setup(api);
+    await ctx.m.start();
+    await ctx.m.openDialog(10);
+    return ctx;
+  }
+
+  it('只带部分字段的更新推送按 id 合并', async () => {
+    const { m, socket, s } = await opened(fakeApi({ msgList: vi.fn(async () => ({ list: page([1, 2], 0), time: 1 })) }));
+    socket.push('update', { id: 2, emoji: [{ symbol: '👍', userids: [OTHER] }] });
+    expect(s().windows[10]!.list[0]).toMatchObject({ id: 2, msg: { text: 'm2' }, emoji: [{ symbol: '👍', userids: [OTHER] }] });
+    m.stop();
+  });
+
+  it('表情回应先在本地切换，失败时还原', async () => {
+    const emoji = vi.fn().mockRejectedValueOnce(new Error('x'));
+    const { m, s } = await opened(fakeApi({ emoji, msgList: vi.fn(async () => ({ list: page([1], 0, 0, { emoji: [{ symbol: '👍', userids: [OTHER] }] } as never), time: 1 })) }));
+    const target = s().windows[10]!.list[0]!;
+    const pending = m.toggleEmoji(target, '👍');
+    expect((s().windows[10]!.list[0] as never as { emoji: unknown }).emoji).toEqual([{ symbol: '👍', userids: [ME, OTHER] }]);
+    await expect(pending).rejects.toThrow('x');
+    expect((s().windows[10]!.list[0] as never as { emoji: unknown }).emoji).toEqual([{ symbol: '👍', userids: [OTHER] }]);
+    m.stop();
+  });
+
+  it('撤回文本：记下原文，5 分钟后过期', async () => {
+    const { m, s } = await opened(fakeApi({ msgList: vi.fn(async () => ({ list: page([1, 2], 0, 0, { userid: ME, msg: { text: '<p>原文</p>' } }), time: 1 })) }));
+    await m.withdraw(s().windows[10]!.list[0]!);
+    expect(s().windows[10]!.list.map((x) => x.id)).toEqual([1]);
+    expect(s().withdrawn).toEqual([{ id: 2, dialog_id: 10, text: '<p>原文</p>', md: false, created_at: '2026-11-08 10:00:00', at: clock }]);
+    await settle(5 * 60_000);
+    expect(s().withdrawn).toEqual([]);
+    m.stop();
+  });
+
+  it('撤回失败且消息还在时去掉占位', async () => {
+    const { m, s } = await opened(fakeApi({ withdraw: vi.fn().mockRejectedValue(new Error('超时')), msgList: vi.fn(async () => ({ list: page([1], 0, 0, { userid: ME }), time: 1 })) }));
+    await expect(m.withdraw(s().windows[10]!.list[0]!)).rejects.toThrow('超时');
+    expect(s().withdrawn).toEqual([]);
+    m.stop();
+  });
+
+  it('编辑后替换原消息', async () => {
+    const sendText = vi.fn(async () => msg(1, { msg: { text: '新' }, modify: 1 } as never));
+    const { m, s } = await opened(fakeApi({ sendText, msgList: vi.fn(async () => ({ list: page([1], 0), time: 1 })) }));
+    await m.editText({ dialog_id: 10, update_id: 1, text: '新' });
+    expect(sendText).toHaveBeenCalledWith({ dialog_id: 10, update_id: 1, text: '新' });
+    expect(s().windows[10]!.list[0]).toMatchObject({ id: 1, msg: { text: '新' }, modify: 1 });
+    m.stop();
+  });
+});
+
+it('表情切换规则与服务端一致', () => {
+  expect(toggledEmoji([], 'a', 1)).toEqual([{ symbol: 'a', userids: [1] }]);
+  expect(toggledEmoji([{ symbol: 'a', userids: [2] }], 'a', 1)).toEqual([{ symbol: 'a', userids: [1, 2] }]);
+  expect(toggledEmoji([{ symbol: 'a', userids: [1] }, { symbol: 'b', userids: [2] }], 'a', 1)).toEqual([{ symbol: 'b', userids: [2] }]);
 });

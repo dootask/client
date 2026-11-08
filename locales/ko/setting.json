@@ -10,5 +10,11 @@
     "title": "언어"
   },
   "logout": "로그아웃",
-  "logoutConfirm": "시스템에서 로그아웃하시겠습니까?"
+  "logoutConfirm": "시스템에서 로그아웃하시겠습니까?",
+  "keyboard": {
+    "title": "키보드 설정",
+    "enterNewline": "Enter로 줄 바꿈, 버튼을 눌러 전송",
+    "enterSend": "Enter로 전송",
+    "modEnterSend": "Enter로 줄 바꿈, {{combo}}로 전송"
+  }
 }

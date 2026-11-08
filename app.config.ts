@@ -112,6 +112,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     ['expo-notifications', { enableRemoteNotifications: false, enableBackgroundRemoteNotifications: false }],
     // dev 变体用开发证书签名，推送环境须为 development；安卓厂商通道参数在 N9 接入
     ['doopush-react-native-sdk', { ios: { mode: isDevVariant ? 'development' : 'production' } }],
+    // Android 15 起短气泡会多换一行被裁掉，关掉 TextView 的 useBoundsForWidth
+    './plugins/with-text-bounds',
   ],
   experiments: {
     // Web 部署在服务端的 /next 子路径下，与旧前端并存

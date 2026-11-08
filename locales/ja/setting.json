@@ -10,5 +10,11 @@
     "title": "言語"
   },
   "logout": "ログアウト",
-  "logoutConfirm": "システムからログアウトしてもよろしいですか？"
+  "logoutConfirm": "システムからログアウトしてもよろしいですか？",
+  "keyboard": {
+    "title": "キーボード設定",
+    "enterNewline": "Enter で改行、ボタンで送信",
+    "enterSend": "Enter で送信",
+    "modEnterSend": "Enter で改行、{{combo}} で送信"
+  }
 }

@@ -11,7 +11,8 @@
     "test": "vitest run",
     "check": "npm run typecheck && npm run lint && npm run test && npm run i18n:check",
     "i18n:check": "node scripts/check-i18n.mjs",
-    "i18n:find": "node scripts/i18n-find.mjs"
+    "i18n:find": "node scripts/i18n-find.mjs",
+    "postinstall": "patch-package"
   },
   "dependencies": {
     "@expo/metro-runtime": "~58.0.14",
@@ -41,8 +42,10 @@
     "expo-status-bar": "~58.0.3",
     "expo-system-ui": "~58.0.6",
     "expo-video": "58.0.11",
+    "htmlparser2": "^10.1.0",
     "i18next": "^27.0.1",
     "lucide-react-native": "1.66.0",
+    "markdown-it": "^14.3.3",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "react-i18next": "^18.0.0",
@@ -65,12 +68,15 @@
     "zustand": "^5.1.0"
   },
   "devDependencies": {
+    "@types/markdown-it": "^14.2.0",
     "@types/node": "^26.6.5",
     "@types/react": "~19.3.0",
+    "@types/react-dom": "~19.3.0",
     "babel-preset-expo": "~58.0.24",
     "eslint": "^9.39.5",
     "eslint-config-expo": "~58.0.4",
     "fake-indexeddb": "^6.2.7",
+    "patch-package": "^8.0.1",
     "typescript": "~6.0.3",
     "vitest": "^4.1.12"
   }

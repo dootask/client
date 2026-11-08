@@ -10,5 +10,11 @@
     "title": "Language"
   },
   "logout": "Log Out",
-  "logoutConfirm": "Are you sure you want to log out of the system?"
+  "logoutConfirm": "Are you sure you want to log out of the system?",
+  "keyboard": {
+    "title": "Keyboard Settings",
+    "enterNewline": "Enter adds a new line, tap the button to send",
+    "enterSend": "Enter sends",
+    "modEnterSend": "Enter adds a new line, {{combo}} sends"
+  }
 }

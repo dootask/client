@@ -1,0 +1,27 @@
+diff --git a/node_modules/react-native-keyboard-controller/ios/swizzling/UIResponderSwizzle.swift b/node_modules/react-native-keyboard-controller/ios/swizzling/UIResponderSwizzle.swift
+index 32ae6de..54f00a1 100644
+--- a/node_modules/react-native-keyboard-controller/ios/swizzling/UIResponderSwizzle.swift
++++ b/node_modules/react-native-keyboard-controller/ios/swizzling/UIResponderSwizzle.swift
+@@ -88,6 +88,22 @@ extension UIResponder {
+     method_setImplementation(originalResignMethod, implementation)
+   }
+ 
++  /// Resigns the current first responder right away instead of postponing it to the next frame.
++  /// Needed right before an interactive pop transition starts: once it has started, UIKit keeps
++  /// the keyboard attached to the page, so a postponed resign is too late.
++  public static func resignCurrentImmediately() {
++    guard let responder = UIResponder.current else { return }
++    if let textInput = responder as? TextInput, textInput.inputAccessoryView is InvisibleInputAccessoryView {
++      KeyboardAreaExtender.shared.hide()
++      NotificationCenter.default.post(
++        name: .shouldIgnoreKeyboardEvents, object: nil, userInfo: ["ignore": false]
++      )
++      textInput.inputAccessoryView = nil
++      KeyboardAreaExtender.shared.remove()
++    }
++    _ = responder.callOriginalResignFirstResponder(#selector(resignFirstResponder))
++  }
++
+   private func callOriginalResignFirstResponder(_ selector: Selector) -> Bool {
+     guard let originalResignFirstResponder = originalResignFirstResponder else { return false }
+     typealias Function = @convention(c) (AnyObject, Selector) -> Bool

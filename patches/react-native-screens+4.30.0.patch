@@ -1,0 +1,35 @@
+diff --git a/node_modules/react-native-screens/ios/RNSScreenStack.mm b/node_modules/react-native-screens/ios/RNSScreenStack.mm
+index 5da1196..59f3206 100644
+--- a/node_modules/react-native-screens/ios/RNSScreenStack.mm
++++ b/node_modules/react-native-screens/ios/RNSScreenStack.mm
+@@ -253,6 +253,11 @@ namespace react = facebook::react;
+ @end
+ #endif
+ 
++// Implemented by react-native-keyboard-controller (see patches/react-native-keyboard-controller).
++@interface UIResponder (RNSKeyboardController)
+++ (void)resignCurrentImmediately;
++@end
++
+ @implementation RNSScreenStackView {
+   UINavigationController *_controller;
+   NSMutableArray<RNSScreenView *> *_reactSubviews;
+@@ -938,6 +943,18 @@ RNS_IGNORE_SUPER_CALL_END
+ 
+     // _UIParallaxTransitionPanGestureRecognizer (other...)
+     [self cancelTouchesInParent];
++    // Dismiss the keyboard before the interactive transition starts. Resigning it in viewWillDisappear
++    // is too late: during an interactive pop UIKit keeps the keyboard attached to the page instead of
++    // sliding it down, while keyboard listeners already get the hide notification.
++    // react-native-keyboard-controller postpones resignFirstResponder by a frame (see its patch), so
++    // use its immediate variant when available.
++    if (topScreen.hideKeyboardOnSwipe) {
++      if ([UIResponder respondsToSelector:@selector(resignCurrentImmediately)]) {
++        [UIResponder resignCurrentImmediately];
++      } else {
++        [topScreen endEditing:YES];
++      }
++    }
+     return YES;
+   }
+ 

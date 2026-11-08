@@ -10,5 +10,11 @@
     "title": "Bahasa"
   },
   "logout": "Keluar",
-  "logoutConfirm": "Apakah Anda yakin ingin keluar dari sistem?"
+  "logoutConfirm": "Apakah Anda yakin ingin keluar dari sistem?",
+  "keyboard": {
+    "title": "Pengaturan Keyboard",
+    "enterNewline": "Enter untuk baris baru, ketuk tombol untuk mengirim",
+    "enterSend": "Enter untuk mengirim",
+    "modEnterSend": "Enter untuk baris baru, {{combo}} untuk mengirim"
+  }
 }

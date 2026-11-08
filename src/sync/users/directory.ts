@@ -97,6 +97,20 @@ export function createUserDirectory(deps: UserDirectoryDeps) {
     if (pending.size && !timer) timer = setTimeout(() => void flush().catch((err) => log('[users] flush failed', err)), BATCH_DELAY);
   }
 
+  /** 马上重新取（如打开单聊时要最新的在线状态），不管有没有过期 */
+  function refresh(ids: readonly number[]) {
+    const fresh = ids.filter((id) => id > 0);
+    if (stopped || fresh.length === 0) return;
+    void fetchFresh(fresh);
+  }
+
+  /** line 推送：只改内存里的在线状态，不落缓存（下次取资料时以服务端为准） */
+  function setOnline(userid: number, online: boolean) {
+    const u = store.getState().users[userid];
+    if (!u || u.online === online) return;
+    store.setState((s) => ({ users: { ...s.users, [userid]: { ...u, online } } }));
+  }
+
   /** 服务端推来或别处拿到的新资料，直接覆盖 */
   function put(list: readonly UserBasic[]) {
     if (stopped || list.length === 0) return;
@@ -111,7 +125,7 @@ export function createUserDirectory(deps: UserDirectoryDeps) {
     if (timer) clearTimeout(timer);
   }
 
-  return { store, want, put, stop };
+  return { store, want, refresh, put, setOnline, stop };
 }
 
 export type UserDirectory = ReturnType<typeof createUserDirectory>;

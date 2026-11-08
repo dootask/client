@@ -32,9 +32,10 @@ export function Menu({ items, trigger = 'press', onPress, accessibilityLabel, st
             : undefined
         }
       >
+        {/* 只有右键菜单、没有点击动作的（文字消息气泡）不是按钮：里面可能还有按钮，渲染成 <button> 会嵌套 */}
         <Touchable
           ref={ref}
-          accessibilityRole="button"
+          accessibilityRole={trigger === 'press' || onPress ? 'button' : undefined}
           accessibilityLabel={accessibilityLabel}
           accessibilityState={trigger === 'press' ? { expanded: anchor !== null } : undefined}
           onPress={trigger === 'press' ? open : onPress}

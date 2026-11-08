@@ -1,5 +1,5 @@
 import { router, usePathname } from 'expo-router';
-import { Languages, LogOut, Palette } from 'lucide-react-native';
+import { Keyboard, Languages, LogOut, Palette } from 'lucide-react-native';
 import { PixelRatio, ScrollView, Text, View } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
@@ -13,6 +13,7 @@ import { signOut, useSession } from '../session';
 const ITEMS = [
   { href: '/settings/appearance', label: 'setting:theme.title', icon: Palette },
   { href: '/settings/language', label: 'setting:language.title', icon: Languages },
+  { href: '/settings/keyboard', label: 'setting:keyboard.title', icon: Keyboard },
 ] as const;
 
 /** 设置的一级列表：窄屏是设置首页，并排视图里是左侧列表栏 */

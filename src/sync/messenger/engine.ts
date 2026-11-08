@@ -18,7 +18,7 @@ import {
   removeMsgs,
   upsertMsgs,
 } from './rules';
-import { createMessengerStore, type MsgWindow, type OutboxItem, type StoredDialog } from './store';
+import { createMessengerStore, type MsgWindow, type OutboxItem, type StoredDialog, type WithdrawnMsg } from './store';
 
 /** 引擎用到的接口，client 已绑定；测试时注入假的 */
 export interface MessengerApi {
@@ -37,6 +37,8 @@ export interface MessengerApi {
   silence: (dialogId: number, on: boolean) => ReturnType<typeof dialogApi.silence>;
   color: (dialogId: number, value: string) => ReturnType<typeof dialogApi.color>;
   sendText: (params: SendTextParams) => ReturnType<typeof dialogApi.sendText>;
+  withdraw: (msgId: number) => Promise<void>;
+  emoji: (msgId: number, symbol: string) => ReturnType<typeof dialogApi.emoji>;
 }
 
 export function bindMessengerApi(client: ApiClient): MessengerApi {
@@ -56,6 +58,8 @@ export function bindMessengerApi(client: ApiClient): MessengerApi {
     silence: (id, on) => dialogApi.silence(client, id, on),
     color: (id, v) => dialogApi.color(client, id, v),
     sendText: (p) => dialogApi.sendText(client, p),
+    withdraw: (id) => dialogApi.withdraw(client, id),
+    emoji: (id, symbol) => dialogApi.emoji(client, id, symbol),
   };
 }
 
@@ -103,6 +107,8 @@ const OUTBOX_RETRY = 30_000;
 const OUTBOX_EXPIRE = 24 * 3600_000;
 const BEYOND_INTERVAL = 3600_000;
 const PERSIST_DELAY = 300;
+/** 撤回的文本在本地保留多久（可以重新编辑） */
+const WITHDRAWN_KEEP = 5 * 60_000;
 
 function pad(n: number) {
   return String(n).padStart(2, '0');
@@ -120,6 +126,15 @@ function parseJson<T>(raw: string | undefined): T | undefined {
   } catch {
     return undefined;
   }
+}
+
+/** 和服务端 emojiMsg 相同的切换规则：点过的去掉（没人了整项去掉），没点过的加在最前 */
+export function toggledEmoji(list: readonly { symbol: string; userids: number[] }[], symbol: string, userId: number) {
+  const index = list.findIndex((item) => item.symbol === symbol);
+  if (index < 0) return [{ symbol, userids: [userId] }, ...list];
+  const item = list[index]!;
+  const userids = item.userids.includes(userId) ? item.userids.filter((id) => id !== userId) : [userId, ...item.userids];
+  return userids.length ? list.map((it, i) => (i === index ? { symbol, userids } : it)) : list.filter((_, i) => i !== index);
 }
 
 function msgOf(value: unknown): Msg | undefined {
@@ -382,7 +397,7 @@ export function createMessenger(deps: MessengerDeps) {
     set({ windows });
   }
 
-  /** 消息进来后（R13）：更新会话里的「第一条未读」和最后一条消息 */
+  /** 消息进来后（R13）：更新会话里的「第一条未读」、未读的 @ 我和最后一条消息 */
   function afterMsgs(dialogId: number, msgs: readonly Msg[]) {
     const d = get().dialogs[dialogId];
     if (!d) return;
@@ -393,6 +408,8 @@ export function createMessenger(deps: MessengerDeps) {
         if (m.read_at || m.userid === userId) continue;
         const current = patch.unread_one ?? d.unread_one ?? 0;
         patch.unread_one = current ? Math.min(current, m.id) : m.id;
+        const mentions = patch.mention_ids ?? d.mention_ids ?? [];
+        if (m.mention && !mentions.includes(m.id)) patch.mention_ids = [...mentions, m.id];
         changed = true;
       }
     }
@@ -493,11 +510,23 @@ export function createMessenger(deps: MessengerDeps) {
     await loadLatest(dialogId);
   }
 
+  /** 打开期间收到过别人新消息的会话（R20 没加未读） */
+  const arrivedWhileOpen = new Set<number>();
+
   function closeDialog(dialogId: number) {
     if (get().openId === dialogId) set({ openId: 0 });
     cancel(windowTimers.get(dialogId));
     windowTimers.delete(dialogId);
     background(persistWindow(dialogId), 'persist window');
+    if (arrivedWhileOpen.delete(dialogId)) background(reconcileUnread(dialogId), 'unread');
+  }
+
+  /** 打开期间来的消息不一定都看到了（停在上面翻历史）：先把攒着的已读报掉，再以服务端的未读为准 */
+  async function reconcileUnread(dialogId: number) {
+    cancel(readTimer);
+    readTimer = undefined;
+    await flushRead();
+    saveDialogs([await api.msgUnread(dialogId)]);
   }
 
   // ---------------------------------------------------------------------------
@@ -516,11 +545,9 @@ export function createMessenger(deps: MessengerDeps) {
         break;
       }
       case 'update':
-      case 'readed': {
-        const msg = msgOf(data);
-        if (msg) insertMsgs(msg.dialog_id, [msg], false);
+      case 'readed':
+        patchMsg(data);
         break;
-      }
       case 'delete':
         onPushDelete(data);
         break;
@@ -544,12 +571,35 @@ export function createMessenger(deps: MessengerDeps) {
     }
   }
 
+  /** 消息更新：推送可能只带变化的字段（如表情回应只有 id 和 emoji），按 id 合并进已有的消息 */
+  function patchMsg(data: Record<string, unknown>) {
+    const full = msgOf(data);
+    if (full) {
+      insertMsgs(full.dialog_id, [full], false);
+      return;
+    }
+    const id = Number(data.id) || 0;
+    if (!id) return;
+    for (const [dialogId, win] of Object.entries(get().windows)) {
+      const old = win.list.find((m) => m.id === id);
+      if (old) {
+        insertMsgs(Number(dialogId), [{ ...old, ...data } as Msg], false);
+        return;
+      }
+    }
+    background(
+      cache.getMany<Msg>('messages', [id]).then((found) => (found.length ? cache.putMany('messages', [{ ...found[0]!, ...data } as Msg]) : undefined)),
+      'cache patch',
+    );
+  }
+
   function onPushMsg(msg: Msg, data: Record<string, unknown>, isAdd: boolean, silence: boolean) {
     const exists = !!get().windows[msg.dialog_id]?.list.some((m) => m.id === msg.id);
     const d = get().dialogs[msg.dialog_id];
     if (!exists && isAdd && msg.userid !== userId) {
-      // R20 正在看的会话不加未读，由已读上报清掉
-      if (d && get().openId !== d.id) {
+      // R20 正在看的会话不加未读，由已读上报清掉；关闭时再和服务端对一次
+      if (d && get().openId === d.id) arrivedWhileOpen.add(d.id);
+      else if (d) {
         saveDialogs([
           {
             id: d.id,
@@ -760,6 +810,7 @@ export function createMessenger(deps: MessengerDeps) {
         }
         try {
           const msg = await api.sendText({ dialog_id: item.dialog_id, text: item.text, reply_id: item.reply_id });
+          set({ sentKeys: { ...get().sentKeys, [msg.id]: item.localId } });
           discardSend(item.localId);
           insertMsgs(msg.dialog_id, [msg], true);
           if (get().dialogs[msg.dialog_id]) saveDialogs([lastMsgPatch(msg)]);
@@ -776,6 +827,63 @@ export function createMessenger(deps: MessengerDeps) {
       }
     } finally {
       flushing = false;
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // 编辑、撤回、表情回应
+  // ---------------------------------------------------------------------------
+
+  /** 编辑自己发的文本，成功后替换原消息；失败抛出服务端的提示 */
+  async function editText(params: { dialog_id: number; update_id: number; text: string }) {
+    const msg = await api.sendText(params);
+    insertMsgs(msg.dialog_id, [msg], false);
+  }
+
+  function setWithdrawn(list: WithdrawnMsg[]) {
+    set({ withdrawn: list });
+  }
+
+  /**
+   * 撤回自己的消息。文本消息先在本地记下原文（5 分钟内可以重新编辑），
+   * 这样原消息被推送或接口响应删掉的同一刻占位就顶上，不闪
+   */
+  async function withdraw(msg: Msg) {
+    const body = (msg.msg ?? {}) as { text?: unknown; type?: unknown };
+    const keep = msg.type === 'text' && typeof body.text === 'string' && body.text !== '';
+    if (keep) {
+      setWithdrawn([...get().withdrawn.filter((w) => w.id !== msg.id), { id: msg.id, dialog_id: msg.dialog_id, text: body.text as string, md: body.type === 'md', created_at: msg.created_at, at: now() }]);
+      later(() => forgetWithdrawn(msg.id), WITHDRAWN_KEEP);
+    }
+    try {
+      await api.withdraw(msg.id);
+    } catch (err) {
+      // 接口报错但服务端可能已经撤回（消息已被推送删掉），这时保留占位
+      if (keep && get().windows[msg.dialog_id]?.list.some((m) => m.id === msg.id)) forgetWithdrawn(msg.id);
+      throw err;
+    }
+    // 会话的最后一条由服务端的 delete 推送更新
+    const win = get().windows[msg.dialog_id];
+    if (win) setWindow(msg.dialog_id, { list: removeMsgs(win.list, [msg.id]) });
+    background(cache.delete('messages', msg.id), 'delete message');
+  }
+
+  /** 重新编辑或过期后去掉撤回占位 */
+  function forgetWithdrawn(id: number) {
+    if (get().withdrawn.some((w) => w.id === id)) setWithdrawn(get().withdrawn.filter((w) => w.id !== id));
+  }
+
+  /** 点按回应胶囊：先在本地切换，再用服务端的结果覆盖；失败时还原 */
+  async function toggleEmoji(msg: Msg, symbol: string) {
+    const current = get().windows[msg.dialog_id]?.list.find((m) => m.id === msg.id) ?? msg;
+    const before = (current as { emoji?: { symbol: string; userids: number[] }[] }).emoji ?? [];
+    setMsgs(msg.dialog_id, (m) => m.id === msg.id, { emoji: toggledEmoji(before, symbol, userId) } as Partial<Msg>);
+    try {
+      const res = await api.emoji(msg.id, symbol);
+      setMsgs(msg.dialog_id, (m) => m.id === msg.id, { emoji: res.emoji } as Partial<Msg>);
+    } catch (err) {
+      setMsgs(msg.dialog_id, (m) => m.id === msg.id, { emoji: before } as Partial<Msg>);
+      throw err;
     }
   }
 
@@ -857,6 +965,10 @@ export function createMessenger(deps: MessengerDeps) {
     sendText,
     retrySend,
     discardSend,
+    editText,
+    withdraw,
+    forgetWithdrawn,
+    toggleEmoji,
     /** 别人发来的新消息（通知、横幅） */
     onIncoming(fn: (e: IncomingMessage) => void) {
       incomingListeners.add(fn);

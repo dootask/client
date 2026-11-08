@@ -77,6 +77,9 @@ export function useT() {
   return useTranslation(NAMESPACES).t;
 }
 
+/** useT 取到的翻译函数，传给非组件的格式化函数用 */
+export type Translate = ReturnType<typeof useT>;
+
 /** 当前界面语言，切换时重渲染 */
 export function useLanguage(): Language {
   const { i18n: current } = useTranslation();

@@ -10,5 +10,11 @@
     "title": "Sprache"
   },
   "logout": "Abmelden",
-  "logoutConfirm": "Sind Sie sicher, dass Sie sich vom System abmelden möchten?"
+  "logoutConfirm": "Sind Sie sicher, dass Sie sich vom System abmelden möchten?",
+  "keyboard": {
+    "title": "Tastatureinstellungen",
+    "enterNewline": "Enter fügt eine neue Zeile ein, Senden per Schaltfläche",
+    "enterSend": "Enter sendet",
+    "modEnterSend": "Enter fügt eine neue Zeile ein, {{combo}} sendet"
+  }
 }

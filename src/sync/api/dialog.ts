@@ -263,3 +263,16 @@ export async function sendText(client: ApiClient, params: SendTextParams) {
   });
   return data;
 }
+
+/** 撤回自己的消息（超过系统设置的时限会被拒绝）；成功后服务端推送 delete */
+export async function withdraw(client: ApiClient, msgId: number) {
+  await client.request('dialog/msg/withdraw', { data: { msg_id: msgId } });
+}
+
+export const emojiItemSchema = z.looseObject({ symbol: str, userids: phpList(num) });
+
+/** 表情回应：自己点过的取消，没点过的加上；返回这条消息新的回应列表 */
+export async function emoji(client: ApiClient, msgId: number, symbol: string) {
+  const { data } = await requestParsed(client, 'dialog/msg/emoji', z.looseObject({ id: num, emoji: phpList(emojiItemSchema) }), { data: { msg_id: msgId, symbol } });
+  return data;
+}

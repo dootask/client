@@ -1,8 +1,3 @@
-import { useLocalSearchParams } from 'expo-router';
+import { ChatRoute } from '../../../modules/messenger';
 
-import { ChatPlaceholder } from '../../../modules/messenger';
-
-export default function DialogScreen() {
-  const { dialogId } = useLocalSearchParams<{ dialogId: string }>();
-  return <ChatPlaceholder dialogId={Number(dialogId) || 0} />;
-}
+export default ChatRoute;

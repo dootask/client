@@ -9,6 +9,7 @@ import { startMessengerService } from '../modules/messenger';
 import { entryHref, ProfilePrompt, refreshSession, useSession } from '../modules/session';
 import { restorePreferences } from '../modules/setting';
 import { BrowserDefaults } from '../ui/BrowserDefaults';
+import { KeyboardRoot } from '../ui/KeyboardRoot';
 import { TooltipHost } from '../ui/popover';
 import { ThemeEffects } from '../ui/theme';
 import { ToastHost } from '../ui/Toast';
@@ -32,17 +33,19 @@ export default function RootLayout() {
   return (
     // GestureHandlerRootView 不经过 unistyles 的 babel 插件，样式放在里层的 View 上
     <GestureHandlerRootView style={FILL}>
-      <View style={styles.root}>
-        <NavigationTheme>
-          <ThemeEffects />
-          <BrowserDefaults />
-          <Routes />
-          <ProfilePrompt />
-          <ToastHost />
-          {/* 全页共用的悬停提示层（只在 Web 上有内容），放在最上面 */}
-          <TooltipHost />
-        </NavigationTheme>
-      </View>
+      <KeyboardRoot>
+        <View style={styles.root}>
+          <NavigationTheme>
+            <ThemeEffects />
+            <BrowserDefaults />
+            <Routes />
+            <ProfilePrompt />
+            <ToastHost />
+            {/* 全页共用的悬停提示层（只在 Web 上有内容），放在最上面 */}
+            <TooltipHost />
+          </NavigationTheme>
+        </View>
+      </KeyboardRoot>
     </GestureHandlerRootView>
   );
 }

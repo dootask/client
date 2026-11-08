@@ -10,5 +10,11 @@
     "title": "Langue"
   },
   "logout": "Déconnexion",
-  "logoutConfirm": "Êtes-vous sûr de vouloir vous déconnecter du système ?"
+  "logoutConfirm": "Êtes-vous sûr de vouloir vous déconnecter du système ?",
+  "keyboard": {
+    "title": "Paramètres du clavier",
+    "enterNewline": "Entrée ajoute une ligne, le bouton envoie",
+    "enterSend": "Entrée envoie",
+    "modEnterSend": "Entrée ajoute une ligne, {{combo}} envoie"
+  }
 }

@@ -1,6 +1,6 @@
 import type { TextStyle } from 'react-native';
 
-import { platformRadius, platformSize } from './platform';
+import { monoFont, platformRadius, platformSize } from './platform';
 
 /**
  * 设计令牌。取值见 docs/ui-spec.md（来自 resources/app 的 docs/native-ui-spec.md，补了宽屏 / 桌面部分）。
@@ -50,6 +50,18 @@ const light = {
   /** 轻提示：深底白字 */
   toast: 'rgba(31,35,41,0.88)',
   onToast: '#FFFFFF',
+  /** 聊天气泡（docs/ui-spec.md 1.3） */
+  bubbleIn: '#FFFFFF',
+  bubbleInText: '#1F2329',
+  bubbleInMeta: '#8F959E',
+  bubbleOut: '#D9F2CC',
+  bubbleOutText: '#1F2329',
+  bubbleOutMeta: '#5E8A4E',
+  /** 气泡里的二级块：引用、代码、表情回应 */
+  bubbleOverlay: 'rgba(0,0,0,0.05)',
+  /** 图片上的时间浮层（配白字） */
+  mediaScrim: 'rgba(0,0,0,0.45)',
+  onMedia: '#FFFFFF',
 };
 
 export type Colors = typeof light;
@@ -90,6 +102,15 @@ const dark: Colors = {
   badgeMuted: '#636366',
   toast: 'rgba(72,72,74,0.95)',
   onToast: '#F2F2F2',
+  bubbleIn: '#1C1C1E',
+  bubbleInText: '#F2F2F2',
+  bubbleInMeta: '#7C7C80',
+  bubbleOut: '#2B4A22',
+  bubbleOutText: '#F2F2F2',
+  bubbleOutMeta: '#9CC28C',
+  bubbleOverlay: 'rgba(255,255,255,0.08)',
+  mediaScrim: 'rgba(0,0,0,0.55)',
+  onMedia: '#FFFFFF',
 };
 
 const font = (fontSize: number, lineHeight: number, fontWeight: TextStyle['fontWeight']) => ({ fontSize, lineHeight, fontWeight });
@@ -103,6 +124,10 @@ const typography = {
   footnote: font(13, 18, '400'),
   caption: font(12, 16, '400'),
   caption2: font(11, 13, '500'),
+  /** 表情面板里的表情 */
+  emoji: font(26, 32, '400'),
+  /** 代码块、行内代码 */
+  code: { ...font(14, 20, '400'), fontFamily: monoFont },
 } satisfies Record<string, TextStyle>;
 
 /** 按下态：图标按钮降透明度，主按钮略降（docs/ui-spec.md 第 4 节）；不可用的按钮 */
@@ -163,6 +188,19 @@ const size = {
   /** 分类胶囊、列表顶部搜索框的高度 */
   chip: 30,
   searchField: 36,
+  /** 聊天：输入框单行高、浮动圆钮（回到底部、@ 我）、回应胶囊高、文件卡片左侧色块、气泡对侧至少留出的空白 */
+  chatInput: 36,
+  floatButton: 40,
+  reaction: 26,
+  fileTile: 44,
+  bubbleFarGap: 40,
+  /** 视频消息中间的播放圆钮、语音消息的播放圆钮、语音进度条粗细、未读红点 */
+  mediaPlay: 48,
+  /** 回复引用右侧的缩略图 */
+  quoteThumb: 36,
+  voicePlay: 32,
+  voiceTrack: 4,
+  dot: 8,
   ...platformSize,
 };
 
@@ -172,12 +210,37 @@ const palette = {
   avatarUser: ['#7FB5E5', '#86C79A', '#E5A27F', '#B49BE0', '#E58FA8', '#6CC2C2', '#D9B866', '#8F9BB3'],
   onAvatar: '#FFFFFF',
   markSwatch: { yellow: '#F2D86D', blue: '#51ABEA', green: '#73B45C', pink: '#FF819C', purple: '#B583E3' },
+  /** 消息卡片左侧的色块（docs/ui-spec.md 1.4），配白色图标 */
+  tile: {
+    pdf: '#E8584F',
+    doc: '#4A86E8',
+    sheet: '#3BA55C',
+    slide: '#EE8A3C',
+    archive: '#B58A4C',
+    image: '#9B7BE0',
+    video: '#E05A8A',
+    audio: '#2FB5A9',
+    code: '#6B7A90',
+    other: '#8F959E',
+    location: '#F0883E',
+    meeting: '#4A86E8',
+  },
+  /** 色块上的图标 */
+  onTile: '#FFFFFF',
+  /** 色块上表示进度的填充 */
+  tileProgress: 'rgba(255,255,255,0.35)',
 };
 
 /** 浮起的面板（菜单、弹窗、气泡）的阴影 */
 const shadow = {
-  light: { popover: '0px 8px 28px rgba(0,0,0,0.12), 0px 0px 1px rgba(0,0,0,0.18)' },
-  dark: { popover: '0px 8px 28px rgba(0,0,0,0.5), 0px 0px 0px 1px rgba(255,255,255,0.08)' },
+  light: {
+    popover: '0px 8px 28px rgba(0,0,0,0.12), 0px 0px 1px rgba(0,0,0,0.18)',
+    float: '0px 2px 8px rgba(0,0,0,0.12), 0px 0px 1px rgba(0,0,0,0.18)',
+  },
+  dark: {
+    popover: '0px 8px 28px rgba(0,0,0,0.5), 0px 0px 0px 1px rgba(255,255,255,0.08)',
+    float: '0px 2px 8px rgba(0,0,0,0.4), 0px 0px 0px 1px rgba(255,255,255,0.08)',
+  },
 };
 
 /** 按窗口宽度分三档，不看设备类型：窄屏 < 768、中屏 768–1199、宽屏 ≥ 1200 */

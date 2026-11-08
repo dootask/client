@@ -11,7 +11,7 @@ import { PageHeader } from '../../ui/PageHeader';
 import { MAIN_TABS } from '../shell';
 import { SettingsMenu } from './SettingsMenu';
 
-type Title = 'setting:title' | 'setting:theme.title' | 'setting:language.title';
+type Title = 'setting:title' | 'setting:theme.title' | 'setting:language.title' | 'setting:keyboard.title';
 
 /** 设置里的一页：导航栏 + 内容。窄屏左上角返回（没有历史时回首页），并排视图里没有返回（列表就在左边） */
 export function SettingsPage({ title, back = true, children }: { title: Title; back?: boolean; children: ReactNode }) {

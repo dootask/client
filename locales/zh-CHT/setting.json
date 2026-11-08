@@ -10,5 +10,11 @@
     "title": "語言"
   },
   "logout": "退出登錄",
-  "logoutConfirm": "你確定要登出系統嗎？"
+  "logoutConfirm": "你確定要登出系統嗎？",
+  "keyboard": {
+    "title": "鍵盤設置",
+    "enterNewline": "Enter 換行，點按鈕發送",
+    "enterSend": "Enter 發送",
+    "modEnterSend": "Enter 換行，{{combo}} 發送"
+  }
 }

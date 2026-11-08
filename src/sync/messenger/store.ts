@@ -34,6 +34,19 @@ export interface OutboxItem {
   error?: string;
 }
 
+/** 自己刚撤回的文本消息（只在本地保留 5 分钟）：原位置显示「你撤回了一条消息」和「重新编辑」 */
+export interface WithdrawnMsg {
+  id: number;
+  dialog_id: number;
+  /** 原文：HTML 或 Markdown */
+  text: string;
+  md: boolean;
+  /** 原消息的发送时间（占位按它排日期） */
+  created_at: string;
+  /** 撤回的时间（毫秒） */
+  at: number;
+}
+
 export interface MessengerState {
   /** 已从缓存读出会话列表（冷启动先画缓存） */
   ready: boolean;
@@ -46,6 +59,9 @@ export interface MessengerState {
   /** 草稿（R19），会话 id → HTML */
   drafts: Record<number, string>;
   outbox: OutboxItem[];
+  /** 本次运行发出的消息 id → 发送时的本地 id，聊天列表用它认行，发送中换成发出的消息时行不重挂 */
+  sentKeys: Record<number, string>;
+  withdrawn: WithdrawnMsg[];
 }
 
 export const initialMessengerState = (): MessengerState => ({
@@ -56,6 +72,8 @@ export const initialMessengerState = (): MessengerState => ({
   openId: 0,
   drafts: {},
   outbox: [],
+  sentKeys: {},
+  withdrawn: [],
 });
 
 export const createMessengerStore = () => createStore<MessengerState>()(initialMessengerState);

@@ -6,7 +6,7 @@ import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { dateFormats, useLanguage, useT } from '../../i18n';
 import type { SearchItem } from '../../sync/api/dialog';
 import { dialogMention, dialogUnread, type StoredDialog } from '../../sync/messenger';
-import { draftPreview, lastSenderId, msgPreview, type Preview, type PreviewLabel, type PreviewStatus } from '../../sync/messenger/preview';
+import { draftPreview, lastSenderId, msgPreview } from '../../sync/messenger/preview';
 import { DialogAvatar, UserAvatar } from '../../ui/Avatar';
 import { Badge } from '../../ui/Badge';
 import { Icon } from '../../ui/Icon';
@@ -18,35 +18,7 @@ import { useDialogMenu } from './dialogMenu';
 import { useToday } from './clock';
 import { useDialog, useMessengerState, useUser } from './hooks';
 import { listTime } from './listModel';
-
-const LABELS = {
-  longtext: 'messenger:label.longtext',
-  vote: 'messenger:label.vote',
-  wordChain: 'messenger:label.wordChain',
-  voice: 'messenger:label.voice',
-  location: 'messenger:label.location',
-  meeting: 'messenger:label.meeting',
-  image: 'messenger:label.image',
-  video: 'messenger:label.video',
-  file: 'messenger:label.file',
-  tag: 'messenger:label.tag',
-  untag: 'messenger:label.untag',
-  top: 'messenger:label.top',
-  untop: 'messenger:label.untop',
-  todo: 'messenger:label.todo',
-  untodo: 'messenger:label.untodo',
-  todoDone: 'messenger:label.todoDone',
-  forward: 'messenger:label.forward',
-  sticker: 'messenger:label.sticker',
-  unknown: 'messenger:label.unknown',
-} as const satisfies Record<PreviewLabel, string>;
-
-const STATUS = {
-  aiWaiting: 'messenger:status.aiWaiting',
-  aiRunning: 'messenger:status.aiRunning',
-  aiStopped: 'messenger:status.aiStopped',
-  aiThinking: 'messenger:status.aiThinking',
-} as const satisfies Record<PreviewStatus, string>;
+import { PreviewText } from './PreviewText';
 
 /** 会话行能显示的数据：本地会话和搜索结果（联系人的 id 是 `u:<userid>`）共用 */
 export type RowData = StoredDialog | SearchItem;
@@ -140,19 +112,6 @@ function RowTime({ lastAt }: { lastAt: string | null | undefined }) {
           ? f.monthDay(time.date)
           : f.full(time.date);
   return <Text style={styles.time}>{text}</Text>;
-}
-
-function PreviewText({ preview }: { preview: Preview }) {
-  const t = useT();
-  const labels = preview.labels.map((l) => `[${t(LABELS[l])}]`).join('');
-  const body = preview.status ? t(STATUS[preview.status]) : preview.text;
-  return (
-    <>
-      {labels}
-      {labels && body ? ' ' : ''}
-      {body}
-    </>
-  );
 }
 
 function DraftLine({ html }: { html: string }) {

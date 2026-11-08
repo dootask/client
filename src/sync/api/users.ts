@@ -20,6 +20,8 @@ export const userBasicSchema = z.looseObject({
   bot: num.nullish(),
   pinyin: str.nullish(),
   line_at: str.nullish(),
+  /** 取资料那一刻是否在线；之后靠 line 推送更新 */
+  online: z.boolean().nullish(),
   disable_at: str.nullish(),
   delete_at: str.nullish(),
 });

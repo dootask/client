@@ -1,0 +1,7 @@
+{
+  "name": "dootask-keyboard-dock",
+  "version": "1.0.0",
+  "description": "DooTask 会话页底部坞：由 UIKit 按 keyboardLayoutGuide 托着消息区与输入栏跟随键盘",
+  "private": true,
+  "license": "MIT"
+}

@@ -10,5 +10,11 @@
     "title": "语言"
   },
   "logout": "退出登录",
-  "logoutConfirm": "你确定要登出系统吗？"
+  "logoutConfirm": "你确定要登出系统吗？",
+  "keyboard": {
+    "title": "键盘设置",
+    "enterNewline": "Enter 换行，点按钮发送",
+    "enterSend": "Enter 发送",
+    "modEnterSend": "Enter 换行，{{combo}} 发送"
+  }
 }

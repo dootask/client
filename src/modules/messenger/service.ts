@@ -89,6 +89,10 @@ export function startMessengerService(): () => void {
     onGone((kind, id) => {
       if (kind === 'dialog') useMessengerInstance.getState().messenger?.forgetDialogs([id]);
     }),
+    // 别人上线、下线
+    socket.on<{ userid?: number; online?: boolean }>('line', ({ data }) => {
+      if (data?.userid) useMessengerInstance.getState().users?.setOnline(data.userid, !!data.online);
+    }),
   ];
   // 回到前台：连接还活着就增量同步一次；断了 check 会重连，重连后自动同步
   let background = AppState.currentState !== 'active';
