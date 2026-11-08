@@ -55,17 +55,34 @@
 | Web | react-native-web（SDK 58 自带版本） | `expo export --platform web` |
 | 桌面 | 沿用主仓库的 Electron，加载 Web 构建 | Tauri 等迁移完成后再评估 |
 | 路由 | expo-router（文件路由，Web 端是真实 URL） | 深链、推送点击、分享链接共用一套路径 |
-| 样式与主题 | react-native-unistyles 3 | happy-app 验证过；rn-next 已列出它在 RN 0.88 上需真机验证，不行就退回 `StyleSheet` + 自写主题 |
+| 样式与主题 | react-native-unistyles 3 | 2026-11-08 已在 RN 0.88 新架构的 Android Release 包和 Web 上验证通过（3.8.1 + nitro-modules 0.37.2），见 [reuse-inventory.md](./reuse-inventory.md) 第 5 节 |
 | 全局状态 | zustand | 组件外也能读写，WebSocket 推送直接写 store |
 | 服务端数据 | 自建同步层 + zustand | 会话、消息要做增量合并和离线缓存；低频配置类数据可局部用 TanStack Query |
-| 长列表 | @shopify/flash-list 2 | 聊天倒序场景可评估 @legendapp/list；`resources/app` 已有的消息列表方案优先沿用 |
-| 本地存储 | 键值：react-native-mmkv（Web 用 localStorage）；结构化缓存：原生 expo-sqlite、Web 用 IndexedDB | Web 不用 expo-sqlite：它要求全站开跨源隔离响应头，会破坏 iframe 嵌入和第三方登录弹窗 |
+| 长列表 | @shopify/flash-list 2 | 聊天消息列表例外，按平台分开实现，见下方说明 |
+| 本地存储 | 键值：react-native-mmkv 4（自带 Web 实现，底层是 localStorage；2026-11-08 已验证）；结构化缓存：原生 expo-sqlite、Web 用 IndexedDB | Web 不用 expo-sqlite：它要求全站开跨源隔离响应头，会破坏 iframe 嵌入和第三方登录弹窗 |
 | 动画手势 | reanimated 4 + gesture-handler | Web 端动画另有要求，见性能规范 |
 | 国际化 | i18next + react-i18next | 见第 8 节 |
 | 图标 | lucide-react-native | 与旧前端、App 同一套图标，名字能对上 |
 | 校验 | zod | 接口返回值校验 |
 | 测试 | vitest（数据层和纯函数）、Playwright（Web 端回归） | 组件不写单元测试 |
 | 语言 | TypeScript strict | — |
+
+### 聊天消息列表：按平台分开实现（2026-11-08 定）
+
+两端效果一样：最新消息在底部，打开时停在底部，往上滚加载历史。
+
+- **原生端（iOS / 安卓）**：沿用 `resources/app` 的 `packages/chat-ui`，也就是倒序 FlatList 加 VirtualizedList 插入跳位补丁，再加 KeyboardDock。这套已经在真机上验证过
+- **网页端**：不用倒序（inverted）FlatList。react-native-web 实现倒序的办法是给网页元素加 `scaleY(-1)` 上下翻转，浏览器并不知道列表被翻了，所以：
+  - 滚轮方向要手动反过来，触控板惯性滚动不自然
+  - 网页元素的顺序是反的，选中文字、页内查找、读屏的顺序都是反的
+  - `maintainVisibleContentPosition` 在网页上基本不起作用
+
+  网页端改为参考 Happy Next 的实现：用 `column-reverse` 做滚动容器，加一套从底部算起的虚拟列表模型。这套实现已经打磨过 41 个提交。只借用底层的布局模型和滚动控制；折叠、小地图这些是 Happy 自己的功能，不搬。参考文件在 `/home/coder/workspaces/happy-next/packages/happy-app/sources/components/` 下：
+  - `ChatList.web.tsx`：滚动容器和虚拟列表的组装
+  - `chatListVirtualModel.ts`：从底部算起的布局模型（纯计算）
+  - `scrollDistanceController.ts`：记录到底部的距离，滚动修正时按这个数计算，避免列表漂移
+- **对外接口两端一致**：都沿用 chat-ui 的 `ChatView` 参数（`ChatViewProps` / `ChatViewHandle`），两端分别写成 `.native.tsx` 和 `.web.tsx`，业务代码不用区分平台
+- 具体怎么实现，留到 M1 做聊天时再定
 
 ## 5. 分层与目录
 
@@ -205,6 +222,6 @@ locales/          翻译文件
 | 性能：重渲染、长列表、Web 端动画、WebView 混排 | 性能规范从第一天起执行，每个模块验收都过清单 |
 | 漏掉藏在旧代码里的业务规则 | 每个模块的业务规则逐条对照旧代码核对 |
 | 两套前端并存，维护成本翻倍 | 新功能只写在本项目；旧前端和 `resources/app` 只修 bug |
-| unistyles / MMKV（nitro-modules）与 RN 0.88 不兼容 | M0 第一件事就在安卓模拟器上验证，不行立即换方案 |
+| unistyles / MMKV（nitro-modules）与 RN 0.88 不兼容 | 已排除（2026-11-08 安卓模拟器 Release 包 + Web 验证通过）；iOS 待用户验证 |
 | react-native-web 下中文输入法合成事件异常 | M0 用输入框样例在 Chrome、Safari、Electron 实测拼音输入 |
 | 周期长、中途优先级变化 | 每个里程碑结束都保持可运行；未做的部分用占位屏 |

@@ -26,7 +26,7 @@
 
 ### 列表与键盘
 
-11. **长列表一律用虚拟列表**（flash-list 或 App 现有的消息列表方案），`renderItem` 和 `keyExtractor` 保持稳定。
+11. **长列表一律用虚拟列表**（flash-list 或 App 现有的消息列表方案），`renderItem` 和 `keyExtractor` 保持稳定。网页端是例外：聊天消息列表不能用倒序（inverted）FlatList，因为它靠上下翻转实现，滚轮方向、文字选择、页内查找、读屏顺序都会反过来，保持滚动位置也不起作用。网页端改用 `column-reverse` 滚动容器，加上从底部算起的虚拟列表，参考 Happy Next，见 architecture.md 第 4 节的「聊天消息列表」。
 12. **跟随键盘的列表不要每帧滚动**。键盘移动时整体做位移，停下后再一次性滚到位置（happy-app 的做法）。
 13. 在列表开头插入数据时会画面跳位，先看 `resources/app` 的 `patches/` 里已有的修复。
 
