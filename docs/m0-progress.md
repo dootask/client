@@ -11,7 +11,7 @@
 | W8 国际化（提前和 W3 一起做） | ✅ | 见 git log |
 | W4 数据层 API | ✅ | 见 git log |
 | W5 数据层 WebSocket | ✅ | 见 git log |
-| W6 | 暂停：加密方案重新设计 | 不再沿用 PGP、不兼容旧前端，方案在主仓库讨论，定了再做。已知：Hermes 没有 `crypto`（无 `getRandomValues`、无 `subtle`），新方案也要解决随机数来源 |
+| W6 | 暂停：加密方案重新设计 | 不再沿用 PGP、不兼容旧前端，方案在主仓库讨论，定了再做。新方案仍是传输层加密（只在请求、响应、推送外层加解密，业务层拿到的都是明文），接到 API 的加密插件位置即可，不影响消息格式和上层。已知：Hermes 没有 `crypto`（无 `getRandomValues`、无 `subtle`），新方案也要解决随机数来源 |
 | W7 本地存储 | ✅ | 见 git log |
 | W9 弹出层 | ✅ | 见 git log |
 | W10 嵌入页协议 | ✅ | 见 git log |
@@ -103,7 +103,7 @@
 ## W10 嵌入页协议
 
 - `src/embed`：宿主与嵌入页之间的消息协议（初始化、主题、语言、请求 / 回复、事件），Web 用 iframe + postMessage，App 用 react-native-webview；带 vitest
-- 验收页 `embed-check` + `public/embed-test.html`：初始化参数、主题和语言切换实时同步、嵌入页发给宿主的消息都收到
+- 验收页 `embed-check` + `public/embed-test.html`（临时，M0 验收后已删）：初始化参数、主题和语言切换实时同步、嵌入页发给宿主的消息都收到
 - 安卓验收（截图 `tests/playwright-results/w10-android-*`）：WebView 收到初始化参数；切主题、切语言实时送达；navigate / title / changed / close 四种消息宿主都收到；嵌入页要求跳站外地址被拒；服务器与嵌入页跨源时不下发 token
 
 ## W11 登录与主框架
@@ -122,7 +122,7 @@
   - `MIN_SERVER_VERSION` 暂定为开发时对接的 `1.10.38`，正式值等新客户端首个正式版发布时定
   - 后端：`User::auth()` 里"身份已失效,请重新登录"没有按 `language` 请求头翻译（"请登录后继续..."有），英文界面会显示中文原因；translate.json 里有现成译文。未改后端
   - Web 上密码框不在 `<form>` 里，浏览器的密码管理器不一定会提示保存；W12 已处理（见下）
-  - 文档里多处引用的 `docs/ui-spec.md` 不存在
+  - 文档里多处引用的 `docs/ui-spec.md` 不存在（M0 收尾时已补）
 
 ## W12 桌面浏览器交互
 
@@ -148,5 +148,6 @@
   - 服务器页 → 登录页、登录 → 主框架中间闪空白页：原来先回 `/` 启动分流再转一次，被路由守卫挡住的页面也要先变空白再带动画转走。改为直接去目标页（守卫用 `redirectTo`，服务器页用 `dismissTo` 回到原来的登录页），登录前后两组页面互换不带动画
   - 键盘打开时从邮箱切到密码页面抖动：原来按键盘高度缩小滚动区，居中的内容跟着键盘高度变化跳；iOS 改为由系统调整滚动区内边距（`automaticallyAdjustKeyboardInsets`），不改布局
   - Web 和安卓模拟器已逐项验过，用户已在 iPhone 上复验通过（2026-11-08）
-- 真机验收用的临时入口：设置 →「开发测试」列出 W7、W9、W10、W11 的测试页（未提交，只在本机工作区，M0 验收完和测试页一起删）
+- 用户在 iPhone 上验收通过：W9 系统菜单和确认框、W10 嵌入页、W11 登录与主框架（2026-11-08）。验收用的临时入口和各项测试页（`*-check` 页、`public/embed-test.html`）已删除，没有提交过
+- 补了 `docs/ui-spec.md`（由 `resources/app` 的 native-ui-spec 改写，加了宽屏和桌面部分），代码注释和 architecture.md 引用的就是它
 - 等用户决定：W6 新加密方案（主仓库讨论中）

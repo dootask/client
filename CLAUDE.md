@@ -5,6 +5,7 @@ DooTask 的全端客户端：一套 Expo + react-native-web 代码，出 iOS、A
 ## 必读
 
 - `docs/architecture.md`：架构、选型、分层、各项已定决议。动手前先读，决议有变要先改这份文档
+- `docs/ui-spec.md`：设计令牌和界面规范（颜色、字号、间距、常用元素、宽屏和桌面），写页面前对照
 - `docs/performance.md`：性能硬规则和验收清单。**性能是本项目最大的难点**，规则从第一行代码起执行
 - `docs/m0-plan.md`：当前阶段的范围和验收标准
 - `docs/dev.md`：开发、Mac mini 构建流程和踩过的坑
