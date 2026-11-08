@@ -13,5 +13,6 @@
   },
   "save": "Enregistrer",
   "modify": "Modifier",
-  "refresh": "Actualiser"
+  "refresh": "Actualiser",
+  "clear": "Effacer"
 }

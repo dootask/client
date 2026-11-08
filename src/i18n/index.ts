@@ -5,6 +5,7 @@ import { applyDocumentLanguage } from './document';
 import { type Language, resolveLanguage, SOURCE_LANGUAGE } from './languages';
 import { NAMESPACES, sourceResources } from './resources';
 
+export { dateFormats, type DateFormats } from './dates';
 export { LANGUAGES, type Language } from './languages';
 export type { Namespace } from './resources';
 

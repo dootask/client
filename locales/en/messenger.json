@@ -1,0 +1,72 @@
+{
+  "search": "Search",
+  "category": {
+    "all": "All",
+    "project": "Project",
+    "task": "Task",
+    "user": "Personal",
+    "group": "Group Chat",
+    "bot": "Bot",
+    "mark": "Mark",
+    "mention": "@Me"
+  },
+  "tag": {
+    "deleted": "Deleted",
+    "archived": "Archived"
+  },
+  "self": "You",
+  "yesterday": "Yesterday",
+  "draft": "Draft",
+  "todo": "To-Do",
+  "label": {
+    "longtext": "Long Text",
+    "vote": "Vote",
+    "wordChain": "Chain Reply",
+    "voice": "Voice",
+    "location": "Location",
+    "meeting": "Meeting",
+    "image": "Image",
+    "video": "Video",
+    "file": "File",
+    "tag": "Mark",
+    "untag": "Cancel annotation",
+    "top": "Pin",
+    "untop": "Unpin",
+    "todo": "Set To-Do",
+    "untodo": "Cancel To-Do",
+    "todoDone": "Complete",
+    "forward": "Chat history",
+    "sticker": "Animated emojis",
+    "unknown": "Unknown message"
+  },
+  "status": {
+    "aiWaiting": "Awaiting confirmation",
+    "aiRunning": "Processing...",
+    "aiStopped": "Stopped",
+    "aiThinking": "Thinking..."
+  },
+  "menu": {
+    "top": "Pin",
+    "untop": "Unpin",
+    "read": "Mark as read",
+    "unread": "Mark as unread",
+    "silence": "Do not disturb",
+    "unsilence": "Allow Message Notifications",
+    "hide": "Hide conversation",
+    "hideAction": "Hide",
+    "hideTip": "This chat will be hidden from the list and will reappear when a new message arrives",
+    "color": "Color"
+  },
+  "color": {
+    "default": "Default",
+    "yellow": "Yellow",
+    "blue": "Blue",
+    "green": "Green",
+    "pink": "Pink",
+    "purple": "Purple"
+  },
+  "empty": "No conversations",
+  "noResult": "No results related to \"{{key}}\"",
+  "pick": "Select a conversation to start chatting",
+  "loading": "Loading..."
+}

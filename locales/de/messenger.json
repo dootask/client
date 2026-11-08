@@ -1,0 +1,72 @@
+{
+  "search": "Suchen",
+  "category": {
+    "all": "Alle",
+    "project": "Projekt",
+    "task": "Aufgabe",
+    "user": "Einzelchat",
+    "group": "Gruppenchat",
+    "bot": "Bot",
+    "mark": "Markieren",
+    "mention": "@Mich"
+  },
+  "tag": {
+    "deleted": "Gelöscht",
+    "archived": "Archiviert"
+  },
+  "self": "Du",
+  "yesterday": "Gestern",
+  "draft": "Entwurf",
+  "todo": "Aufgabe",
+  "label": {
+    "longtext": "Langer Text",
+    "vote": "Abstimmen",
+    "wordChain": "Kettenantwort",
+    "voice": "Sprache",
+    "location": "Ort",
+    "meeting": "Besprechung",
+    "image": "Bild",
+    "video": "Video",
+    "file": "Datei",
+    "tag": "Markieren",
+    "untag": "Anmerkung abbrechen",
+    "top": "Anheften",
+    "untop": "Anheften aufheben",
+    "todo": "Aufgabe festlegen",
+    "untodo": "Aufgabe abbrechen",
+    "todoDone": "Abschließen",
+    "forward": "Chatverlauf",
+    "sticker": "Animierte Emojis",
+    "unknown": "Unbekannte Nachricht"
+  },
+  "status": {
+    "aiWaiting": "Warte auf Bestätigung",
+    "aiRunning": "Wird verarbeitet...",
+    "aiStopped": "Gestoppt",
+    "aiThinking": "Nachdenken..."
+  },
+  "menu": {
+    "top": "Anheften",
+    "untop": "Anheften aufheben",
+    "read": "Als gelesen markieren",
+    "unread": "Als ungelesen markieren",
+    "silence": "Nicht stören",
+    "unsilence": "Nachrichtenbenachrichtigungen zulassen",
+    "hide": "Konversation ausblenden",
+    "hideAction": "Ausblenden",
+    "hideTip": "Der Chat wird aus der Liste ausgeblendet und erscheint wieder, sobald eine neue Nachricht eingeht",
+    "color": "Farbe"
+  },
+  "color": {
+    "default": "Standard",
+    "yellow": "Gelb",
+    "blue": "Blau",
+    "green": "Grün",
+    "pink": "Rosa",
+    "purple": "Lila"
+  },
+  "empty": "Keine Gespräche",
+  "noResult": "Keine Ergebnisse im Zusammenhang mit „{{key}}“",
+  "pick": "Wählen Sie ein Gespräch aus, um den Chat zu beginnen",
+  "loading": "Wird geladen..."
+}

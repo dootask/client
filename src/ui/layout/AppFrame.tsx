@@ -11,15 +11,16 @@ const VARIANT = { xs: 'tabs', md: 'rail', lg: 'sidebar' } as const satisfies Rec
 
 /**
  * 主框架（architecture.md 第 7 节）：按窗口宽度切换导航形态，内容区不动。
- * 三个位置的子元素顺序固定，切换断点时内容区不会重新挂载，页面状态和 URL 都保持
+ * 三个位置的子元素顺序固定，切换断点时内容区不会重新挂载，页面状态和 URL 都保持。
+ * hideTabBar：窄屏推入的二级页（聊天、设置子页）不显示底部 Tab
  */
-export function AppFrame({ nav, children }: { nav: (variant: NavVariant) => ReactNode; children: ReactNode }) {
+export function AppFrame({ nav, hideTabBar = false, children }: { nav: (variant: NavVariant) => ReactNode; hideTabBar?: boolean; children: ReactNode }) {
   const variant = VARIANT[useBreakpoint()];
   return (
     <View style={styles.root}>
       {variant !== 'tabs' && <View style={styles.side}>{nav(variant)}</View>}
       <View style={styles.content}>{children}</View>
-      {variant === 'tabs' && <View style={styles.tabBar}>{nav(variant)}</View>}
+      {variant === 'tabs' && !hideTabBar && <View style={styles.tabBar}>{nav(variant)}</View>}
     </View>
   );
 }

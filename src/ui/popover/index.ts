@@ -1,4 +1,5 @@
 export { Confirm } from './Confirm';
+export { confirmOnApp } from './confirmOnApp';
 export { Menu } from './Menu';
 export type { MenuAction, MenuEntry } from './menuModel';
 export { Popover } from './Popover';

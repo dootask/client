@@ -125,7 +125,7 @@
 | 项 | 结论 | 说明 |
 | --- | --- | --- |
 | `app.config.ts` | 改造后搬（W1） | 保留：包名和开发版变体（`APP_VARIANT`、`com.dootask.task(.dev)`、`group.im.dootask(.dev)`）、scheme `dootask(-dev)`、Team ID、`CFBundleLocalizations`、ATS、隐私清单、`allowBackup:false`、混淆规则、Agora 剔除扩展、推送厂商读取。去掉：`with-web-assets`、本地 Web 服务的明文流量说明（是否仍需明文流量要看自部署 http 服务器，保留开关并改注释）。`platforms` 加 `web`。插件列表随 M0 实际依赖增减，没用到的原生依赖（agora、camera 等）先不装 |
-| `locales/*.json`（iOS 权限说明 10 种语言） | 直接搬 | `app.config.ts` 的 `locales` 用 |
+| `locales/*.json`（iOS 权限说明 10 种语言） | 直接搬到 `ios-locales/`（`locales/` 已是翻译目录），定位文案等签到功能做时再加 | `app.config.ts` 的 `locales` 用 |
 | `assets/icon.png`、`android-icon-*`、`splash-icon.png`、`favicon.png`、`assets/splash/` | 直接搬 | 图标和启动图 |
 | `assets/meeting`、`menu`、`navbar`、`scanner` | 不要 / 用到再看 | `menu`、`navbar` 是 WebView 壳的按钮图；会议、扫码到时用 lucide 能替代就不搬 |
 | `assets/web/` | 不要 | 内置的旧前端 |

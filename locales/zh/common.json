@@ -13,5 +13,6 @@
   },
   "save": "保存",
   "modify": "修改",
-  "refresh": "刷新"
+  "refresh": "刷新",
+  "clear": "清除"
 }

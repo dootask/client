@@ -25,6 +25,7 @@ export interface MessengerApi {
   lists: (params: Parameters<typeof dialogApi.lists>[1]) => ReturnType<typeof dialogApi.lists>;
   beyond: (params: Parameters<typeof dialogApi.beyond>[1]) => ReturnType<typeof dialogApi.beyond>;
   one: (dialogId: number) => ReturnType<typeof dialogApi.one>;
+  openUser: (userid: number) => ReturnType<typeof dialogApi.openUser>;
   msgList: (params: MsgListParams) => ReturnType<typeof dialogApi.msgList>;
   msgLatest: (dialogs: { id: number; latest_id: number }[], take: number) => ReturnType<typeof dialogApi.msgLatest>;
   msgRead: (ids: Record<number, number>) => ReturnType<typeof dialogApi.msgRead>;
@@ -43,6 +44,7 @@ export function bindMessengerApi(client: ApiClient): MessengerApi {
     lists: (p) => dialogApi.lists(client, p),
     beyond: (p) => dialogApi.beyond(client, p),
     one: (id) => dialogApi.one(client, id),
+    openUser: (userid) => dialogApi.openUser(client, userid),
     msgList: (p) => dialogApi.msgList(client, p),
     msgLatest: (d, take) => dialogApi.msgLatest(client, d, take),
     msgRead: (ids) => dialogApi.msgRead(client, ids),
@@ -238,6 +240,13 @@ export function createMessenger(deps: MessengerDeps) {
       fetching.set(id, task);
     }
     return task;
+  }
+
+  /** 打开（没有时创建）和某人的单聊，返回会话 id */
+  async function openUser(userid: number): Promise<number> {
+    const d = await api.openUser(userid);
+    saveDialogs([d]);
+    return d.id;
   }
 
   // R1 会话列表增量同步 ------------------------------------------------------
@@ -829,6 +838,7 @@ export function createMessenger(deps: MessengerDeps) {
     catchUp,
     syncDialogs,
     fetchDialog,
+    openUser,
     forgetDialogs,
     openDialog,
     closeDialog,

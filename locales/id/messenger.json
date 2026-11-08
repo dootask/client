@@ -1,0 +1,72 @@
+{
+  "search": "Cari",
+  "category": {
+    "all": "Semua",
+    "project": "Proyek",
+    "task": "Tugas",
+    "user": "Obrolan Pribadi",
+    "group": "Obrolan Grup",
+    "bot": "Bot",
+    "mark": "Tandai",
+    "mention": "@Saya"
+  },
+  "tag": {
+    "deleted": "Dihapus",
+    "archived": "Diarsipkan"
+  },
+  "self": "Anda",
+  "yesterday": "Kemarin",
+  "draft": "Draf",
+  "todo": "Tugas",
+  "label": {
+    "longtext": "Teks Panjang",
+    "vote": "Voting",
+    "wordChain": "Balas Berantai",
+    "voice": "Suara",
+    "location": "Lokasi",
+    "meeting": "Rapat",
+    "image": "Gambar",
+    "video": "Video",
+    "file": "Berkas",
+    "tag": "Tandai",
+    "untag": "Batalkan anotasi",
+    "top": "Sematkan",
+    "untop": "Batalkan sematan",
+    "todo": "Atur Tugas",
+    "untodo": "Batalkan Tugas",
+    "todoDone": "Selesai",
+    "forward": "Riwayat chat",
+    "sticker": "Emoji animasi",
+    "unknown": "Pesan tidak dikenal"
+  },
+  "status": {
+    "aiWaiting": "Menunggu konfirmasi",
+    "aiRunning": "Sedang memproses...",
+    "aiStopped": "Dihentikan",
+    "aiThinking": "Sedang berpikir..."
+  },
+  "menu": {
+    "top": "Sematkan",
+    "untop": "Batalkan sematan",
+    "read": "Tandai Sudah Dibaca",
+    "unread": "Tandai belum dibaca",
+    "silence": "Jangan ganggu",
+    "unsilence": "Izinkan Notifikasi Pesan",
+    "hide": "Sembunyikan percakapan",
+    "hideAction": "Sembunyikan",
+    "hideTip": "Percakapan akan disembunyikan dari daftar dan muncul kembali saat ada pesan baru",
+    "color": "Warna"
+  },
+  "color": {
+    "default": "Default",
+    "yellow": "Kuning",
+    "blue": "Biru",
+    "green": "Hijau",
+    "pink": "Merah muda",
+    "purple": "Ungu"
+  },
+  "empty": "Tidak ada percakapan",
+  "noResult": "Tidak ada hasil yang terkait dengan \"{{key}}\"",
+  "pick": "Pilih percakapan untuk mulai mengobrol",
+  "loading": "Memuat..."
+}

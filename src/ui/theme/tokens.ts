@@ -39,6 +39,17 @@ const light = {
   hover: 'rgba(31,35,41,0.05)',
   /** 键盘焦点环 */
   focusRing: 'rgba(132,197,106,0.6)',
+  /** 会话颜色标记的行底色（旧前端存的就是这几个浅色值，暗色下换成同色相的低透明度） */
+  markYellow: '#FFFAE6',
+  markBlue: '#E5F5FF',
+  markGreen: '#ECFFE5',
+  markPink: '#FFEAEE',
+  markPurple: '#F6ECFF',
+  /** 免打扰会话的未读角标 */
+  badgeMuted: '#BBBFC4',
+  /** 轻提示：深底白字 */
+  toast: 'rgba(31,35,41,0.88)',
+  onToast: '#FFFFFF',
 };
 
 export type Colors = typeof light;
@@ -71,6 +82,14 @@ const dark: Colors = {
   nav: '#111113',
   hover: 'rgba(255,255,255,0.06)',
   focusRing: 'rgba(154,214,130,0.7)',
+  markYellow: 'rgba(242,216,109,0.16)',
+  markBlue: 'rgba(81,171,234,0.16)',
+  markGreen: 'rgba(115,180,92,0.16)',
+  markPink: 'rgba(255,129,156,0.16)',
+  markPurple: 'rgba(181,131,227,0.16)',
+  badgeMuted: '#636366',
+  toast: 'rgba(72,72,74,0.95)',
+  onToast: '#F2F2F2',
 };
 
 const font = (fontSize: number, lineHeight: number, fontWeight: TextStyle['fontWeight']) => ({ fontSize, lineHeight, fontWeight });
@@ -137,7 +156,22 @@ const size = {
   logo: 72,
   /** 图形验证码的显示宽度（高度同输入框） */
   captchaWidth: 120,
+  /** 头像只用这几档（docs/ui-spec.md 第 3 节） */
+  avatar: { xs: 20, sm: 24, md: 32, lg: 40, xl: 48, xxl: 64, huge: 80 },
+  /** 未读角标的最小宽高 */
+  badge: 18,
+  /** 分类胶囊、列表顶部搜索框的高度 */
+  chip: 30,
+  searchField: 36,
   ...platformSize,
+};
+
+/** 两种主题通用的语义色（docs/ui-spec.md 1.5）：头像底色配白色图标或首字，颜色标记在菜单里的色块 */
+const palette = {
+  avatarGroup: { department: '#5BC7B0', project: '#6E99EB', task: '#9B96DF', okr: '#9B96DF', default: '#61B2F9' },
+  avatarUser: ['#7FB5E5', '#86C79A', '#E5A27F', '#B49BE0', '#E58FA8', '#6CC2C2', '#D9B866', '#8F9BB3'],
+  onAvatar: '#FFFFFF',
+  markSwatch: { yellow: '#F2D86D', blue: '#51ABEA', green: '#73B45C', pink: '#FF819C', purple: '#B583E3' },
 };
 
 /** 浮起的面板（菜单、弹窗、气泡）的阴影 */
@@ -149,7 +183,7 @@ const shadow = {
 /** 按窗口宽度分三档，不看设备类型：窄屏 < 768、中屏 768–1199、宽屏 ≥ 1200 */
 export const breakpoints = { xs: 0, md: 768, lg: 1200 } as const;
 
-const shared = { typography, spacing, radius, size, opacity };
+const shared = { typography, spacing, radius, size, opacity, palette };
 
 export const lightTheme = { colors: light, shadow: shadow.light, ...shared };
 export const darkTheme: typeof lightTheme = { colors: dark, shadow: shadow.dark, ...shared };

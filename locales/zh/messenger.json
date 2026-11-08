@@ -1,0 +1,72 @@
+{
+  "search": "搜索",
+  "category": {
+    "all": "全部",
+    "project": "项目",
+    "task": "任务",
+    "user": "单聊",
+    "group": "群聊",
+    "bot": "机器人",
+    "mark": "标注",
+    "mention": "@我"
+  },
+  "tag": {
+    "deleted": "已删除",
+    "archived": "已归档"
+  },
+  "self": "你",
+  "yesterday": "昨天",
+  "draft": "草稿",
+  "todo": "待办",
+  "label": {
+    "longtext": "长文本",
+    "vote": "投票",
+    "wordChain": "接龙",
+    "voice": "语音",
+    "location": "位置",
+    "meeting": "会议",
+    "image": "图片",
+    "video": "视频",
+    "file": "文件",
+    "tag": "标注",
+    "untag": "取消标注",
+    "top": "置顶",
+    "untop": "取消置顶",
+    "todo": "设待办",
+    "untodo": "取消待办",
+    "todoDone": "完成",
+    "forward": "聊天记录",
+    "sticker": "动画表情",
+    "unknown": "未知的消息"
+  },
+  "status": {
+    "aiWaiting": "等待确认",
+    "aiRunning": "正在处理...",
+    "aiStopped": "已停止",
+    "aiThinking": "思考中..."
+  },
+  "menu": {
+    "top": "置顶",
+    "untop": "取消置顶",
+    "read": "标记已读",
+    "unread": "标记未读",
+    "silence": "消息免打扰",
+    "unsilence": "允许消息通知",
+    "hide": "不显示该会话",
+    "hideAction": "不显示",
+    "hideTip": "会话将从消息列表中隐藏，收到新消息时会重新出现",
+    "color": "颜色"
+  },
+  "color": {
+    "default": "默认",
+    "yellow": "黄色",
+    "blue": "蓝色",
+    "green": "绿色",
+    "pink": "粉色",
+    "purple": "紫色"
+  },
+  "empty": "没有任何会话",
+  "noResult": "没有任何与\"{{key}}\"相关的结果",
+  "pick": "选择一个会话开始聊天",
+  "loading": "加载中..."
+}

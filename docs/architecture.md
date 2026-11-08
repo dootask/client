@@ -102,6 +102,7 @@ src/
 modules/          本地 Expo 模块（Swift / Kotlin）
 plugins/          config plugin
 locales/          翻译文件
+ios-locales/      iOS 权限说明（InfoPlist.strings 各语言）
 ```
 
 - **依赖方向**：`app → modules → sync / ui / i18n / platform / embed`，反向禁止，用 ESLint 规则强制。`sync/` 不能引用 React

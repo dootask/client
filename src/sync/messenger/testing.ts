@@ -3,17 +3,18 @@ import type { MessengerKv } from './engine';
 
 /* 测试用的内存实现（单元测试和联调测试共用） */
 
-/** 内存版结构化缓存：只实现引擎用到的主键和单索引精确查询 */
+/** 内存版结构化缓存：只实现引擎用到的主键和单索引精确查询；users 集合主键是 userid，其余是 id */
 export function memoryCache(): StructuredCache & { data: Record<string, Map<number, Record<string, unknown>>> } {
-  const data: Record<string, Map<number, Record<string, unknown>>> = { dialogs: new Map(), messages: new Map() };
+  const data: Record<string, Map<number, Record<string, unknown>>> = { dialogs: new Map(), messages: new Map(), users: new Map() };
   const col = (name: string) => (data[name] ??= new Map());
+  const keyOf = (c: string, r: object) => Number((r as Record<string, unknown>)[c === 'users' ? 'userid' : 'id']);
   return {
     data,
     async put(c, r) {
-      col(c).set((r as { id: number }).id, structuredClone(r) as Record<string, unknown>);
+      col(c).set(keyOf(c, r), structuredClone(r) as Record<string, unknown>);
     },
     async putMany(c, rs) {
-      for (const r of rs) col(c).set((r as { id: number }).id, structuredClone(r) as Record<string, unknown>);
+      for (const r of rs) col(c).set(keyOf(c, r), structuredClone(r) as Record<string, unknown>);
     },
     async get<T>(c: string, k: number | string) {
       return col(c).get(Number(k)) as T | undefined;

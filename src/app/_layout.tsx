@@ -11,6 +11,7 @@ import { restorePreferences } from '../modules/setting';
 import { BrowserDefaults } from '../ui/BrowserDefaults';
 import { TooltipHost } from '../ui/popover';
 import { ThemeEffects } from '../ui/theme';
+import { ToastHost } from '../ui/Toast';
 
 export default function RootLayout() {
   const [ready, setReady] = useState(false);
@@ -37,6 +38,7 @@ export default function RootLayout() {
           <BrowserDefaults />
           <Routes />
           <ProfilePrompt />
+          <ToastHost />
           {/* 全页共用的悬停提示层（只在 Web 上有内容），放在最上面 */}
           <TooltipHost />
         </NavigationTheme>

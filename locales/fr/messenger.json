@@ -1,0 +1,72 @@
+{
+  "search": "Rechercher",
+  "category": {
+    "all": "Tout",
+    "project": "Projet",
+    "task": "Tâche",
+    "user": "Chat individuel",
+    "group": "Discussion de groupe",
+    "bot": "Bot",
+    "mark": "Marquer",
+    "mention": "@Moi"
+  },
+  "tag": {
+    "deleted": "Supprimé",
+    "archived": "Archivé"
+  },
+  "self": "Vous",
+  "yesterday": "Hier",
+  "draft": "Brouillon",
+  "todo": "À faire",
+  "label": {
+    "longtext": "Texte Long",
+    "vote": "Voter",
+    "wordChain": "Réponse en chaîne",
+    "voice": "Voix",
+    "location": "Emplacement",
+    "meeting": "Réunion",
+    "image": "Image",
+    "video": "Vidéo",
+    "file": "Fichier",
+    "tag": "Marquer",
+    "untag": "Annuler l'annotation",
+    "top": "Épingler",
+    "untop": "Désépingler",
+    "todo": "Définir une tâche",
+    "untodo": "Annuler la tâche",
+    "todoDone": "Terminer",
+    "forward": "Historique de chat",
+    "sticker": "Emojis animés",
+    "unknown": "Message inconnu"
+  },
+  "status": {
+    "aiWaiting": "En attente de confirmation",
+    "aiRunning": "Traitement en cours...",
+    "aiStopped": "Arrêté",
+    "aiThinking": "Réflexion..."
+  },
+  "menu": {
+    "top": "Épingler",
+    "untop": "Désépingler",
+    "read": "Marquer comme lu",
+    "unread": "Marquer comme non lu",
+    "silence": "Ne pas déranger",
+    "unsilence": "Autoriser les notifications de messages",
+    "hide": "Masquer la conversation",
+    "hideAction": "Masquer",
+    "hideTip": "La conversation sera masquée de la liste et réapparaîtra à la réception d’un nouveau message",
+    "color": "Couleur"
+  },
+  "color": {
+    "default": "Par défaut",
+    "yellow": "Jaune",
+    "blue": "Bleu",
+    "green": "Vert",
+    "pink": "Rose",
+    "purple": "Violet"
+  },
+  "empty": "Aucune conversation",
+  "noResult": "Aucun résultat lié à « {{key}} »",
+  "pick": "Sélectionnez une conversation pour commencer à discuter",
+  "loading": "Chargement..."
+}

@@ -35,6 +35,7 @@
 
 - **`npx expo install` 会装 SDK 里最新的补丁版本**（例如 RN 0.88.1、safe-area 5.11），和 `resources/app` 不一致，补丁文件也对不上版本。装完对照 `resources/app` 的 `package-lock.json` 改回同一版本（`npm install --save-prefix='~' 包@版本`；RN、React 写死版本号）
 - **间接依赖也要和 `resources/app` 对齐**：`expo` 写的是 `~` 范围，新装依赖时 npm 会把 `expo-modules-core` 等间接依赖升到最新补丁。58.0.30 引用了 RN 0.88.1 才有的 `RCTStatusBarAppearance`，编译能过，iOS 一启动就因找不到符号闪退（安卓不受影响）。`package-lock.json` 以 `resources/app` 的为底重新生成：复制它的 lock 到临时目录，放上本项目的 `package.json`，`npm install --package-lock-only --ignore-scripts`，再拷回来 `npm install`。之后对照两边 lock，只允许本项目自己声明的依赖版本不同
+- **Expo 原生模块也写死成 `resources/app` 的版本**：npm 包里带了预编译好的 AAR（`local-maven-repo/`），它和编译时用的 `expo-modules-core` 版本绑定。expo-sqlite 58.0.15 的 AAR 按 expo-modules-v2 0.2.7 编译，而 expo-modules-core 58.0.22 带的是 0.2.5：编译能过，安卓一启动就报 `Cannot find native module 'ExpoSQLite'`（logcat 里是 `NoSuchMethodError: ...SharedObjectRegistry.register`）。原生模块用 `npm install --save-exact 包@版本` 装成和 `resources/app` 一样的版本；`resources/app` 没有的，装和当前 `expo-modules-core` 同一时期发布的版本
 - **iOS 闪退先看崩溃报告**：模拟器装上后 `xcrun simctl launch`，崩溃报告在 `~/Library/Logs/DiagnosticReports/<App>-*.ips`，`asi` 字段里有 dyld 找不到符号这类启动期错误
 
 - **Gradle 守护进程偶尔内存溢出（Metaspace OOM）卡死**：`./gradlew --stop`，杀掉挂住的 gradlew 客户端进程，再重新构建

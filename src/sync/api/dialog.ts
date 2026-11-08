@@ -59,6 +59,8 @@ export const dialogSchema = z.looseObject({
   pinyin: str.nullish(),
   group_info: groupInfoSchema.nullish(),
   bot: num.nullish(),
+  /** 单聊的对方（userid 为 0 时是和自己的会话，服务端已换成自己） */
+  dialog_user: z.looseObject({ userid: num }).nullish(),
   email: str.nullish(),
   userimg: str.nullish(),
   dialog_delete: num.nullish(),
@@ -114,6 +116,33 @@ export async function lists(client: ApiClient, params: { page: number; pagesize:
 /** 列表外（更早）的未读会话和待办会话：last_at 早于给定时间（时间字符串或秒）的 */
 export async function beyond(client: ApiClient, params: { unread_at: string | number; todo_at: string | number }) {
   const { data } = await requestParsed(client, 'dialog/beyond', phpList(dialogSchema), { data: params });
+  return data;
+}
+
+/** 搜索结果里的联系人：还没有单聊时 id 是 `u:<userid>` */
+const searchItemSchema = dialogSchema.extend({
+  id: z.union([num, str]),
+  /** 按消息内容搜到的那条 */
+  search_msg_id: num.nullish(),
+  dialog_user: z.looseObject({ userid: num }).nullish(),
+});
+export type SearchItem = z.output<typeof searchItemSchema>;
+
+/** 搜索：先会话名，不够 20 个再补联系人，再补消息内容 */
+export async function search(client: ApiClient, key: string) {
+  const { data } = await requestParsed(client, 'dialog/search', phpList(searchItemSchema), { data: { key } });
+  return data;
+}
+
+/** 最近 50 条被标注的消息，每条一行：会话信息 + 那条消息（last_msg、search_msg_id） */
+export async function searchTag(client: ApiClient) {
+  const { data } = await requestParsed(client, 'dialog/search/tag', phpList(dialogSchema.extend({ search_msg_id: num })));
+  return data;
+}
+
+/** 打开（没有时创建）和某人的单聊 */
+export async function openUser(client: ApiClient, userid: number) {
+  const { data } = await requestParsed(client, 'dialog/open/user', dialogSchema, { data: { userid } });
   return data;
 }
 

@@ -1,14 +1,16 @@
 import { AppState } from 'react-native';
 import { create } from 'zustand';
 
+import { usersApi } from '../../sync/api';
 import { createMessenger, bindMessengerApi, type Messenger } from '../../sync/messenger';
 import { kv, KV_KEYS, openAppCache, type StructuredCache } from '../../sync/storage';
+import { createUserDirectory, type UserDirectory } from '../../sync/users';
 import { api, onGone, socket, useSession, type SessionState } from '../session';
 
 const KV_NAMES = ['sync', 'beyond', 'drafts', 'outbox'] as const;
 
-/** 当前账号的消息数据层，未登录为 null。界面通过 hooks 读，不直接用 */
-export const useMessengerInstance = create<{ messenger: Messenger | null }>()(() => ({ messenger: null }));
+/** 当前账号的消息数据层和用户目录，未登录为 null。界面通过 hooks 读，不直接用 */
+export const useMessengerInstance = create<{ messenger: Messenger | null; users: UserDirectory | null }>()(() => ({ messenger: null, users: null }));
 
 let cachePromise: Promise<StructuredCache> | null = null;
 const appCache = () => (cachePromise ??= openAppCache());
@@ -21,6 +23,7 @@ async function claimCache(cache: StructuredCache, owner: string, userId: number)
   if (kv.getString(KV_KEYS.cacheOwner) === owner) return;
   await cache.clear('messages');
   await cache.clear('dialogs');
+  await cache.clear('users');
   for (const name of KV_NAMES) kv.remove(KV_KEYS.messenger(userId, name));
   kv.set(KV_KEYS.cacheOwner, owner);
 }
@@ -31,15 +34,19 @@ let queue: Promise<void> = Promise.resolve();
 function switchTo(owner: string) {
   queue = queue
     .then(async () => {
-      const previous = useMessengerInstance.getState().messenger;
+      const { messenger: previous, users: previousUsers } = useMessengerInstance.getState();
+      previousUsers?.stop();
       if (previous) {
-        useMessengerInstance.setState({ messenger: null });
+        useMessengerInstance.setState({ messenger: null, users: null });
         previous.stop();
         socket.disconnect();
       }
       if (!owner) {
         // 退出登录：清掉上一个账号的数据
-        if (previous) await previous.clear();
+        if (previous) {
+          await previous.clear();
+          await (await appCache()).clear('users');
+        }
         kv.remove(KV_KEYS.cacheOwner);
         return;
       }
@@ -60,7 +67,8 @@ function switchTo(owner: string) {
         userId,
         log: console.warn,
       });
-      useMessengerInstance.setState({ messenger });
+      const users = createUserDirectory({ fetchBasic: (ids) => usersApi.basic(api, ids), cache, log: console.warn });
+      useMessengerInstance.setState({ messenger, users });
       await messenger.start();
       socket.connect();
     })
