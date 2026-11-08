@@ -7,11 +7,11 @@ import { ApiError } from '../../sync/api';
 import { Button } from '../../ui/Button';
 import { FormError } from '../../ui/FormError';
 import { TextField } from '../../ui/TextField';
-import { connectServer, useErrorText, useSession } from '../session';
+import { connectServer, entryHref, useErrorText, useSession } from '../session';
 import { AuthPage } from './AuthPage';
 
 /**
- * 填服务器地址：取到版本号才算连上，然后回到启动分流（登录页或升级提示）。
+ * 填服务器地址：取到版本号才算连上，然后去登录页（或升级提示）；从登录页点进来的就回到原来那一页。
  * 第一次打开时，Web 先静默试一下页面所在的站点（部署在服务端 /next 下时就是服务器），成功就直接跳过本页
  */
 export function ServerScreen() {
@@ -29,7 +29,7 @@ export function ServerScreen() {
     let active = true;
     connectServer(probe).then(
       () => {
-        if (active) router.replace('/');
+        if (active) router.dismissTo(entryHref(useSession.getState()));
       },
       () => {
         if (active) setBusy(false);
@@ -46,7 +46,7 @@ export function ServerScreen() {
     setError(null);
     try {
       await connectServer(address);
-      router.replace('/');
+      router.dismissTo(entryHref(useSession.getState()));
     } catch (err) {
       setError(err instanceof ApiError && (err.kind === 'invalid' || err.kind === 'no-server') ? t('auth:server.invalid') : errorText(err));
       setBusy(false);

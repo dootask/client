@@ -45,7 +45,9 @@ const styles = StyleSheet.create((theme) => ({
     overflow: 'hidden',
   }),
   input: {
-    ...theme.typography.body,
+    // 不设行高：iOS 单行输入框设了行高，文字会偏离垂直居中，失焦后长文字还会折行
+    fontSize: theme.typography.body.fontSize,
+    fontWeight: theme.typography.body.fontWeight,
     flex: 1,
     alignSelf: 'stretch',
     paddingHorizontal: theme.spacing.md,

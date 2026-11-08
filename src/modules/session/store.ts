@@ -41,6 +41,9 @@ export const useSession = create<SessionState>()(() => ({
 
 export const useSignedIn = () => useSession((state) => state.token !== '');
 
+/** 按登录状态该去的页面：服务器版本过低 → 升级提示；已登录 → 主框架；有服务器 → 登录；否则先填服务器 */
+export const entryHref = (state: SessionState) => (state.outdated ? '/upgrade' : state.token ? '/dashboard' : state.server ? '/login' : '/server');
+
 /** 换了服务器：原来的登录作废 */
 export function saveServer(server: string, outdated: string | null): void {
   const changed = server !== useSession.getState().server;

@@ -5,7 +5,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { initI18n } from '../i18n';
-import { ProfilePrompt, refreshSession, useSession } from '../modules/session';
+import { entryHref, ProfilePrompt, refreshSession, useSession } from '../modules/session';
 import { restorePreferences } from '../modules/setting';
 import { BrowserDefaults } from '../ui/BrowserDefaults';
 import { TooltipHost } from '../ui/popover';
@@ -41,20 +41,27 @@ export default function RootLayout() {
   );
 }
 
-/** 按登录状态守卫路由：没登录（或服务器版本过低）进不了主框架，登录了进不了登录页，状态一变自动切换 */
+/**
+ * 按登录状态守卫路由：没登录（或服务器版本过低）进不了主框架，登录了进不了登录页，状态一变自动切换。
+ * 被挡住的页面直接转到该去的页面（不经过启动分流再转一次），而且不带切页动画：
+ * 被挡的页面已经变成空白，带动画会看到空白页滑走
+ */
 function Routes() {
   const inside = useSession((state) => state.token !== '' && state.outdated === null);
+  const entry = useSession(entryHref);
   return (
     <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Protected guard={inside}>
-        <Stack.Screen name="(main)" />
+      <Stack.Protected guard={inside} redirectTo={entry}>
+        <Stack.Screen name="(main)" options={NO_ANIMATION} />
       </Stack.Protected>
-      <Stack.Protected guard={!inside}>
-        <Stack.Screen name="(auth)" />
+      <Stack.Protected guard={!inside} redirectTo={entry}>
+        <Stack.Screen name="(auth)" options={NO_ANIMATION} />
       </Stack.Protected>
     </Stack>
   );
 }
+
+const NO_ANIMATION = { animation: 'none' } as const;
 
 /** 路由容器（页面底色、切页动画露出的底色）跟着应用主题走 */
 function NavigationTheme({ children }: { children: React.ReactNode }) {

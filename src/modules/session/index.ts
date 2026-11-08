@@ -2,4 +2,4 @@ export { connectServer, MIN_SERVER_VERSION, refreshSession, signIn, signOut } fr
 export { api } from './api';
 export { useErrorText } from './errorText';
 export { ProfilePrompt } from './ProfilePrompt';
-export { type SessionState, useSession, useSignedIn } from './store';
+export { entryHref, type SessionState, useSession, useSignedIn } from './store';
