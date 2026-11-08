@@ -12,6 +12,7 @@
 - **Web 开发页在根路径打开**（Metro 地址后面直接跟 `/`），不带 `/next`：expo-router 在开发模式下不处理 `experiments.baseUrl`，访问 `/next/` 会显示 Unmatched Route
 - **Web 导出和子路径预览**：`npm run web:export` 导出到 `dist/`，`npm run web:preview [端口]` 在本机把它挂到 `/next` 下预览（默认端口 2211），其余地址都回落到 `index.html`，用来验证刷新和深链。`npx expo serve` 不处理子路径和回落，不要用它验证
 - 主仓库的前端 dev server 由用户自己运行，不要去启动
+- **加翻译**：新键先按中文原文查主仓库的旧译文 `npm run i18n:find -- 设置`（找不到会列出相近的原文），9 种语言写进 `locales/<语言>/<命名空间>.json`；`npm run check` 会检查缺译、未使用的键和插值参数
 
 ## Mac mini（只构建和运行，不改代码）
 
@@ -39,4 +40,5 @@
 - **含清空目录操作的脚本**只能在目标机器的预期目录里用文件路径执行，不能通过 stdin 执行，也不能拿来实测；要验证就用 `bash -n` 或读代码。远程执行清空前，先 echo 出将被删除的路径（2026-10-18 曾两次误删目录）
 - **列表在开头插入数据时画面跳走**：根因是 VirtualizedList 条数不变时跳过状态更新，`resources/app/patches/@react-native+virtualized-lists+0.88.0.patch` 已修复，复制消息列表时一起带上；升级 RN 时先看上游是否已修
 - **RNGH 的 `activeOffsetX([a, b])`** 表示 dx ≤ a 或 dx ≥ b 即激活，不是区间。写成两个正数会让手势一碰就激活，吃掉内层的点击和长按；单向只写一个正数
+- **unistyles 样式只对经过它 babel 插件的组件生效**：`GestureHandlerRootView` 这类第三方组件传 unistyles 样式在 Web 上会丢；同一个 `Animated.View` 上同时放 unistyles 样式和 `useAnimatedStyle`，Web 上动画样式不生效。第三方组件只给普通样式，动画样式和 unistyles 样式分两层
 - **不要向服务端发送格式非法的 token 做测试**：会让后端 Swoole worker 崩溃（已知问题，属主程序，暂不修）；合法但过期的 token 会正常返回 `-1`

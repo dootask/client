@@ -1,0 +1,12 @@
+{
+  "title": "Einstellungen",
+  "theme": {
+    "title": "Design",
+    "system": "System folgen",
+    "light": "Hell",
+    "dark": "Dunkel"
+  },
+  "language": {
+    "title": "Sprache"
+  }
+}

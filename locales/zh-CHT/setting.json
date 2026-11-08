@@ -1,0 +1,12 @@
+{
+  "title": "設置",
+  "theme": {
+    "title": "主題",
+    "system": "跟隨系統",
+    "light": "淺色",
+    "dark": "深色"
+  },
+  "language": {
+    "title": "語言"
+  }
+}

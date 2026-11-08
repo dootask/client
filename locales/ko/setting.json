@@ -1,0 +1,12 @@
+{
+  "title": "설정",
+  "theme": {
+    "title": "테마",
+    "system": "시스템 따르기",
+    "light": "밝음",
+    "dark": "어두움"
+  },
+  "language": {
+    "title": "언어"
+  }
+}

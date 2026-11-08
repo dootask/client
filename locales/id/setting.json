@@ -1,0 +1,12 @@
+{
+  "title": "Pengaturan",
+  "theme": {
+    "title": "Tema",
+    "system": "Ikuti Sistem",
+    "light": "Terang",
+    "dark": "Gelap"
+  },
+  "language": {
+    "title": "Bahasa"
+  }
+}

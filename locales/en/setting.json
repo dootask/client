@@ -1,0 +1,12 @@
+{
+  "title": "Settings",
+  "theme": {
+    "title": "Theme",
+    "system": "Follow System",
+    "light": "Light",
+    "dark": "Dark"
+  },
+  "language": {
+    "title": "Language"
+  }
+}

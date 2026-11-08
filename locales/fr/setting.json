@@ -1,0 +1,12 @@
+{
+  "title": "Paramètres",
+  "theme": {
+    "title": "Thème",
+    "system": "Suivre le système",
+    "light": "Clair",
+    "dark": "Sombre"
+  },
+  "language": {
+    "title": "Langue"
+  }
+}

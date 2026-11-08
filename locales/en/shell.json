@@ -1,0 +1,9 @@
+{
+  "tab": {
+    "dashboard": "Dashboard",
+    "project": "Project",
+    "messenger": "Message",
+    "contacts": "Contacts",
+    "apps": "Apps"
+  }
+}

@@ -1,0 +1,142 @@
+import type { TextStyle } from 'react-native';
+
+import { platformRadius, platformSize } from './platform';
+
+/**
+ * 设计令牌。取值见 docs/ui-spec.md（来自 resources/app 的 docs/native-ui-spec.md，补了宽屏 / 桌面部分）。
+ * 页面只引用主题里的令牌，不写颜色、字号、间距、圆角字面量
+ */
+
+const light = {
+  bg: '#F2F3F5',
+  surface: '#FFFFFF',
+  surface2: '#F7F8FA',
+  fill: '#F0F1F3',
+  fillPressed: '#E6E7EA',
+  fillButton: '#E9EAEE',
+  segmentActive: '#FFFFFF',
+  separator: '#E5E6EB',
+  text: '#1F2329',
+  text2: '#646A73',
+  text3: '#8F959E',
+  text4: '#BBBFC4',
+  overlay: 'rgba(0,0,0,0.4)',
+  menuScrim: 'rgba(0,0,0,0.2)',
+  primary: '#84C56A',
+  primaryText: '#4F9A37',
+  primarySoft: '#EDF7E8',
+  /** 品牌色底上的文字和图标 */
+  onPrimary: '#FFFFFF',
+  rowHighlight: 'rgba(132,197,106,0.14)',
+  danger: '#F04A4A',
+  warning: '#F5A524',
+  link: '#2F7AE5',
+  online: '#34C759',
+  badge: '#F04A4A',
+  /** 宽屏侧栏底色，比列表栏深一档 */
+  nav: '#EBEDF0',
+  /** 鼠标悬停：叠在任意底色上 */
+  hover: 'rgba(31,35,41,0.05)',
+  /** 键盘焦点环 */
+  focusRing: 'rgba(132,197,106,0.6)',
+};
+
+export type Colors = typeof light;
+
+const dark: Colors = {
+  bg: '#000000',
+  surface: '#1C1C1E',
+  surface2: '#2C2C2E',
+  fill: '#2C2C2E',
+  fillPressed: '#3A3A3C',
+  fillButton: '#3A3A3C',
+  segmentActive: '#636366',
+  separator: '#38383A',
+  text: '#F2F2F2',
+  text2: '#AEAEB2',
+  text3: '#7C7C80',
+  text4: '#545458',
+  overlay: 'rgba(0,0,0,0.6)',
+  menuScrim: 'rgba(0,0,0,0.4)',
+  primary: '#84C56A',
+  primaryText: '#9AD682',
+  primarySoft: '#1F2D1A',
+  onPrimary: '#FFFFFF',
+  rowHighlight: 'rgba(132,197,106,0.22)',
+  danger: '#FF6961',
+  warning: '#FFB340',
+  link: '#5B9CF0',
+  online: '#30D158',
+  badge: '#FF453A',
+  nav: '#111113',
+  hover: 'rgba(255,255,255,0.06)',
+  focusRing: 'rgba(154,214,130,0.7)',
+};
+
+const font = (fontSize: number, lineHeight: number, fontWeight: TextStyle['fontWeight']) => ({ fontSize, lineHeight, fontWeight });
+
+const typography = {
+  title1: font(22, 28, '700'),
+  title2: font(17, 22, '600'),
+  body: font(16, 22, '400'),
+  callout: font(15, 20, '400'),
+  subhead: font(14, 19, '400'),
+  footnote: font(13, 18, '400'),
+  caption: font(12, 16, '400'),
+  caption2: font(11, 13, '500'),
+} satisfies Record<string, TextStyle>;
+
+/** 按下态：图标按钮降透明度，主按钮略降（docs/ui-spec.md 第 4 节） */
+const opacity = { pressedIcon: 0.5, pressedPrimary: 0.85 };
+
+const spacing = { xs: 4, sm: 8, md: 12, lg: 16, xl: 20, xxl: 24, page: 16 };
+
+const radius = {
+  bubble: 18,
+  bubbleTight: 6,
+  card: 12,
+  block: 10,
+  image: 12,
+  pill: 999,
+  ...platformRadius,
+};
+
+const size = {
+  navBar: 52,
+  rowSingle: 52,
+  rowDouble: 64,
+  /** 窄屏底部 Tab 栏（不含安全区） */
+  tabBar: 56,
+  /** 中屏图标侧栏 */
+  rail: 72,
+  /** 宽屏完整侧栏 */
+  sidebar: 220,
+  /** 列表栏：中屏固定宽度；宽屏默认宽度和拖动范围 */
+  listPane: 320,
+  listPaneMin: 260,
+  listPaneMax: 480,
+  /** 宽屏居中弹窗 */
+  dialogWidth: 480,
+  icon: 22,
+  /** 底部弹层顶部的拖拽条 */
+  grabberWidth: 36,
+  grabberHeight: 5,
+  iconSmall: 18,
+  ...platformSize,
+};
+
+/** 浮起的面板（菜单、弹窗、气泡）的阴影 */
+const shadow = {
+  light: { popover: '0px 8px 28px rgba(0,0,0,0.12), 0px 0px 1px rgba(0,0,0,0.18)' },
+  dark: { popover: '0px 8px 28px rgba(0,0,0,0.5), 0px 0px 0px 1px rgba(255,255,255,0.08)' },
+};
+
+/** 按窗口宽度分三档，不看设备类型：窄屏 < 768、中屏 768–1199、宽屏 ≥ 1200 */
+export const breakpoints = { xs: 0, md: 768, lg: 1200 } as const;
+
+const shared = { typography, spacing, radius, size, opacity };
+
+export const lightTheme = { colors: light, shadow: shadow.light, ...shared };
+export const darkTheme: typeof lightTheme = { colors: dark, shadow: shadow.dark, ...shared };
+
+export type AppTheme = typeof lightTheme;

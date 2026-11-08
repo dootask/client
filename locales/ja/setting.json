@@ -1,0 +1,12 @@
+{
+  "title": "設定",
+  "theme": {
+    "title": "テーマ",
+    "system": "システムに従う",
+    "light": "明るい",
+    "dark": "ダーク"
+  },
+  "language": {
+    "title": "言語"
+  }
+}
