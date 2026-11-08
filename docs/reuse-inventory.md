@@ -147,7 +147,7 @@
 
 以 `app` main 的 `package.json` 为准（Expo `~58.0.14`、RN `0.88.0`、React `19.3.0`、reanimated `4.7.1`、worklets `0.13.0`、gesture-handler `~3.3.0`、TypeScript `~6.0.3`）。rn-next 额外加过的：`react-native-unistyles`、`react-native-nitro-modules`、`react-native-edge-to-edge`、`react-native-web`、`@expo/metro-runtime`、`openpgp`、`zod`、`vitest`、`fake-indexeddb`。本项目再加 `react-native-mmkv`、`zustand`、`i18next`、`react-i18next`、`@shopify/flash-list`。
 
-unistyles、MMKV、nitro 不在 Expo SDK 58 的 `bundledNativeModules.json` 里，`npx expo install` 会装最新版；验证用的版本见第 5 节，W1 按这个版本锁定。
+unistyles、MMKV、nitro 不在 Expo SDK 58 的 `bundledNativeModules.json` 里，`npx expo install` 会装最新版；验证用的版本见第 5 节，引入时（W3 / W7）按这个版本锁定。W1 只装了工程骨架需要的 Expo、路由、Web 相关依赖，版本都对齐 `resources/app` 的 `package-lock.json`。
 
 ## 4. 版本号来源（2026-11-08 定：A，跟服务端同号）
 

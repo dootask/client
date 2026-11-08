@@ -6,8 +6,11 @@
 
 - 代码在本机开发，Metro（含 Web 开发服务）常驻本机
 - **Web 开发直连测试服**：测试服后端允许跨域（`Access-Control-Allow-Origin: *`），本机的 Web 开发服务可以直接请求测试服接口，不需要配代理
-- Metro 的对外地址按 `VSCODE_PROXY_URI` 模板推导，开发包据此加载 bundle；地址写在 `.env.local`，不写进仓库
+- **启动 Metro**：`npm start`（`scripts/start.mjs`），原生 bundle 和 Web 开发页共用这一个 Metro
+- **Metro 的对外地址**：开发包按这个地址加载 bundle。命令行环境里设了 `EXPO_PACKAGER_PROXY_URL` 就用它；没设时按 `VSCODE_PROXY_URI` 模板和端口推导；两个都没有，就由 Expo 自己取局域网地址。Expo 只从命令行环境读这个变量，写进 `.env` 或 `.env.local` 不生效
 - **Metro 端口固定**（端口号见 `CLAUDE.local.md`）：启动脚本写死端口；端口被占用时直接报错退出，不要自动换到下一个端口。外网能访问的端口要单独开放，开发包里也记着这个地址，换了端口就连不上。被占用时先查是谁占的，多半是上一次没关掉的 Metro
+- **Web 开发页在根路径打开**（Metro 地址后面直接跟 `/`），不带 `/next`：expo-router 在开发模式下不处理 `experiments.baseUrl`，访问 `/next/` 会显示 Unmatched Route
+- **Web 导出和子路径预览**：`npm run web:export` 导出到 `dist/`，`npm run web:preview [端口]` 在本机把它挂到 `/next` 下预览（默认端口 2211），其余地址都回落到 `index.html`，用来验证刷新和深链。`npx expo serve` 不处理子路径和回落，不要用它验证
 - 主仓库的前端 dev server 由用户自己运行，不要去启动
 
 ## Mac mini（只构建和运行，不改代码）
@@ -17,6 +20,7 @@
 ### 安卓
 
 - 开发包（`APP_VARIANT=development`，包名 `com.dootask.task.dev`）装到模拟器后连本机 Metro 实时开发；原生代码或原生依赖没变时，只改 JS 不用重新出包
+- 模拟器开发包流程：本机打源码包（不含 `node_modules`、`ios`、`android`、`.git`、`dist`、`tests`）→ 传到 Mac mini 解包 → `export APP_VARIANT=development`，`npm install`，`npx expo prebuild --platform android --clean --no-install` → `cd android && ./gradlew :app:assembleDebug` → `adb install -r` → 用 `adb shell am start -a android.intent.action.VIEW -d "exp+dootask-dev://expo-development-client/?url=<URL 编码的 Metro 外网地址>"` 打开并连上 Metro
 - 开发版包名与 `resources/app` 的开发版相同，会覆盖设备上旧的 DooTask (dev)，用户已同意
 - 出包流程可参考 `resources/app/scripts/mac-build.sh` 和 `resources/app/docs/dev.md`，本项目的脚本自己写
 - **正式签名**不进仓库，放在 Mac mini 本地（位置见 `CLAUDE.local.md`），构建时通过环境变量或 config plugin 注入
@@ -27,6 +31,8 @@
 用 `.claude/skills/app-build` 技能（本机文件，不进 git）：出 IPA / APK 放进下载页，由用户自己装到真机测试。安卓模拟器自测不走这个技能。
 
 ## 坑
+
+- **`npx expo install` 会装 SDK 里最新的补丁版本**（例如 RN 0.88.1、safe-area 5.11），和 `resources/app` 不一致，补丁文件也对不上版本。装完对照 `resources/app` 的 `package-lock.json` 改回同一版本（`npm install --save-prefix='~' 包@版本`；RN、React 写死版本号）
 
 - **Gradle 守护进程偶尔内存溢出（Metaspace OOM）卡死**：`./gradlew --stop`，杀掉挂住的 gradlew 客户端进程，再重新构建
 - **长构建用 `nohup` 后台跑**，日志写 `/tmp`；直接在 orchestrator 里前台跑，守护进程重启会把子进程一起杀掉

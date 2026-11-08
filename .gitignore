@@ -1,9 +1,9 @@
 node_modules/
 .expo/
-dist/
+/dist/
 web-build/
-ios/
-android/
+/ios/
+/android/
 *.tsbuildinfo
 .env.local
 .env*.local
@@ -11,3 +11,5 @@ CLAUDE.local.md
 .playwright-mcp/
 tests/playwright-results/
 .DS_Store
+expo-env.d.ts
+.metro-health-check*
