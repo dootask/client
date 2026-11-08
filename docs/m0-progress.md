@@ -10,7 +10,8 @@
 | W3 主题与布局原语 | ✅ | 见 git log |
 | W8 国际化（提前和 W3 一起做） | ✅ | 见 git log |
 | W4 数据层 API | ✅ | 见 git log |
-| W5–W7、W9–W12 | 未开始 | — |
+| W5 数据层 WebSocket | ✅ | 见 git log |
+| W6、W7、W9–W12 | 未开始 | — |
 
 ## W1 工程初始化
 
@@ -54,6 +55,18 @@
 - vitest：请求头（全部字段、每次现取）、错误分类（四种 kind + 超时）、全局返回码（-1 / -2 / -3 / -4001~-4004 及开关）、四组接口的 schema
 - 测试服联调：`LIVE_SERVER=… LIVE_EMAIL=… LIVE_PASSWORD=… npx vitest run live`（账号只放命令行环境变量）—— 公开接口、错误密码、未登录 -1、管理员登录并取我的信息全部通过
 - 留到 W11：界面层按 kind 出提示语的翻译键、`onAuthLost` / `onNeedProfile` 的实际处理
+
+## W5 数据层 WebSocket
+
+- `src/sync/ws`：连接地址与旧前端一致，收到 `open` 记 `fd`（供 API 请求头）、`handshake` 回执、业务推送带 `msgId` 回 `receipt`、`{{RemoteURL}}` 替换、3 秒内重复帧去重、`type=encrypt` 推送解密钩子和公钥上报（W6 接）、按 `type` 订阅分发；断线指数退避（1~30 秒，50% 抖动）重连，重连成功带 `reconnect=true` 供上层增量同步；前后台、网络变化由上层调 `check()`
+- 由 rn-next 搬过来时改的：
+  - **帧和断开事件排队按到达顺序处理**：原来加密帧异步解密时，后到的明文帧会先分发；断开事件也进队列，保证服务端「先推 error 再断开」时先处理 error
+  - 解密期间连接已换时，旧连接的帧丢弃（不分发、不回执）
+  - 新增连接超时（默认 15 秒收不到 `open` 按断线处理）：网络半通时既不 open 也不 close，原来会一直卡在 connecting
+- 核对服务端：只有 `handshake` 和服务端不认识的类型会回执，`path`、`encrypt` 不回执，`request()` 只用于 handshake
+- vitest（假 socket）：地址与 fd、退避序列与重置、回执乱序对应、回执超时与断线 reject、业务回执与 `{{RemoteURL}}`、重复帧、服务端拒绝后不重连、check 与 disconnect、公钥上报与解密、解密乱序、旧连接帧丢弃、连接超时、心跳发现无 close 的断线
+- 测试服联调（`npx vitest run live`）：外网 wss 和本机 http 都能连上、拿到 fd、握手回执；**断网恢复**：中间插 TCP 转发，切成「连接不断、数据全丢」（手机丢信号时客户端收不到 close），心跳握手超时后进入重连，断网期间一直连不上；恢复后自动重连成功，拿到新 fd、`reconnect=true`、握手正常
+- 发现（主仓库后端，未改）：**退出登录后旧 token 仍能建立 WebSocket**。`users/logout` 只删设备记录，HTTP 接口随即返回 -1，但 `WebSocketService::onOpen` 只校验用户、邮箱和 encrypt，不看设备，旧 token 仍能连上收推送。客户端退出时会主动断开，不影响本项目；是否修后端由用户决定
 
 ## W8 国际化
 
