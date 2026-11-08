@@ -11,6 +11,8 @@ M0 不做业务功能，只把「一套代码跑四端」需要的基础设施�
 1. **盘点可复用的代码**，写成一份清单（`docs/reuse-inventory.md`），每项注明「直接搬 / 改造后搬 / 只参考 / 不要」：
    - `resources/app` 的 `feature/rn-next` 分支（提交 `da6404433`）：`src/sync/`（api、ws、storage、crypto）、`src/embed/`、`src/ui/layout`、`src/ui/theme`、`src/modules/auth`、`src/modules/shell`。这些已对测试服联调过一部分，详情见主仓库 `feature/rn-next` 分支的 `docs/rn-next/pending-device-verification.md`
    - `resources/app` 的 `main`：`src/ui/`、`modules/`、`plugins/`、`push/`、出包脚本和签名配置；会话和任务的原生页留到 M1、M2 再搬
+   - `resources/app` 的 `patches/`（含 VirtualizedList 插入跳位的修复）、App 图标和启动图、`app.config.ts` 里的包名 / scheme / 开发版变体配置
+   - 版本号来源：`resources/app` 现在取自主仓库生成的 `version.json`，本项目要定自己的来源（App 版本号、构建号与服务端版本的关系）
    - 注意：rn-next 的 `src/i18n/` 是旧 `L()` 方案，不搬
 2. **最先验证风险最高的依赖**：unistyles 3 和 MMKV 4（都基于 nitro-modules）在 RN 0.88 新架构下能否在安卓模拟器上跑起来。不行就立即换方案，并更新 architecture.md 的选型表。
 

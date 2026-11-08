@@ -7,7 +7,8 @@ DooTask 的全端客户端：一套 Expo + react-native-web 代码，出 iOS、A
 - `docs/architecture.md`：架构、选型、分层、各项已定决议。动手前先读，决议有变要先改这份文档
 - `docs/performance.md`：性能硬规则和验收清单。**性能是本项目最大的难点**，规则从第一行代码起执行
 - `docs/m0-plan.md`：当前阶段的范围和验收标准
-- 环境相关的地址、端口、设备放在 `CLAUDE.local.md`（不进 git）
+- `docs/dev.md`：开发、Mac mini 构建流程和踩过的坑
+- 环境相关的地址、端口、设备、账号放在 `CLAUDE.local.md`（不进 git）
 
 ## 语言
 
@@ -20,7 +21,16 @@ DooTask 的全端客户端：一套 Expo + react-native-web 代码，出 iOS、A
 - App 工程 `/home/coder/workspaces/dootask/resources/app`：可复制的 RN 代码来源；`feature/rn-next` 分支是上一轮底座代码
 - happy-app `/home/coder/workspaces/happy-next/packages/happy-app`：同类架构和性能经验参考
 
-**不要修改主仓库的前端和 `resources/app`**，它们只维护、不加功能。**后端可以改**，规则见 architecture.md 第 11 节：兼容的改动直接改；不兼容的大改宁可新增接口。后端改动在主仓库按主仓库的 `CLAUDE.md` 做（命令走 `./cmd`），和本项目分开提交。
+**不要修改主仓库的前端和 `resources/app`**，它们只维护、不加功能。
+
+**后端可以改**，规则见 architecture.md 第 11 节：兼容的改动直接改；不兼容的大改宁可新增接口。改后端时：
+
+- 动手前先读主仓库的 `CLAUDE.md`（它不会自动加载），按它的规矩写
+- 命令在主仓库目录用 `./cmd` 执行（不要直接跑 `php artisan`）
+- 改完跑 `./cmd composer stan`；改了控制器 public 方法或路由，跑 `./cmd artisan doc:api-map` 重新生成对照表；配置或路由变更后 `./cmd php restart` 才生效
+- 和本项目分开提交
+
+**AI 知识库（主仓库 `resources/ai-kb/`）**：本项目切换上线前不同步；整体切换时按新客户端统一更新。
 
 ## 规矩
 
@@ -45,8 +55,9 @@ DooTask 的全端客户端：一套 Expo + react-native-web 代码，出 iOS、A
 ## 测试
 
 - **Web**：用 Playwright 在浏览器里亲自点过，截图和记录放 `tests/playwright-results/`
-- **Android**：用 Mac mini 上的安卓模拟器（通过 orchestrator 操作，细节见 `CLAUDE.local.md`）。Mac mini 上只构建和运行，不在上面改代码
+- **Android**：用 Mac mini 上的安卓模拟器（通过全局 orchestrator 技能操作，细节见 `CLAUDE.local.md` 和 `docs/dev.md`）。Mac mini 上只构建和运行，不在上面改代码
 - **iOS**：交给用户自己验证
+- **真机测试包**（iOS 和安卓）：用 `.claude/skills/app-build` 技能出包放进下载页，用户自己安装
 - UI 和交互要自己逐屏验收，不要只看代码就说完成
 - **测试服数据可以随意增删改**（发消息、建任务、上传都不用请示）
 - **测试账号**见 `CLAUDE.local.md`。需要普通权限账号时，在主仓库执行 `./cmd repassword <账号>` 重置密码（会让该账号现有的登录失效）
