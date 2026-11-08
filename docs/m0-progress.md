@@ -140,5 +140,6 @@
 
 ## M0 收尾
 
-- iOS 开发包（Debug，`com.dootask.task.dev`，对应 `dd3866d`）已放进下载页，团队开发证书签名（method `debugging`），等用户在真机上验收 W9 系统菜单、W10 嵌入页、W11 登录
+- 第一版 iOS 开发包（`dd3866d`）真机打开即闪退：依赖锁文件里 `expo-modules-core` 被升到 58.0.30，它引用 RN 0.88.1 才有的 `RCTStatusBarAppearance`，dyld 启动时找不到符号。锁文件改为以 `resources/app` 的为底重新生成（`1f214e5`，做法写进 dev.md），在 iOS 27.2 模拟器上确认能启动并加载到服务器地址页
+- 重新出的 iOS 开发包已放进下载页，团队开发证书签名（method `debugging`），等用户在真机上验收 W9 系统菜单、W10 嵌入页、W11 登录
 - 等用户决定：W6 新加密方案（主仓库讨论中）
