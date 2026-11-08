@@ -9,7 +9,8 @@
 | W2 工程约束 | ✅ | 见 git log |
 | W3 主题与布局原语 | ✅ | 见 git log |
 | W8 国际化（提前和 W3 一起做） | ✅ | 见 git log |
-| W4–W7、W9–W12 | 未开始 | — |
+| W4 数据层 API | ✅ | 见 git log |
+| W5–W7、W9–W12 | 未开始 | — |
 
 ## W1 工程初始化
 
@@ -43,6 +44,16 @@
   - 嵌套 Stack 用 `unstable_settings = { anchor: 'index' }`，深链直接进子页时栈底也有首页（`initialRouteName` 已弃用）
 - 安卓验收（Mac mini 模拟器，重出了开发包，新增的原生依赖都在里面）：全面屏和安全区正确，Tab、设置两级页、系统返回键、深色立即生效（状态栏跟随）、语言切换立即生效
 - 留到后面：主题模式、语言、列表栏宽度的持久化（W7 键值存储）；Sheet 的键盘避让、多层叠放和真实场景验收（W9，同时检查上面两条 Web 样式问题在 Sheet 上的表现）；中文输入法合成事件验证（W11 登录页有真实输入框时做）
+
+## W4 数据层 API
+
+- `src/sync/api`：`createApiClient`（请求头、jQuery.param 查询串、Date 序列化、30 秒超时、加密插件接口留给 W6）+ 系统设置 / 版本、登录 / 验证码 / 注册状态 / 我的信息 / 退出；返回值用 zod 校验，未声明字段原样保留，PHP 下标不连续输出成对象的列表统一转数组
+- 由 rn-next 搬过来时改的：
+  - **sync 层不写提示文字**：`ApiError` 带 `kind`（`network` / `invalid` / `server` / `no-server`），界面层按 kind 翻译；`server` 的 message 是服务端按 `language` 请求头翻译好的原文。原来客户端失败也用 `ret = -1`，上层按 -1 判断登录失效时会把断网误当掉登录，现在客户端失败一律 `ret = 0`、只看 kind
+  - 超时覆盖到读响应体；响应缺 `ret` 算 `invalid`；`-2` / `-3` 用户取消补填时原样抛服务端错误；`platform` 限定为服务端认的五种取值
+- vitest：请求头（全部字段、每次现取）、错误分类（四种 kind + 超时）、全局返回码（-1 / -2 / -3 / -4001~-4004 及开关）、四组接口的 schema
+- 测试服联调：`LIVE_SERVER=… LIVE_EMAIL=… LIVE_PASSWORD=… npx vitest run live`（账号只放命令行环境变量）—— 公开接口、错误密码、未登录 -1、管理员登录并取我的信息全部通过
+- 留到 W11：界面层按 kind 出提示语的翻译键、`onAuthLost` / `onNeedProfile` 的实际处理
 
 ## W8 国际化
 
