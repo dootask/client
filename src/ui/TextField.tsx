@@ -8,15 +8,16 @@ export type TextFieldProps = Omit<TextInputProps, 'style' | 'placeholderTextColo
   right?: ReactNode;
 };
 
-/** 单行输入框：灰底圆角，聚焦时描边 */
-export function TextField({ ref, right, onFocus, onBlur, ...rest }: TextFieldProps) {
+/** 输入框：灰底圆角，聚焦时描边；multiline 时至少三行高、随内容变高 */
+export function TextField({ ref, right, multiline = false, onFocus, onBlur, ...rest }: TextFieldProps) {
   const { theme } = useUnistyles();
   const [focused, setFocused] = useState(false);
   return (
-    <View style={styles.box(focused)}>
+    <View style={styles.box(focused, multiline)}>
       <TextInput
         {...rest}
         ref={ref}
+        multiline={multiline}
         placeholderTextColor={theme.colors.text3}
         onFocus={(event) => {
           setFocused(true);
@@ -26,7 +27,7 @@ export function TextField({ ref, right, onFocus, onBlur, ...rest }: TextFieldPro
           setFocused(false);
           onBlur?.(event);
         }}
-        style={styles.input}
+        style={[styles.input, multiline && styles.multiline]}
       />
       {right}
     </View>
@@ -34,10 +35,10 @@ export function TextField({ ref, right, onFocus, onBlur, ...rest }: TextFieldPro
 }
 
 const styles = StyleSheet.create((theme) => ({
-  box: (focused: boolean) => ({
-    height: theme.size.control,
+  box: (focused: boolean, multiline: boolean) => ({
+    ...(multiline ? { minHeight: theme.size.textArea } : { height: theme.size.control }),
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: multiline ? 'stretch' : 'center',
     borderRadius: theme.radius.block,
     borderWidth: 1,
     borderColor: focused ? theme.colors.focusRing : 'transparent',
@@ -55,5 +56,10 @@ const styles = StyleSheet.create((theme) => ({
     // 聚焦的描边画在外框上，不再画浏览器自带的焦点框
     outlineStyle: 'solid',
     outlineWidth: 0,
+  },
+  multiline: {
+    ...theme.typography.body,
+    paddingVertical: theme.spacing.md,
+    textAlignVertical: 'top',
   },
 }));

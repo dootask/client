@@ -31,6 +31,7 @@ import { useEnterSend } from '../../setting';
 import { useDialog, useMessenger, useUser } from '../hooks';
 import { PreviewText } from '../PreviewText';
 import type { Attach } from './attach';
+import type { Extra } from './extras';
 import { AttachButton } from './AttachButton';
 import { useComposeState, type ComposeStore } from './composeStore';
 import { useEnterKey } from './enterKey';
@@ -69,11 +70,12 @@ const msgHtml = (msg: Msg) => String((msg.msg as { text?: unknown } | null)?.tex
  * 内容放在 store 里（与上方的候选浮层共用），随时存为草稿（会话列表里显示）；
  * 编辑消息期间草稿先收起来，编辑完或取消后还原。群里回复别人时自动 @ 对方
  */
-export function Composer({ dialogId, store, pickerKeysRef, mode, onModeEnd, onSent, attach, voice, ref }: {
+export function Composer({ dialogId, store, pickerKeysRef, mode, onModeEnd, onSent, attach, extras, voice, ref }: {
   dialogId: number;
   store: ComposeStore;
   pickerKeysRef: PickerKeys;
   attach: Attach;
+  extras: Extra[];
   /** 不能录音的平台为 null */
   voice: VoiceInput | null;
   mode: ComposerMode;
@@ -315,7 +317,7 @@ export function Composer({ dialogId, store, pickerKeysRef, mode, onModeEnd, onSe
             {sendIcon}
           </Menu>
         ) : (
-          <AttachButton attach={attach} hitSlop={slop} style={({ pressed }) => [styles.button, pressed && styles.pressed]} />
+          <AttachButton attach={attach} extras={extras} hitSlop={slop} style={({ pressed }) => [styles.button, pressed && styles.pressed]} />
         )}
       </View>
     </View>

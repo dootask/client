@@ -266,5 +266,35 @@
     "lock": "Lock",
     "autoSend": "Sending in {{count}}s",
     "recording": "Recording"
+  },
+  "vote": {
+    "title": "Initiate Vote",
+    "topic": "Please enter the voting topic",
+    "option": "Please enter option content",
+    "addOption": "Add option",
+    "multiple": "Allow Multiple Selections",
+    "anonymous": "Anonymous Voting"
+  },
+  "wordChain": {
+    "title": "Initiate Chain Reply",
+    "tag": "Chain Reply",
+    "topic": "Please enter the chain reply topic",
+    "example": "Example",
+    "examplePlaceholder": "You can fill in the chain reply format",
+    "entry": "Please enter the chain reply content",
+    "duplicate": "Repeated content will no longer be counted in the chain reply results",
+    "add": "Add",
+    "initiator": "By {{name}} Initiated, currently ({{n}}) people participating in the chain reply"
+  },
+  "anon": {
+    "entry": "Anonymous Message",
+    "title": "Send Anonymous Message",
+    "send": "Send Anonymously",
+    "hint": "Anonymous messages will be sent to the recipient via Anonymous Message (Bot) and will not record any of your identity information"
+  },
+  "call": {
+    "entry": "Call",
+    "confirm": "Call ({{name}})?",
+    "action": "Make a call"
   }
 }

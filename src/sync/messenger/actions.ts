@@ -27,6 +27,10 @@ export interface MsgActionsApi extends MentionApi {
   myTodos: (dialogId: number) => ReturnType<typeof dialogApi.myTodos>;
   msgDone: (todoId: number) => ReturnType<typeof dialogApi.msgDone>;
   stickerSearch: (key: string) => ReturnType<typeof dialogApi.stickerSearch>;
+  voteCreate: (params: dialogApi.VoteCreateParams) => ReturnType<typeof dialogApi.voteCreate>;
+  wordChainCreate: (params: Parameters<typeof dialogApi.wordChainCreate>[1]) => ReturnType<typeof dialogApi.wordChainCreate>;
+  sendAnon: (userid: number, text: string) => ReturnType<typeof dialogApi.sendAnon>;
+  tel: (dialogId: number) => ReturnType<typeof dialogApi.tel>;
 }
 
 export function bindMsgActionsApi(client: ApiClient): MsgActionsApi {
@@ -48,6 +52,10 @@ export function bindMsgActionsApi(client: ApiClient): MsgActionsApi {
     myTodos: (id) => dialogApi.myTodos(client, id),
     msgDone: (id) => dialogApi.msgDone(client, id),
     stickerSearch: (key) => dialogApi.stickerSearch(client, key),
+    voteCreate: (p) => dialogApi.voteCreate(client, p),
+    wordChainCreate: (p) => dialogApi.wordChainCreate(client, p),
+    sendAnon: (userid, text) => dialogApi.sendAnon(client, userid, text),
+    tel: (id) => dialogApi.tel(client, id),
     searchUsers: (key, opts) => usersApi.search(client, key, opts),
     taskList: (p) => projectApi.taskList(client, p),
     fileSearch: (key) => fileApi.search(client, key),
@@ -161,6 +169,26 @@ export function createMsgActions(api: MsgActionsApi, messenger: Messenger) {
     },
 
     favoriteRemark: (id: number, remark: string) => api.favoriteRemark(id, remark),
+
+    /** 发起投票；发出的消息立即插进会话 */
+    async createVote(params: dialogApi.VoteCreateParams): Promise<void> {
+      messenger.applyResult({ add: await api.voteCreate(params) });
+    },
+
+    /** 发起接龙；发出的消息立即插进会话 */
+    async createWordChain(params: Parameters<MsgActionsApi['wordChainCreate']>[0]): Promise<void> {
+      messenger.applyResult({ add: await api.wordChainCreate(params) });
+    },
+
+    /** 发匿名消息给单聊的对方；返回服务端的提示语 */
+    sendAnon: (userid: number, text: string) => api.sendAnon(userid, text),
+
+    /** 取单聊对方的电话；服务端发出的「查看了联系电话」通知插进会话 */
+    async tel(dialogId: number): Promise<string> {
+      const { tel, add } = await api.tel(dialogId);
+      messenger.applyResult({ add });
+      return tel;
+    },
 
     /** 语音转文字：转写内容写进消息（msg.text），所有人可见 */
     async voice2text(msg: Msg): Promise<void> {

@@ -288,6 +288,50 @@ export async function convertRecord(client: ApiClient, params: RecordParams) {
   return data;
 }
 
+export interface VoteCreateParams {
+  dialog_id: number;
+  text: string;
+  /** 选项：id 只要在本次里不重复 */
+  list: { id: number; text: string }[];
+  multiple: boolean;
+  anonymous: boolean;
+}
+
+/** 在群里发起投票，返回发出的消息 */
+export async function voteCreate(client: ApiClient, { multiple, anonymous, ...params }: VoteCreateParams) {
+  const { data } = await requestParsed(client, 'dialog/msg/vote', z.array(msgSchema), {
+    method: 'post',
+    data: { ...params, type: 'create', multiple: multiple ? 1 : 0, anonymous: anonymous ? 1 : 0 },
+  });
+  return data;
+}
+
+/** 接龙条目：case 是发起人写的示例（格式），text 是一条接龙 */
+export interface WordChainEntry {
+  id: number;
+  type: 'case' | 'text';
+  userid: number;
+  text: string;
+}
+
+/** 发起接龙（服务端分配 id 和 uuid），返回发出的消息 */
+export async function wordChainCreate(client: ApiClient, params: { dialog_id: number; text: string; list: WordChainEntry[] }) {
+  const { data } = await requestParsed(client, 'dialog/msg/wordchain', msgSchema, { method: 'post', data: params });
+  return data;
+}
+
+/** 通过匿名机器人给对方发消息（不留发送人）；返回服务端的提示语 */
+export async function sendAnon(client: ApiClient, userid: number, text: string) {
+  const { msg } = await requestParsed(client, 'dialog/msg/sendanon', z.unknown(), { method: 'post', data: { userid, text } });
+  return msg;
+}
+
+/** 单聊对方的电话：服务端同时在会话里发一条「查看了联系电话」的通知（add） */
+export async function tel(client: ApiClient, dialogId: number) {
+  const { data } = await requestParsed(client, 'dialog/tel', z.looseObject({ tel: str, add: msgSchema.nullish() }), { data: { dialog_id: dialogId } });
+  return data;
+}
+
 /** 撤回自己的消息（超过系统设置的时限会被拒绝）；成功后服务端推送 delete */
 export async function withdraw(client: ApiClient, msgId: number) {
   await client.request('dialog/msg/withdraw', { data: { msg_id: msgId } });

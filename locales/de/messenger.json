@@ -266,5 +266,35 @@
     "lock": "Sperren",
     "autoSend": "Wird in {{count}} s gesendet",
     "recording": "Aufnahme läuft"
+  },
+  "vote": {
+    "title": "Abstimmung initiieren",
+    "topic": "Bitte geben Sie das Abstimmungsthema ein",
+    "option": "Bitte geben Sie den Inhalt der Option ein",
+    "addOption": "Option hinzufügen",
+    "multiple": "Mehrfachauswahl erlauben",
+    "anonymous": "Anonyme Abstimmung"
+  },
+  "wordChain": {
+    "title": "Kettenantwort initiieren",
+    "tag": "Kettenantwort",
+    "topic": "Bitte geben Sie das Thema der Kettenantwort ein",
+    "example": "Beispiel",
+    "examplePlaceholder": "Sie können das Format der Kettenantwort ausfüllen",
+    "entry": "Bitte geben Sie den Inhalt der Kettenantwort ein",
+    "duplicate": "Wiederholte Inhalte werden nicht mehr in den Ergebnissen der Kettenantwort gezählt",
+    "add": "Hinzufügen",
+    "initiator": "Von {{name}} Initiiert, derzeit ({{n}}) Teilnehmer an der Kettenantwort"
+  },
+  "anon": {
+    "entry": "Anonyme Nachricht",
+    "title": "Anonyme Nachricht senden",
+    "send": "Anonym senden",
+    "hint": "Anonyme Nachrichten werden über Anonyme Nachricht (Bot) an den Empfänger gesendet und zeichnen keine Ihrer Identitätsinformationen auf"
+  },
+  "call": {
+    "entry": "Anrufen",
+    "confirm": "({{name}}) anrufen?",
+    "action": "Anrufen"
   }
 }

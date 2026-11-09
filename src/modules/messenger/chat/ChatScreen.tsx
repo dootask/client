@@ -25,6 +25,7 @@ import { buildRows, type RowData } from './chatModel';
 import { Composer, type ComposerHandle, type ComposerMode } from './Composer';
 import { useComposeStore } from './composeStore';
 import { EmojiPanel } from './EmojiPanel';
+import { type ExtraSheet, useExtras } from './extras';
 import { QuickEmoticons } from './QuickEmoticons';
 import { countText, dayLabel } from './format';
 import { MessageActionMenu, type LongPressTarget } from './MessageActionMenu';
@@ -35,6 +36,7 @@ import { MorePanel } from './MorePanel';
 import { RichHandlersContext, type RichHandlers } from './RichText';
 import { createSelection, SELECTION_MAX, type Selection } from './selection';
 import { SendPreview } from './SendPreview';
+import { AnonSheet } from './sheets/AnonSheet';
 import { FavoriteRemarkSheet } from './sheets/FavoriteRemarkSheet';
 import { ForwardSheet } from './sheets/ForwardSheet';
 import { ReadListSheet } from './sheets/ReadListSheet';
@@ -43,6 +45,8 @@ import { StickerSearchSheet } from './sheets/StickerSearchSheet';
 import { TodoDetailSheet } from './sheets/TodoDetailSheet';
 import { TodoSetSheet } from './sheets/TodoSetSheet';
 import { TranslateSheet } from './sheets/TranslateSheet';
+import { VoteSheet } from './sheets/VoteSheet';
+import { WordChainSheet } from './sheets/WordChainSheet';
 import { toggleVoice } from './voice';
 import { useVoiceInput } from './VoiceRecorder';
 import { CAN_RECORD } from './voiceTraits';
@@ -64,7 +68,8 @@ type SheetContent =
   | { kind: 'todoSet' | 'todoDetail' | 'translate'; msg: Msg }
   | { kind: 'remark' | 'readList'; msgId: number }
   | { kind: 'selectText'; text: string }
-  | { kind: 'stickerSearch' };
+  | { kind: 'stickerSearch' }
+  | ExtraSheet;
 /** seq：每次打开换一个，弹层重新挂载、状态从头开始；visible 置 false 时内容留着放完关闭动画 */
 type SheetState = { seq: number; visible: boolean; content: SheetContent };
 
@@ -289,6 +294,7 @@ function ChatScreen({ dialogId, msgId }: { dialogId: number; msgId: number }) {
   const attach = useAttach({ dialogId, mode, onModeEnd, onSent });
   const onConverted = useCallback((text: string) => composerRef.current?.dictate(text), []);
   const voice = useVoiceInput({ dialogId, mode, onModeEnd, onSent, onConverted });
+  const extras = useExtras({ dialog, userId, openSheet });
 
   const nextMention = mentions.length ? Math.min(...mentions) : 0;
   // 面板一直挂着：元素要稳定，否则页面每次重渲染（如开始、结束录音）都连带重渲染整个表情面板
@@ -323,7 +329,7 @@ function ChatScreen({ dialogId, msgId }: { dialogId: number; msgId: number }) {
               }
               composer={
                 <BottomBar selection={selection} onForward={(msgIds) => openSheet({ kind: 'forward', msgIds })}>
-                  <Composer ref={composerRef} dialogId={dialogId} store={compose} pickerKeysRef={pickerKeysRef} mode={mode} onModeEnd={onModeEnd} onSent={onSent} attach={attach} voice={CAN_RECORD ? voice : null} />
+                  <Composer ref={composerRef} dialogId={dialogId} store={compose} pickerKeysRef={pickerKeysRef} mode={mode} onModeEnd={onModeEnd} onSent={onSent} attach={attach} extras={extras} voice={CAN_RECORD ? voice : null} />
                 </BottomBar>
               }
               bottomColor={theme.colors.surface}
@@ -348,7 +354,7 @@ function ChatScreen({ dialogId, msgId }: { dialogId: number; msgId: number }) {
               }
               panels={{
                 emoji: emojiPanel,
-                more: <MorePanel attach={attach} />,
+                more: <MorePanel attach={attach} extras={extras} />,
               }}
               keyboardDragOffset={theme.size.touch + theme.spacing.xs * 2}
               renderScrollToBottom={renderScrollToBottom}
@@ -371,7 +377,7 @@ function ChatScreen({ dialogId, msgId }: { dialogId: number; msgId: number }) {
         <MenuHost ref={menuHost} group={dialog?.type === 'group'} userId={userId} menu={menu} onReact={onReact} />
       </RowContextValue.Provider>
       {attach.preview && <SendPreview {...attach.preview} onClose={attach.closePreview} onSend={attach.send} />}
-      {sheet && <ChatSheet key={sheet.seq} content={sheet.content} visible={sheet.visible} onClose={closeSheet} onForwarded={selection.clear} onPickSticker={(item) => composerRef.current?.sendEmoticon(item, false)} />}
+      {sheet && <ChatSheet key={sheet.seq} dialogId={dialogId} content={sheet.content} visible={sheet.visible} onClose={closeSheet} onForwarded={selection.clear} onSent={onSent} onPickSticker={(item) => composerRef.current?.sendEmoticon(item, false)} />}
     </View>
   );
 }
@@ -388,11 +394,14 @@ function MenuHost({ ref, ...props }: Omit<ComponentProps<typeof MessageActionMen
   return target && <MessageActionMenu {...props} target={target} onClose={() => setTarget(null)} />;
 }
 
-function ChatSheet({ content, visible, onClose, onForwarded, onPickSticker }: {
+function ChatSheet({ dialogId, content, visible, onClose, onForwarded, onSent, onPickSticker }: {
+  dialogId: number;
   content: SheetContent;
   visible: boolean;
   onClose: () => void;
   onForwarded: () => void;
+  /** 投票、接龙发出后（滚到底部） */
+  onSent: () => void;
   onPickSticker: (item: Emoticon) => void;
 }) {
   const common = { visible, onClose };
@@ -413,6 +422,12 @@ function ChatSheet({ content, visible, onClose, onForwarded, onPickSticker }: {
       return <SelectTextSheet {...common} text={content.text} />;
     case 'stickerSearch':
       return <StickerSearchSheet {...common} onPick={onPickSticker} />;
+    case 'vote':
+      return <VoteSheet {...common} dialogId={dialogId} onSent={onSent} />;
+    case 'wordChain':
+      return <WordChainSheet {...common} dialogId={dialogId} onSent={onSent} />;
+    case 'anon':
+      return <AnonSheet {...common} userid={content.userid} />;
   }
 }
 

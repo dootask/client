@@ -266,5 +266,35 @@
     "lock": "锁定",
     "autoSend": "{{count}} 秒后自动发送",
     "recording": "录音中"
+  },
+  "vote": {
+    "title": "发起投票",
+    "topic": "请输入投票主题",
+    "option": "请输入选项内容",
+    "addOption": "添加选项",
+    "multiple": "允许多选",
+    "anonymous": "匿名投票"
+  },
+  "wordChain": {
+    "title": "发起接龙",
+    "tag": "接龙",
+    "topic": "请输入接龙主题",
+    "example": "例",
+    "examplePlaceholder": "可填写接龙格式",
+    "entry": "请输入接龙内容",
+    "duplicate": "重复内容将不再计入接龙结果",
+    "add": "添加",
+    "initiator": "由 {{name}} 发起，参与接龙目前共({{n}})人"
+  },
+  "anon": {
+    "entry": "匿名消息",
+    "title": "发送匿名消息",
+    "send": "匿名发送",
+    "hint": "匿名消息将通过匿名消息（机器人）发送给对方，不会记录你的任何身份信息"
+  },
+  "call": {
+    "entry": "打电话",
+    "confirm": "是否拨打电话给 ({{name}})？",
+    "action": "拨打电话"
   }
 }

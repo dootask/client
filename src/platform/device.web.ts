@@ -5,3 +5,6 @@ export const API_PLATFORM = 'web' as const;
 export function pageOrigin(): string | null {
   return window.location.origin;
 }
+
+/** 能交给系统拨号：浏览器、桌面端不提供（同旧网页） */
+export const CAN_DIAL = false;

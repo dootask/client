@@ -1,7 +1,7 @@
 import { Image } from 'expo-image';
-import { Camera, FolderOpen, Images, type LucideIcon } from 'lucide-react-native';
+import { Camera, FolderOpen, Images } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
-import { FlatList, Text, View } from 'react-native';
+import { FlatList, ScrollView, Text, View } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { useT } from '../../../i18n';
@@ -12,6 +12,7 @@ import { CheckOption } from '../../../ui/CheckMark';
 import { Icon } from '../../../ui/Icon';
 import { Touchable } from '../../../ui/Touchable';
 import type { Attach, PickSource } from './attach';
+import type { Extra } from './extras';
 
 /** 最近照片一次最多选几张 */
 const SELECT_LIMIT = 9;
@@ -20,16 +21,18 @@ const PLACEHOLDERS = 6;
 
 /**
  * 加号面板（App）：上方最近照片（点选带序号，选了之后出现原图、预览、发送），下方相册、拍摄、文件入口。
- * 点入口先收起面板再打开系统选择器
+ * 后面接投票、接龙等按会话类型给的入口。点入口先收起面板再打开系统选择器或弹层
  */
-export function MorePanel({ attach }: { attach: Attach }) {
+export function MorePanel({ attach, extras }: { attach: Attach; extras: Extra[] }) {
   const t = useT();
   const { theme } = useUnistyles();
   const controller = useChat();
-  const entries: [PickSource, LucideIcon, string][] = [
-    ['media', Images, t('messenger:chat.album')],
-    ...(CAN_CAPTURE ? [['capture', Camera, t('messenger:chat.capture')] as [PickSource, LucideIcon, string]] : []),
-    ['file', FolderOpen, t('messenger:chat.file')],
+  const pick = (source: PickSource) => () => attach.pick(source);
+  const entries: Extra[] = [
+    { key: 'media', icon: Images, label: t('messenger:chat.album'), onPress: pick('media') },
+    ...(CAN_CAPTURE ? [{ key: 'capture', icon: Camera, label: t('messenger:chat.capture'), onPress: pick('capture') }] : []),
+    { key: 'file', icon: FolderOpen, label: t('messenger:chat.file'), onPress: pick('file') },
+    ...extras,
   ];
   return (
     <View style={styles.root}>
@@ -45,15 +48,16 @@ export function MorePanel({ attach }: { attach: Attach }) {
           }}
         />
       )}
-      <View style={styles.entries}>
-        {entries.map(([source, icon, label]) => (
+      {/* 面板高度跟键盘一样，入口多到放不下时上下滚 */}
+      <ScrollView contentContainerStyle={styles.entries}>
+        {entries.map(({ key, icon, label, onPress }) => (
           <Touchable
-            key={source}
+            key={key}
             accessibilityRole="button"
             accessibilityLabel={label}
             onPress={() => {
               controller.closePanel();
-              attach.pick(source);
+              onPress();
             }}
             style={({ pressed }) => [styles.entry, pressed && styles.pressed]}
           >
@@ -63,7 +67,7 @@ export function MorePanel({ attach }: { attach: Attach }) {
             <Text style={styles.label} numberOfLines={1}>{label}</Text>
           </Touchable>
         ))}
-      </View>
+      </ScrollView>
     </View>
   );
 }
@@ -235,8 +239,9 @@ const styles = StyleSheet.create((theme) => ({
   askPressed: { backgroundColor: theme.colors.fillPressed },
   askText: { ...theme.typography.subhead, flex: 1, color: theme.colors.text2 },
   askAction: { ...theme.typography.subhead, color: theme.colors.primaryText },
-  entries: { flexDirection: 'row', paddingHorizontal: theme.spacing.page, paddingTop: theme.spacing.lg, gap: theme.spacing.xl },
-  entry: { alignItems: 'center', gap: theme.spacing.xs, width: theme.size.moreTile + theme.spacing.md },
+  // 每行四个，多了换行
+  entries: { flexDirection: 'row', flexWrap: 'wrap', rowGap: theme.spacing.lg, paddingHorizontal: theme.spacing.page, paddingVertical: theme.spacing.lg },
+  entry: { alignItems: 'center', gap: theme.spacing.xs, width: '25%' },
   tile: {
     width: theme.size.moreTile,
     height: theme.size.moreTile,

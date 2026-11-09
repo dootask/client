@@ -189,6 +189,8 @@ const size = {
   tooltipMaxWidth: 240,
   /** 输入框、整行按钮的高度 */
   control: 48,
+  /** 多行输入框的最小高度（约三行） */
+  textArea: 96,
   /** 登录类页面表单的最大宽度（宽屏上居中） */
   formMaxWidth: 360,
   /** 登录页的应用图标 */

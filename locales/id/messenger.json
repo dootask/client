@@ -266,5 +266,35 @@
     "lock": "Kunci",
     "autoSend": "Terkirim otomatis dalam {{count}} dtk",
     "recording": "Merekam"
+  },
+  "vote": {
+    "title": "Mulai Voting",
+    "topic": "Silakan masukkan topik voting",
+    "option": "Silakan masukkan konten pilihan",
+    "addOption": "Tambah opsi",
+    "multiple": "Izinkan Pilihan Ganda",
+    "anonymous": "Voting Anonim"
+  },
+  "wordChain": {
+    "title": "Mulai Balas Berantai",
+    "tag": "Balas Berantai",
+    "topic": "Silakan masukkan topik balas berantai",
+    "example": "Contoh",
+    "examplePlaceholder": "Anda dapat mengisi format balas berantai",
+    "entry": "Silakan masukkan konten balas berantai",
+    "duplicate": "Konten yang diulang tidak akan lagi dihitung dalam hasil balas berantai",
+    "add": "Tambah",
+    "initiator": "Oleh {{name}} Dimulai, saat ini ({{n}}) orang berpartisipasi dalam balas berantai"
+  },
+  "anon": {
+    "entry": "Pesan Anonim",
+    "title": "Kirim Pesan Anonim",
+    "send": "Kirim Secara Anonim",
+    "hint": "Pesan anonim akan dikirim ke penerima melalui Pesan Anonim (Bot) dan tidak akan merekam informasi identitas Anda"
+  },
+  "call": {
+    "entry": "Telepon",
+    "confirm": "Telepon ({{name}})?",
+    "action": "Lakukan panggilan"
   }
 }

@@ -7,3 +7,6 @@ export const API_PLATFORM: 'ios' | 'android' = Platform.OS === 'ios' ? 'ios' : '
 export function pageOrigin(): string | null {
   return null;
 }
+
+/** 能交给系统拨号（单聊里「打电话」）：手机上可以 */
+export const CAN_DIAL = true;

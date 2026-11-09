@@ -266,5 +266,35 @@
     "lock": "Verrouiller",
     "autoSend": "Envoi dans {{count}} s",
     "recording": "Enregistrement"
+  },
+  "vote": {
+    "title": "Initier un vote",
+    "topic": "Veuillez entrer le sujet du vote",
+    "option": "Veuillez entrer le contenu de l'option",
+    "addOption": "Ajouter une option",
+    "multiple": "Autoriser les sélections multiples",
+    "anonymous": "Vote anonyme"
+  },
+  "wordChain": {
+    "title": "Initier une réponse en chaîne",
+    "tag": "Réponse en chaîne",
+    "topic": "Veuillez entrer le sujet de la réponse en chaîne",
+    "example": "Exemple",
+    "examplePlaceholder": "Vous pouvez remplir le format de réponse en chaîne",
+    "entry": "Veuillez entrer le contenu de la réponse en chaîne",
+    "duplicate": "Le contenu répété ne sera plus compté dans les résultats de la réponse en chaîne",
+    "add": "Ajouter",
+    "initiator": "Par {{name}} Initié, actuellement ({{n}}) personnes participant à la réponse en chaîne"
+  },
+  "anon": {
+    "entry": "Message anonyme",
+    "title": "Envoyer un message anonyme",
+    "send": "Envoyer anonymement",
+    "hint": "Les messages anonymes seront envoyés au destinataire via Message Anonyme (Bot) et n'enregistreront aucune de vos informations d'identité"
+  },
+  "call": {
+    "entry": "Appeler",
+    "confirm": "Appeler ({{name}}) ?",
+    "action": "Passer un appel"
   }
 }

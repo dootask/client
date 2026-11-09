@@ -266,5 +266,35 @@
     "lock": "鎖定",
     "autoSend": "{{count}} 秒後自動發送",
     "recording": "錄音中"
+  },
+  "vote": {
+    "title": "發起投票",
+    "topic": "請輸入投票主題",
+    "option": "請輸入選項內容",
+    "addOption": "添加選項",
+    "multiple": "允許多選",
+    "anonymous": "匿名投票"
+  },
+  "wordChain": {
+    "title": "發起接龍",
+    "tag": "接龍",
+    "topic": "請輸入接龍主題",
+    "example": "例",
+    "examplePlaceholder": "可填寫接龍格式",
+    "entry": "請輸入接龍內容",
+    "duplicate": "重複內容將不再計入接龍結果",
+    "add": "添加",
+    "initiator": "由 {{name}} 發起，參與接龍目前共({{n}})人"
+  },
+  "anon": {
+    "entry": "匿名消息",
+    "title": "發送匿名消息",
+    "send": "匿名發送",
+    "hint": "匿名消息將通過匿名消息（機器人）發送給對方，不會記錄你的任何身份信息"
+  },
+  "call": {
+    "entry": "打電話",
+    "confirm": "是否撥打電話給 ({{name}})？",
+    "action": "撥打電話"
   }
 }

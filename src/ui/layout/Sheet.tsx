@@ -1,5 +1,5 @@
 import { X } from 'lucide-react-native';
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { ActivityIndicator, Modal, Pressable, Text, View } from 'react-native';
 import { GestureDetector, GestureHandlerRootView, usePanGesture } from 'react-native-gesture-handler';
 import Animated, { type CSSTransitionProperties, runOnJS, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
@@ -44,7 +44,7 @@ export interface SheetProps {
   confirm?: SheetConfirm;
   /** 占满可用高度：内容是会变长的列表时，加载、搜索后不跳高；内容区可用 flex: 1 */
   fill?: boolean;
-  /** 弹层的窗口显示出来后：要弹键盘的聚焦放在这里（安卓上窗口显示前聚焦，输入框有焦点但不弹键盘） */
+  /** 弹层展开后：要弹键盘的聚焦放在这里（安卓上弹层窗口拿到焦点前聚焦，输入框有焦点但不弹键盘） */
   onShow?: () => void;
   children: ReactNode;
 }
@@ -61,6 +61,7 @@ export function Sheet({ visible, onClose, title, wide = 'center', confirm, fill 
   const [mounted, setMounted] = useState(visible);
   const [shown, setShown] = useState(false);
   const drag = useSharedValue(0);
+  const showTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   // 打开、关闭的状态在渲染时同步，effect 里只做定时
   if (visible && !mounted) setMounted(true);
@@ -75,9 +76,16 @@ export function Sheet({ visible, onClose, title, wide = 'center', confirm, fill 
       });
       return () => cancelAnimationFrame(frame);
     }
+    clearTimeout(showTimer.current);
     const timer = setTimeout(() => setMounted(false), DURATION);
     return () => clearTimeout(timer);
   }, [visible, drag]);
+  useEffect(() => () => clearTimeout(showTimer.current), []);
+
+  // 窗口显示时安卓上还没拿到输入焦点（这时弹键盘会被系统忽略），等展开动画放完再回调
+  const handleShow = onShow && (() => {
+    showTimer.current = setTimeout(onShow, DURATION);
+  });
 
   // 只有顶部（拖拽条和标题栏）响应下拉，内容区留给滚动和输入
   const pan = usePanGesture({
@@ -105,7 +113,7 @@ export function Sheet({ visible, onClose, title, wide = 'center', confirm, fill 
   if (!mounted) return null;
 
   return (
-    <Modal visible transparent animationType="none" statusBarTranslucent navigationBarTranslucent onRequestClose={onClose} onShow={onShow}>
+    <Modal visible transparent animationType="none" statusBarTranslucent navigationBarTranslucent onRequestClose={onClose} onShow={handleShow}>
       <GestureHandlerRootView style={FILL}>
         <View style={styles.root(form)}>
           <Animated.View style={[styles.backdrop(shown), TRANSITION]}>
