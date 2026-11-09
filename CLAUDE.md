@@ -55,11 +55,12 @@ DooTask 的全端客户端：一套 Expo + react-native-web 代码，出 iOS、A
 
 ## 测试
 
-- **Web**：用 Playwright 在浏览器里亲自点过，截图和记录放 `tests/playwright-results/`
-- **Android**：用 Mac mini 上的安卓模拟器（通过全局 orchestrator 技能操作，细节见 `CLAUDE.local.md` 和 `docs/dev.md`）。Mac mini 上只构建和运行，不在上面改代码
-- **iOS**：交给用户自己验证
-- **真机测试包**（iOS 和安卓）：用 `.claude/skills/app-build` 技能出包放进下载页，用户自己安装
-- UI 和交互要自己逐屏验收，不要只看代码就说完成
+- **测试机**（见 `CLAUDE.local.md`）：Web 的 Playwright 和安卓模拟器测试都在这台 Mac 上跑，通过全局 orchestrator 技能操作，只构建和运行，不在上面改代码。流程和坑见 `docs/dev.md`「测试分工」
+- **执行交给测试机上的 qoder（`dfmodel`），判定自己做**：写清步骤和预期派给它，回来后抽查截图核对结论才算验收；账号密码不写进它的提示词，登录自己做
+- **以安卓为主**；iOS 模拟器非必要不测，iOS 交给用户自己验证
+- 小改动只在 Web 验；涉及手势、键盘的改动安卓也要验
+- **真机测试包**（iOS 和安卓）：在 Mac mini 上用 `.claude/skills/app-build` 技能出包放进下载页，用户自己安装
+- UI 和交互要逐屏验收（看截图），不要只看代码就说完成
 - **测试服数据可以随意增删改**（发消息、建任务、上传都不用请示）
 - **测试账号**见 `CLAUDE.local.md`。需要普通权限账号时，在主仓库执行 `./cmd repassword <账号>` 重置密码（会让该账号现有的登录失效）
 

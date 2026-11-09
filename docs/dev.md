@@ -14,9 +14,18 @@
 - 主仓库的前端 dev server 由用户自己运行，不要去启动
 - **加翻译**：新键先按中文原文查主仓库的旧译文 `npm run i18n:find -- 设置`（找不到会列出相近的原文），9 种语言写进 `locales/<语言>/<命名空间>.json`；`npm run check` 会检查缺译、未使用的键和插值参数
 
-## Mac mini（只构建和运行，不改代码）
+## 测试分工
 
-用于安卓模拟器测试和出 iOS 包，通过 orchestrator 操作（全局 orchestrator 技能）。代码在本机打包后传过去，Mac mini 上只解包、构建、运行。
+- **测试机**（机器名、路径见 `CLAUDE.local.md`）：Web 的 Playwright 测试和安卓模拟器测试都在这台 Mac 上跑；**真机测试包**还在 Mac mini 出（签名证书和正式签名只在 Mac mini 上）
+- **执行交给 qoder，判定自己做**：测试步骤写成自包含的说明，用 orchestrator 派给测试机上的 qoder（`dfmodel`）执行，它截图并逐步报 PASS / FAIL；我抽查截图核对结论后才算验收。它能看图，但会有误报（例如把开发启动器的悬浮齿轮按钮当成界面问题，或自己的检测脚本没认出元素就判失败），结论必须对照截图
+- **账号密码不进 qoder 的提示词**（模型服务在外部）：登录自己做。Web 用登录脚本保存浏览器状态文件给它复用；安卓用 adb 自己登录，它接着用已登录的 App
+- **测试以安卓为主**；iOS 模拟器非必要不测（只影响 iOS 的改动才测，先说明），iOS 真机交给用户
+- 测试机上的辅助文件放在测试目录（`~/qa`）：`login-web.mjs`（Web 登录并保存状态）、`ui.sh`（安卓：`dump` 列出屏幕文字和无障碍标签及坐标，`tap <文字>` 点元素，`type <英文>` 输入，`shot <文件>` 截图）、`rn-m2` + `rn-m2.gradle`（见下面的坑）
+- 派任务时写明：只读项目目录、只在自己的结果目录写文件、不登出不重装不改系统设置、拿不准就标 INCONCLUSIVE 不要猜 PASS；指定机器用任务的 `target: {type: "machine_id", machineId}`，写成 `machineId` 字段会被派到别的机器
+
+## 测试机和 Mac mini（只构建和运行，不改代码）
+
+通过 orchestrator 操作（全局 orchestrator 技能）。代码在本机打包后传过去，只解包、构建、运行。
 
 ### 安卓
 
@@ -38,6 +47,10 @@
 - **Expo 原生模块也写死成 `resources/app` 的版本**：npm 包里带了预编译好的 AAR（`local-maven-repo/`），它和编译时用的 `expo-modules-core` 版本绑定。expo-sqlite 58.0.15 的 AAR 按 expo-modules-v2 0.2.7 编译，而 expo-modules-core 58.0.22 带的是 0.2.5：编译能过，安卓一启动就报 `Cannot find native module 'ExpoSQLite'`（logcat 里是 `NoSuchMethodError: ...SharedObjectRegistry.register`）。原生模块用 `npm install --save-exact 包@版本` 装成和 `resources/app` 一样的版本；`resources/app` 没有的，装和当前 `expo-modules-core` 同一时期发布的版本
 - **iOS 闪退先看崩溃报告**：模拟器装上后 `xcrun simctl launch`，崩溃报告在 `~/Library/Logs/DiagnosticReports/<App>-*.ips`，`asi` 字段里有 dyld 找不到符号这类启动期错误
 
+- **测试机连不上 repo.reactnative.dev**（连接被重置；Maven Central 上的 `react-android`、`hermes-android` 会 301 跳到这里）：Gradle 卡在下载 288 MB 的 debug aar，重试也没用。做法是从 Mac mini 的 Gradle 缓存（`~/.gradle/caches/modules-2/files-2.1/com.facebook.{react,hermes}/...`）把这两个包按 Maven 目录结构整理成本地仓库传过去，构建时 `./gradlew -I <init 脚本> :app:assembleDebug`，init 脚本在 `allprojects.repositories` 里加这个本地仓库并只放行 `com.facebook.react`、`com.facebook.hermes` 两个组。RN 升级后要重新整理。iOS 的 `pod install` 同样卡在这里下载 `reactnative-dependencies` 包
+- **测试机上命令行的环境**：Homebrew 在 `/opt/homebrew/bin`，orchestrator 执行的命令默认不在 PATH 里，要自己加；CocoaPods 要 `LANG=en_US.UTF-8`；没有单独装 JDK，`JAVA_HOME` 用 Android Studio 自带的 JBR（Java 25 能编过）；zsh 不会拆分变量里的空格，`A="adb -s x"; $A ...` 会报找不到命令
+- **安卓模拟器默认输入法是中文拼音**，`adb shell input text` 打的英文会被转成汉字：输入前 `ime disable` 停用 Gboard，打完 `ime enable` + `ime set` 恢复（`ui.sh type` 已包含）；`input text` 只支持 ASCII
+- **开发包第一次打开**会先弹"附近设备"权限和开发菜单引导，点掉即可；开发启动器有个悬浮齿轮按钮（Tools），截图里盖在内容上不是 App 的问题
 - **Gradle 守护进程偶尔内存溢出（Metaspace OOM）卡死**：`./gradlew --stop`，杀掉挂住的 gradlew 客户端进程，再重新构建
 - **长构建用 `nohup` 后台跑**，日志写 `/tmp`；直接在 orchestrator 里前台跑，守护进程重启会把子进程一起杀掉
 - **含清空目录操作的脚本**只能在目标机器的预期目录里用文件路径执行，不能通过 stdin 执行，也不能拿来实测；要验证就用 `bash -n` 或读代码。远程执行清空前，先 echo 出将被删除的路径（2026-10-18 曾两次误删目录）
