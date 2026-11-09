@@ -1,4 +1,4 @@
-import { BellOff, Code, Keyboard, Pencil, Reply, Send, Smile, Type, X } from 'lucide-react-native';
+import { BellOff, Code, Keyboard, Mic, Pencil, Reply, Send, Smile, Type, X } from 'lucide-react-native';
 import { useEffect, useEffectEvent, useImperativeHandle, useLayoutEffect, useRef, type Ref } from 'react';
 import { Text, View, type TextInputSelectionChangeEvent } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
@@ -36,6 +36,8 @@ import { useComposeState, type ComposeStore } from './composeStore';
 import { useEnterKey } from './enterKey';
 import { inputContent } from './inputContent';
 import { slashReplacement, type Candidate, type PickerKeys } from './MentionPicker';
+import type { VoiceInput } from './VoiceRecorder';
+import { HOLD_TO_TALK } from './voiceTraits';
 
 /** 输入框上方的条：回复某条消息，或编辑自己发的消息 */
 /** 发送方式：auto 按内容判断是否 Markdown，silence 不提醒对方 */
@@ -50,6 +52,8 @@ export interface ComposerHandle {
   replace: (value: ComposeValue) => void;
   /** 选了候选：start 为候选符号的位置，到光标为止是查询文字 */
   pick: (start: number, char: PickerChar, item: Candidate) => void;
+  /** 语音转好的文字：插在光标处，切回键盘 */
+  dictate: (text: string) => void;
   /** 删掉光标前的一个字（表情面板的删除键） */
   backspace: () => void;
   /** 发一个表情包或贴纸（带上正在回复的消息）；clear 时清空输入框（选了快捷表情，输入的字就是关键词） */
@@ -60,15 +64,18 @@ export interface ComposerHandle {
 const msgHtml = (msg: Msg) => String((msg.msg as { text?: unknown } | null)?.text ?? '');
 
 /**
- * 输入栏：表情面板开关、输入框、右侧有字时是发送，没字时是加号（发图片、文件）。
+ * 输入栏：语音、输入框、表情面板开关，右侧有字时是发送，没字时是加号（发图片、文件）。
+ * 语音模式下按住说话的长条顶替输入框（输入框留着，切回来内容和光标都在）；编辑消息时没有语音。
  * 内容放在 store 里（与上方的候选浮层共用），随时存为草稿（会话列表里显示）；
  * 编辑消息期间草稿先收起来，编辑完或取消后还原。群里回复别人时自动 @ 对方
  */
-export function Composer({ dialogId, store, pickerKeysRef, mode, onModeEnd, onSent, attach, ref }: {
+export function Composer({ dialogId, store, pickerKeysRef, mode, onModeEnd, onSent, attach, voice, ref }: {
   dialogId: number;
   store: ComposeStore;
   pickerKeysRef: PickerKeys;
   attach: Attach;
+  /** 不能录音的平台为 null */
+  voice: VoiceInput | null;
   mode: ComposerMode;
   onModeEnd: () => void;
   /** 发出一条新消息后（滚到底部） */
@@ -132,8 +139,15 @@ export function Composer({ dialogId, store, pickerKeysRef, mode, onModeEnd, onSe
   });
   useLayoutEffect(() => autoMention(), [replyTo?.id, replyName]);
 
-  // 选了回复 / 编辑就直接能打字
-  const focusInput = useEffectEvent(() => controller.focusInput());
+  const voiceMode = !!voice?.mode && !editing;
+  const leaveVoice = () => voice?.setMode(false);
+
+  // 选了回复 / 编辑就直接能打字；语音模式下回复就按住说话
+  const focusInput = useEffectEvent(() => {
+    if (voiceMode) return;
+    leaveVoice();
+    controller.focusInput();
+  });
   useEffect(() => {
     if (mode) focusInput();
   }, [mode]);
@@ -146,6 +160,14 @@ export function Composer({ dialogId, store, pickerKeysRef, mode, onModeEnd, onSe
     },
     replace: (next) => {
       update(next, next.text.length, true);
+      leaveVoice();
+      controller.focusInput();
+    },
+    dictate: (text) => {
+      const { value: current, cursor } = store.get();
+      const result = applyTextChange(current, current.text.slice(0, cursor) + text + current.text.slice(cursor));
+      update(result.value, cursor + text.length, true);
+      leaveVoice();
       controller.focusInput();
     },
     pick: (start, char, item) => {
@@ -213,20 +235,36 @@ export function Composer({ dialogId, store, pickerKeysRef, mode, onModeEnd, onSe
   ];
   const sendIcon = <Icon icon={Send} color={canSend ? theme.colors.primaryText : theme.colors.text4} size={theme.size.icon} />;
   const emojiOpen = controller.activePanel === 'emoji';
+  /** 按住说话的平台切换语音模式（收起键盘和面板 / 切回键盘）；其余平台点了直接开始录 */
+  const onVoice = () => {
+    if (!voice) return;
+    if (!HOLD_TO_TALK) {
+      voice.start();
+    } else if (voice.mode) {
+      voice.setMode(false);
+      controller.focusInput();
+    } else {
+      controller.dismiss();
+      voice.setMode(true);
+    }
+  };
   return (
     <View style={styles.root}>
       {mode && <ModeBar mode={mode} onClose={onModeEnd} />}
       <View style={styles.row}>
-        <Touchable
-          accessibilityRole="button"
-          accessibilityLabel={t(emojiOpen ? 'messenger:chat.keyboard' : 'messenger:chat.emoji')}
-          hitSlop={slop}
-          onPress={() => controller.togglePanel('emoji')}
-          style={({ pressed }) => [styles.button, pressed && styles.pressed]}
-        >
-          <Icon icon={emojiOpen ? Keyboard : Smile} color={theme.colors.text2} size={theme.size.icon} />
-        </Touchable>
-        <View style={styles.frame}>
+        {voice && !editing && (
+          <Touchable
+            accessibilityRole="button"
+            accessibilityLabel={t(voiceMode ? 'messenger:chat.keyboard' : 'messenger:record.voice')}
+            hitSlop={slop}
+            onPress={onVoice}
+            style={({ pressed }) => [styles.button, pressed && styles.pressed]}
+          >
+            <Icon icon={voiceMode ? Keyboard : Mic} color={theme.colors.text2} size={theme.size.icon} />
+          </Touchable>
+        )}
+        {voiceMode && <View style={styles.voice}>{voice?.bar}</View>}
+        <View style={[styles.frame, voiceMode && styles.hidden]}>
           <ChatInput
             style={styles.input}
             {...inputContent(value)}
@@ -240,6 +278,18 @@ export function Composer({ dialogId, store, pickerKeysRef, mode, onModeEnd, onSe
             {...enterKey}
           />
         </View>
+        <Touchable
+          accessibilityRole="button"
+          accessibilityLabel={t(emojiOpen ? 'messenger:chat.keyboard' : 'messenger:chat.emoji')}
+          hitSlop={slop}
+          onPress={() => {
+            leaveVoice();
+            controller.togglePanel('emoji');
+          }}
+          style={({ pressed }) => [styles.button, pressed && styles.pressed]}
+        >
+          <Icon icon={emojiOpen ? Keyboard : Smile} color={theme.colors.text2} size={theme.size.icon} />
+        </Touchable>
         {editing ? (
           // 编辑按原格式改，没有发送方式菜单
           <Touchable
@@ -252,7 +302,7 @@ export function Composer({ dialogId, store, pickerKeysRef, mode, onModeEnd, onSe
           >
             {sendIcon}
           </Touchable>
-        ) : canSend ? (
+        ) : canSend && !voiceMode ? (
           <Menu
             items={sendMenu}
             trigger="context"
@@ -333,6 +383,12 @@ const styles = StyleSheet.create((theme) => ({
     borderRadius: theme.radius.block,
     backgroundColor: theme.colors.fill,
   },
+  voice: {
+    flex: 1,
+    marginHorizontal: theme.spacing.xs,
+    marginVertical: (theme.size.touch - theme.size.chatInput) / 2,
+  },
+  hidden: { display: 'none' },
   input: {
     ...theme.typography.body,
     color: theme.colors.text,

@@ -26,6 +26,7 @@ function setup(reply: (path: string, fields: Record<string, string>) => unknown)
   const io: UploadIO = {
     md5: async () => 'd41d8cd98f00b204e9800998ecf8427e',
     slice: async (_file, offset, length) => ({ part: { chunk: { offset, length } }, dispose: () => {} }),
+    base64: async () => '',
     post: vi.fn(async ({ url, fields, onProgress }) => {
       const path = pathOf(url);
       posts.push({ path, fields });

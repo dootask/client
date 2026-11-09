@@ -248,5 +248,23 @@
       "myReports": "내 보고서",
       "receivedReports": "받은 보고서"
     }
+  },
+  "record": {
+    "hold": "길게 눌러 말하기",
+    "tooShort": "말하는 시간이 너무 짧습니다",
+    "micDenied": "마이크 권한이 허용되지 않았습니다",
+    "releaseCancel": "놓아서 취소",
+    "releaseConvert": "손을 떼면 텍스트로 변환",
+    "convert": "텍스트로 변환",
+    "converting": "텍스트로 변환 중",
+    "convertFailed": "텍스트로 변환하지 못했습니다",
+    "voice": "음성",
+    "releaseSend": "놓아서 보내기",
+    "releaseLock": "놓아서 잠금",
+    "slideLock": "버튼으로 밀어 잠금, 취소 또는 텍스트 변환",
+    "locked": "잠금됨, 손을 떼고 계속 말하세요",
+    "lock": "잠금",
+    "autoSend": "{{count}}초 후 자동 전송",
+    "recording": "녹음 중"
   }
 }

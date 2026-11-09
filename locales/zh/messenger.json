@@ -248,5 +248,23 @@
       "myReports": "我的报告",
       "receivedReports": "收到的报告"
     }
+  },
+  "record": {
+    "hold": "按住说话",
+    "tooShort": "说话时间太短",
+    "micDenied": "未开启麦克风权限",
+    "releaseCancel": "松开取消",
+    "releaseConvert": "松开转文字",
+    "convert": "转文字",
+    "converting": "转文字中",
+    "convertFailed": "转文字失败",
+    "voice": "语音",
+    "releaseSend": "松开发送",
+    "releaseLock": "松开锁定",
+    "slideLock": "滑到按钮上松开，可锁定、取消或转文字",
+    "locked": "已锁定，可松手继续说",
+    "lock": "锁定",
+    "autoSend": "{{count}} 秒后自动发送",
+    "recording": "录音中"
   }
 }

@@ -24,7 +24,7 @@ import type { BubbleTouchProps, RowRef } from './bubbleTouchTypes';
 import { chained, isSystemRow, type ChatRow, type RowData } from './chatModel';
 import { LIKE } from './emoji';
 import { forwardable } from './messageMenu';
-import { FileCard, isMediaBody, isStickerBody, LocalMedia, MediaBody, MessageBody, StickerBody } from './MessageBody';
+import { FileCard, isMediaBody, isStickerBody, LocalMedia, MediaBody, MessageBody, RecordBody, StickerBody } from './MessageBody';
 import { msgExtra } from './msgExtra';
 import { type BubbleTone, RichBlocks } from './RichText';
 import type { Selection } from './selection';
@@ -108,6 +108,13 @@ function useName(userid: number, aiName?: string): string {
   return user?.nickname ?? '';
 }
 
+/** 列表每次重渲染都会给每行新的 info 对象，按字段比较，内容没变的行不重渲染 */
+function sameInfo(prev: { info: MessageRenderInfo<RowData> }, next: { info: MessageRenderInfo<RowData> }): boolean {
+  const a = prev.info;
+  const b = next.info;
+  return a.message === b.message && a.older === b.older && a.newer === b.newer && a.isOwn === b.isOwn;
+}
+
 export const MessageRow = memo(function MessageRow({ info }: { info: MessageRenderInfo<RowData> }) {
   const ctx = useRowContext();
   const { theme } = useUnistyles();
@@ -135,7 +142,7 @@ export const MessageRow = memo(function MessageRow({ info }: { info: MessageRend
       </View>
     </View>
   );
-});
+}, sameInfo);
 
 const shiftKey = (event: GestureResponderEvent) => !!(event.nativeEvent as { shiftKey?: boolean }).shiftKey;
 
@@ -511,7 +518,13 @@ function UploadRow({ info, item }: { info: MessageRenderInfo<RowData>; item: Upl
   const touch: Touch = { menu: () => items };
   return (
     <View>
-      {file.media ? (
+      {item.duration !== undefined ? (
+        // 语音不显示进度（文件小，随消息一起发出）
+        <BubbleFrame info={info} touch={touch}>
+          <RecordBody url={file.uri} duration={item.duration} text="" tone={ctx.tones.own} />
+          <PendingMeta at={item.queuedAt} tone={ctx.tones.own} />
+        </BubbleFrame>
+      ) : file.media ? (
         <BubbleFrame info={info} variant="bare" touch={touch}>
           <LocalMedia file={file}>{!failed && <UploadProgress localId={item.localId} size={theme.size.mediaPlay} scrim />}</LocalMedia>
         </BubbleFrame>

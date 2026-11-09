@@ -67,6 +67,8 @@ function fakeApi(over: Partial<MessengerApi> = {}): MessengerApi {
     emoji: vi.fn(),
     myTodos: vi.fn(async () => []),
     sendFile: vi.fn(),
+    sendRecord: vi.fn(),
+    convertRecord: vi.fn(),
     forgetFile: vi.fn(),
     ...over,
   } as MessengerApi;
@@ -398,6 +400,24 @@ describe('发文件', () => {
     expect(signal!.aborted).toBe(true);
     expect(s().uploads).toEqual([]);
     expect(forgetFile).toHaveBeenCalledWith(a!.localId, a!.file);
+    m.stop();
+  });
+
+  it('语音走同一个队列：排在同一会话的文件之后，用语音接口发出', async () => {
+    let finishFile: ((v: unknown) => void) | undefined;
+    const sendFile = vi.fn(() => new Promise((resolve) => (finishFile = resolve)));
+    const sendRecord = vi.fn(async () => msg(401, { userid: ME, type: 'record' }));
+    const { m, s } = setup(fakeApi({ sendFile, sendRecord }));
+    await m.start();
+    m.sendFiles({ dialog_id: 10, files: [file('a')] });
+    m.sendRecord({ dialog_id: 10, file: file('r.m4a'), duration: 1500, reply_id: 5 });
+    await settle(10);
+    expect(sendRecord).not.toHaveBeenCalled();
+    finishFile!(msg(400, { userid: ME, type: 'file' }));
+    await settle(10);
+    expect(sendRecord).toHaveBeenCalledWith({ dialog_id: 10, file: file('r.m4a'), duration: 1500, reply_id: 5 });
+    expect(s().uploads).toEqual([]);
+    expect(Object.keys(s().sentKeys)).toEqual(['400', '401']);
     m.stop();
   });
 });

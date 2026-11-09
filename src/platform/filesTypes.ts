@@ -33,6 +33,8 @@ export interface FileIO {
     signal: AbortSignal;
     onProgress: (ratio: number) => void;
   }): Promise<{ status: number; body: string }>;
+  /** 整个文件的 base64（不带 data: 前缀），只用于语音这样的小文件 */
+  base64(file: PickedFile): Promise<string>;
   /** 文件发完或放弃了，释放本地占用（Web 的 blob: 地址） */
   release(file: PickedFile): void;
 }

@@ -248,5 +248,23 @@
       "myReports": "自分のレポート",
       "receivedReports": "受信したレポート"
     }
+  },
+  "record": {
+    "hold": "長押しして話す",
+    "tooShort": "話す時間が短すぎます",
+    "micDenied": "マイクの権限が許可されていません",
+    "releaseCancel": "離してキャンセル",
+    "releaseConvert": "離すとテキストに変換",
+    "convert": "テキストに変換",
+    "converting": "テキストに変換中",
+    "convertFailed": "テキストへの変換に失敗しました",
+    "voice": "音声",
+    "releaseSend": "離して送信",
+    "releaseLock": "離してロック",
+    "slideLock": "ボタンまでスライドしてロック・キャンセル・テキスト変換",
+    "locked": "ロック中、手を離して話し続けられます",
+    "lock": "ロック",
+    "autoSend": "{{count}} 秒後に自動送信",
+    "recording": "録音中"
   }
 }

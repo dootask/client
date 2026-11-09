@@ -248,5 +248,23 @@
       "myReports": "Mes rapports",
       "receivedReports": "Rapports reçus"
     }
+  },
+  "record": {
+    "hold": "Maintenir pour parler",
+    "tooShort": "Le temps de parole est trop court",
+    "micDenied": "L'autorisation du microphone n'est pas activée",
+    "releaseCancel": "Relâchez pour annuler",
+    "releaseConvert": "Relâcher pour convertir en texte",
+    "convert": "Convertir en texte",
+    "converting": "Conversion en texte",
+    "convertFailed": "Échec de la conversion en texte",
+    "voice": "Voix",
+    "releaseSend": "Relâchez pour envoyer",
+    "releaseLock": "Relâchez pour verrouiller",
+    "slideLock": "Glissez sur un bouton pour verrouiller, annuler ou convertir",
+    "locked": "Verrouillé, continuez sans les mains",
+    "lock": "Verrouiller",
+    "autoSend": "Envoi dans {{count}} s",
+    "recording": "Enregistrement"
   }
 }

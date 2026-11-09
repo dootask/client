@@ -3,7 +3,7 @@ import {
   Captions, Copy, Flag, FlagOff, Forward, Languages, ListChecks, ListTodo, ListX, Pencil, Pin, PinOff, Reply, RotateCw, SmilePlus, Star, StarOff,
   TextSelect, Trash2, Undo2, X,
 } from 'lucide-react-native';
-import { useMemo } from 'react';
+import { useLayoutEffect, useMemo, useRef } from 'react';
 
 import { useT } from '../../../i18n';
 import type { Msg } from '../../../sync/api/dialog';
@@ -53,6 +53,11 @@ export function useMessageMenus(handlers: MenuHandlers) {
   const messenger = useMessenger();
   const actions = useMsgActions();
   const errorText = useErrorText();
+  // 回调在选中菜单项时才用：取最新的一份，调用方每次渲染给新对象也不重建菜单（菜单变了整个消息列表都要重渲染）
+  const latest = useRef(handlers);
+  useLayoutEffect(() => {
+    latest.current = handlers;
+  });
 
   return useMemo(() => {
     const failed = (err: unknown) => showToast(errorText(err));
@@ -70,7 +75,7 @@ export function useMessageMenus(handlers: MenuHandlers) {
       const text = plainText(msg, body);
       const { tag, todo } = msgExtra(msg);
 
-      const main: MenuAction[] = [{ label: t('messenger:chat.reply'), icon: Reply, onSelect: () => handlers.onReply(msg) }];
+      const main: MenuAction[] = [{ label: t('messenger:chat.reply'), icon: Reply, onSelect: () => latest.current.onReply(msg) }];
       if (menuTraits.reactSubmenu) {
         main.push({
           label: t('messenger:chat.react'),
@@ -78,15 +83,15 @@ export function useMessageMenus(handlers: MenuHandlers) {
           children: REACTIONS.map((symbol) => ({ label: symbol, onSelect: () => void messenger.toggleEmoji(msg, symbol).catch(failed) })),
         });
       }
-      if (forwardable(msg)) main.push({ label: t('messenger:action.forward'), icon: Forward, onSelect: () => handlers.onForward(msg) });
+      if (forwardable(msg)) main.push({ label: t('messenger:action.forward'), icon: Forward, onSelect: () => latest.current.onForward(msg) });
       if (text) {
         main.push({ label: t('messenger:chat.copy'), icon: Copy, onSelect: () => copy(text) });
-        if (menuTraits.selectTextPage) main.push({ label: t('messenger:action.selectText'), icon: TextSelect, onSelect: () => handlers.onSelectText(text) });
+        if (menuTraits.selectTextPage) main.push({ label: t('messenger:action.selectText'), icon: TextSelect, onSelect: () => latest.current.onSelectText(text) });
       }
-      if (forwardable(msg)) main.push({ label: t('messenger:action.selectMany'), icon: ListChecks, onSelect: () => handlers.onSelectMany(msg) });
+      if (forwardable(msg)) main.push({ label: t('messenger:action.selectMany'), icon: ListChecks, onSelect: () => latest.current.onSelectMany(msg) });
 
       const manage: MenuAction[] = [];
-      if (own && msg.type === 'text') manage.push({ label: t('messenger:chat.edit'), icon: Pencil, onSelect: () => handlers.onEdit(msg) });
+      if (own && msg.type === 'text') manage.push({ label: t('messenger:chat.edit'), icon: Pencil, onSelect: () => latest.current.onEdit(msg) });
       if (own) {
         manage.push({
           label: t('messenger:chat.withdraw'),
@@ -117,7 +122,7 @@ export function useMessageMenus(handlers: MenuHandlers) {
       );
       if (todo) {
         manage.push(
-          { label: t('messenger:action.todoDetail'), icon: ListChecks, onSelect: () => handlers.onTodoDetail(msg) },
+          { label: t('messenger:action.todoDetail'), icon: ListChecks, onSelect: () => latest.current.onTodoDetail(msg) },
           {
             label: t('messenger:action.todoCancel'),
             icon: ListX,
@@ -132,7 +137,7 @@ export function useMessageMenus(handlers: MenuHandlers) {
           },
         );
       } else {
-        manage.push({ label: t('messenger:action.todoSet'), icon: ListTodo, onSelect: () => handlers.onSetTodo(msg) });
+        manage.push({ label: t('messenger:action.todoSet'), icon: ListTodo, onSelect: () => latest.current.onSetTodo(msg) });
       }
       manage.push({
         label: t(favorited ? 'messenger:action.unfavorite' : 'messenger:action.favorite'),
@@ -141,7 +146,7 @@ export function useMessageMenus(handlers: MenuHandlers) {
           void actions
             .toggleFavorite(msg.id)
             // 同旧前端：收藏后的提示里可以接着改备注
-            .then((res) => showToast(res.msg, res.favorited ? { label: t('messenger:action.editRemark'), onPress: () => handlers.onFavoriteRemark(msg.id) } : undefined))
+            .then((res) => showToast(res.msg, res.favorited ? { label: t('messenger:action.editRemark'), onPress: () => latest.current.onFavoriteRemark(msg.id) } : undefined))
             .catch(failed),
       });
 
@@ -181,5 +186,5 @@ export function useMessageMenus(handlers: MenuHandlers) {
     };
 
     return { menu, pendingMenu, uploadMenu };
-  }, [t, messenger, actions, errorText, handlers]);
+  }, [t, messenger, actions, errorText]);
 }

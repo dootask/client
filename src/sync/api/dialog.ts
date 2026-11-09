@@ -269,6 +269,25 @@ export async function sendText(client: ApiClient, params: SendTextParams) {
   return data;
 }
 
+/** 语音：base64 是带音频类型的 data URL（服务端只收 mp3、wav、m4a），duration 毫秒（不少于 600） */
+export type RecordParams = {
+  dialog_id: number;
+  base64: string;
+  duration: number;
+};
+
+/** 发送语音，返回服务器上的消息 */
+export async function sendRecord(client: ApiClient, params: RecordParams & { reply_id?: number }) {
+  const { data } = await requestParsed(client, 'dialog/msg/sendrecord', msgSchema, { method: 'post', data: params });
+  return data;
+}
+
+/** 录音转文字（不发出）；dialog_id 让服务端取最近的聊天作上下文 */
+export async function convertRecord(client: ApiClient, params: RecordParams) {
+  const { data } = await requestParsed(client, 'dialog/msg/convertrecord', z.string(), { method: 'post', data: params });
+  return data;
+}
+
 /** 撤回自己的消息（超过系统设置的时限会被拒绝）；成功后服务端推送 delete */
 export async function withdraw(client: ApiClient, msgId: number) {
   await client.request('dialog/msg/withdraw', { data: { msg_id: msgId } });

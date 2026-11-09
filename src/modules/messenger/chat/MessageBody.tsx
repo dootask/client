@@ -149,7 +149,7 @@ export function FileCard({ name, ext, size, tone, tile }: { name: string; ext: s
 }
 
 /** 语音：宽度随时长增长，点气泡播放 / 停止，播放时进度条走动、时间显示剩余；转写文字在下方；没听过的有红点 */
-function RecordBody({ url, duration, text, tone, unplayed }: {
+export function RecordBody({ url, duration, text, tone, unplayed }: {
   url: string; duration: number; text: string; tone: BubbleTone; unplayed?: boolean;
 }) {
   const { theme } = useUnistyles();

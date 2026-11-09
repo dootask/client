@@ -70,6 +70,11 @@ export async function pickDocuments(): Promise<PickedFile[]> {
   }));
 }
 
+/** 录好的语音（expo-audio 录在缓存里的 m4a）登记成待发送的本地文件 */
+export async function recordedFile(uri: string): Promise<PickedFile> {
+  return { uri, name: uri.split('/').pop() || 'record.m4a', size: new File(uri).size, mimeType: 'audio/mp4' };
+}
+
 let chunkSeq = 0;
 
 /** 原生上传只收文件：片也是缓存里的临时文件 */
@@ -115,6 +120,8 @@ export const fileIO: FileIO = {
       task.release();
     }
   },
+
+  base64: (file) => new File(file.uri).base64(),
 
   // 缓存里的文件交给系统清理
   release: () => {},

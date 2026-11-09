@@ -46,11 +46,23 @@ export interface MessengerApi {
   sendFile: (params: UploadParams) => Promise<unknown>;
   /** 放弃发送的文件：释放本地文件、清掉服务端的分片会话 */
   forgetFile: (key: string, file: LocalFile) => void;
+  /** 发出语音，成功后释放本地文件 */
+  sendRecord: (params: RecordUpload & { reply_id?: number }) => ReturnType<typeof dialogApi.sendRecord>;
+  convertRecord: (params: RecordUpload) => ReturnType<typeof dialogApi.convertRecord>;
+}
+
+/** 录好的语音：文件和时长（毫秒） */
+export interface RecordUpload {
+  dialog_id: number;
+  file: LocalFile;
+  duration: number;
 }
 
 /** io：平台的读文件和上传实现 */
 export function bindMessengerApi(client: ApiClient, io: UploadIO): MessengerApi {
   const uploader = createUploader(client, io);
+  // 接口收带音频类型的 base64；录音是 AAC（m4a 容器）
+  const recordParams = async ({ dialog_id, file, duration }: RecordUpload) => ({ dialog_id, duration, base64: `data:audio/m4a;base64,${await io.base64(file)}` });
   return {
     lists: (p) => dialogApi.lists(client, p),
     beyond: (p) => dialogApi.beyond(client, p),
@@ -72,6 +84,18 @@ export function bindMessengerApi(client: ApiClient, io: UploadIO): MessengerApi 
     myTodos: (id) => dialogApi.myTodos(client, id),
     sendFile: (p) => uploader.send(p),
     forgetFile: (key, file) => uploader.forget(key, file),
+    sendRecord: async ({ reply_id, ...record }) => {
+      const msg = await dialogApi.sendRecord(client, { ...(await recordParams(record)), reply_id });
+      io.release(record.file);
+      return msg;
+    },
+    convertRecord: async (record) => {
+      try {
+        return await dialogApi.convertRecord(client, await recordParams(record));
+      } finally {
+        io.release(record.file);
+      }
+    },
   };
 }
 
@@ -901,6 +925,13 @@ export function createMessenger(deps: MessengerDeps) {
     pumpUploads();
   }
 
+  /** 发语音：和文件同一个队列（同一会话按顺序发出、失败可重发），只是走语音接口、没有进度 */
+  function sendRecord(params: RecordUpload & { reply_id?: number }) {
+    const item: UploadItem = { localId: `local-${now()}-${++localSeq}`, dialog_id: params.dialog_id, reply_id: params.reply_id, file: params.file, duration: params.duration, queuedAt: now(), state: 'sending' };
+    set({ uploads: [...get().uploads, item] });
+    pumpUploads();
+  }
+
   function retryUpload(localId: string) {
     patchUpload(localId, { state: 'sending', error: undefined });
     pumpUploads();
@@ -930,14 +961,16 @@ export function createMessenger(deps: MessengerDeps) {
     uploading.set(item.localId, controller);
     setProgress(item.localId, 0);
     try {
-      const data = await api.sendFile({
-        file: item.file,
-        dialogId: item.dialog_id,
-        replyId: item.reply_id ?? 0,
-        key: item.localId,
-        signal: controller.signal,
-        onProgress: (ratio) => setProgress(item.localId, ratio),
-      });
+      const data = item.duration === undefined
+        ? await api.sendFile({
+          file: item.file,
+          dialogId: item.dialog_id,
+          replyId: item.reply_id ?? 0,
+          key: item.localId,
+          signal: controller.signal,
+          onProgress: (ratio) => setProgress(item.localId, ratio),
+        })
+        : await api.sendRecord({ dialog_id: item.dialog_id, file: item.file, duration: item.duration, reply_id: item.reply_id });
       set({ uploads: get().uploads.filter((i) => i.localId !== item.localId) });
       const msg = msgOf(data);
       if (msg) {
@@ -1115,6 +1148,8 @@ export function createMessenger(deps: MessengerDeps) {
     /** 上传进度（本地 id → 0–1） */
     uploadProgress: progress,
     sendFiles,
+    sendRecord,
+    convertRecord: (params: RecordUpload) => api.convertRecord(params),
     retryUpload,
     discardUpload,
     editText,

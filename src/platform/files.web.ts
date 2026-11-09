@@ -53,6 +53,13 @@ export function fromBrowserFiles(files: readonly File[]): Promise<PickedFile[]> 
   );
 }
 
+/** 录好的语音（expo-audio 给的 blob: 地址）登记成待发送的本地文件 */
+export async function recordedFile(uri: string): Promise<PickedFile> {
+  const blob = await (await fetch(uri)).blob();
+  blobs.set(uri, blob);
+  return { uri, name: 'record.m4a', size: blob.size, mimeType: blob.type || 'audio/mp4' };
+}
+
 function choose(accept: string): Promise<PickedFile[]> {
   return new Promise((resolve) => {
     const input = document.createElement('input');
@@ -110,6 +117,15 @@ export const fileIO: FileIO = {
       xhr.onabort = () => reject(new Error('Aborted'));
       signal.addEventListener('abort', () => xhr.abort(), { once: true });
       xhr.send(form);
+    });
+  },
+
+  base64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result).replace(/^data:[^,]*,/, ''));
+      reader.onerror = () => reject(reader.error ?? new Error('Read failed'));
+      reader.readAsDataURL(blobOf(file));
     });
   },
 

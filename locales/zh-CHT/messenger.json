@@ -248,5 +248,23 @@
       "myReports": "我的報告",
       "receivedReports": "收到的報告"
     }
+  },
+  "record": {
+    "hold": "按住說話",
+    "tooShort": "說話時間太短",
+    "micDenied": "未開啟麥克風權限",
+    "releaseCancel": "鬆開取消",
+    "releaseConvert": "鬆開轉文字",
+    "convert": "轉文字",
+    "converting": "轉文字中",
+    "convertFailed": "轉文字失敗",
+    "voice": "語音",
+    "releaseSend": "鬆開發送",
+    "releaseLock": "鬆開鎖定",
+    "slideLock": "滑到按鈕上鬆開，可鎖定、取消或轉文字",
+    "locked": "已鎖定，可鬆手繼續說",
+    "lock": "鎖定",
+    "autoSend": "{{count}} 秒後自動發送",
+    "recording": "錄音中"
   }
 }

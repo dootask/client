@@ -44,6 +44,8 @@ export interface UploadItem {
   dialog_id: number;
   reply_id?: number;
   file: LocalFile;
+  /** 语音的时长（毫秒）：有它就是语音，走语音接口 */
+  duration?: number;
   queuedAt: number;
   /** sending：排队或上传中；failed：等用户重发或删除 */
   state: 'sending' | 'failed';

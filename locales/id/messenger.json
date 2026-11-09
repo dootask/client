@@ -248,5 +248,23 @@
       "myReports": "Laporan Saya",
       "receivedReports": "Laporan yang Diterima"
     }
+  },
+  "record": {
+    "hold": "Tahan untuk bicara",
+    "tooShort": "Waktu berbicara terlalu singkat",
+    "micDenied": "Izin mikrofon belum diaktifkan",
+    "releaseCancel": "Lepaskan untuk membatalkan",
+    "releaseConvert": "Lepas untuk mengubah ke teks",
+    "convert": "Ubah menjadi teks",
+    "converting": "Mengubah ke teks",
+    "convertFailed": "Gagal mengonversi ke teks",
+    "voice": "Suara",
+    "releaseSend": "Lepaskan untuk mengirim",
+    "releaseLock": "Lepaskan untuk mengunci",
+    "slideLock": "Geser ke tombol untuk mengunci, batal, atau ubah ke teks",
+    "locked": "Terkunci, lanjutkan bicara tanpa menahan",
+    "lock": "Kunci",
+    "autoSend": "Terkirim otomatis dalam {{count}} dtk",
+    "recording": "Merekam"
   }
 }

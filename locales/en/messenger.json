@@ -248,5 +248,23 @@
       "myReports": "My Reports",
       "receivedReports": "Reports Received"
     }
+  },
+  "record": {
+    "hold": "Hold to talk",
+    "tooShort": "Speaking time is too short",
+    "micDenied": "Microphone permission is not enabled",
+    "releaseCancel": "Release to cancel",
+    "releaseConvert": "Release to convert to text",
+    "convert": "Convert to text",
+    "converting": "Converting to text",
+    "convertFailed": "Failed to convert to text",
+    "voice": "Voice",
+    "releaseSend": "Release to send",
+    "releaseLock": "Release to lock",
+    "slideLock": "Slide onto a button to lock, cancel or convert",
+    "locked": "Locked, keep talking hands-free",
+    "lock": "Lock",
+    "autoSend": "Sending in {{count}}s",
+    "recording": "Recording"
   }
 }

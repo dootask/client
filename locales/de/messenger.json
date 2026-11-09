@@ -248,5 +248,23 @@
       "myReports": "Meine Berichte",
       "receivedReports": "Erhaltene Berichte"
     }
+  },
+  "record": {
+    "hold": "Zum Sprechen gedrückt halten",
+    "tooShort": "Sprechzeit ist zu kurz",
+    "micDenied": "Mikrofonberechtigung ist nicht aktiviert",
+    "releaseCancel": "Loslassen zum Abbrechen",
+    "releaseConvert": "Loslassen, um in Text umzuwandeln",
+    "convert": "In Text umwandeln",
+    "converting": "Wird in Text umgewandelt",
+    "convertFailed": "Konvertierung in Text fehlgeschlagen",
+    "voice": "Sprache",
+    "releaseSend": "Loslassen zum Senden",
+    "releaseLock": "Loslassen zum Sperren",
+    "slideLock": "Auf eine Schaltfläche ziehen: sperren, abbrechen oder in Text umwandeln",
+    "locked": "Gesperrt, freihändig weitersprechen",
+    "lock": "Sperren",
+    "autoSend": "Wird in {{count}} s gesendet",
+    "recording": "Aufnahme läuft"
   }
 }

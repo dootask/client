@@ -44,6 +44,8 @@ import { TodoDetailSheet } from './sheets/TodoDetailSheet';
 import { TodoSetSheet } from './sheets/TodoSetSheet';
 import { TranslateSheet } from './sheets/TranslateSheet';
 import { toggleVoice } from './voice';
+import { useVoiceInput } from './VoiceRecorder';
+import { CAN_RECORD } from './voiceTraits';
 
 /** 离开会话时最上面看到的那条，下次打开回到这里（本次运行内） */
 const positions = new Map<number, number>();
@@ -198,7 +200,7 @@ function ChatScreen({ dialogId, msgId }: { dialogId: number; msgId: number }) {
   const onReply = useCallback((msg: Msg) => {
     setMode({ kind: 'reply', msg });
   }, []);
-  // 交给 React Compiler 记忆：手写 useMemo 包住传给 hook 的对象会让编译器放弃优化整个组件
+  // useMessageMenus 只在选中菜单项时读取，不要求稳定
   const handlers: MenuHandlers = {
     onReply,
     onEdit: (msg: Msg) => setMode({ kind: 'edit', msg }),
@@ -285,8 +287,22 @@ function ChatScreen({ dialogId, msgId }: { dialogId: number; msgId: number }) {
   const onSent = useCallback(() => chatRef.current?.scrollToBottom(), []);
   const onModeEnd = useCallback(() => setMode(null), []);
   const attach = useAttach({ dialogId, mode, onModeEnd, onSent });
+  const onConverted = useCallback((text: string) => composerRef.current?.dictate(text), []);
+  const voice = useVoiceInput({ dialogId, mode, onModeEnd, onSent, onConverted });
 
   const nextMention = mentions.length ? Math.min(...mentions) : 0;
+  // 面板一直挂着：元素要稳定，否则页面每次重渲染（如开始、结束录音）都连带重渲染整个表情面板
+  const emojiPanel = useMemo(() => (
+    <EmojiPanel
+      origin={origin}
+      onInsert={(emoji) => composerRef.current?.insert(emoji)}
+      onDelete={() => composerRef.current?.backspace()}
+      onSend={(item) => composerRef.current?.sendEmoticon(item, false)}
+      onSearch={() => openSheet({ kind: 'stickerSearch' })}
+    />
+  ), [origin, openSheet]);
+  // 传给列表的元素要稳定，每次新建会让整个消息列表跟着重渲染
+  const loadingIndicator = useMemo(() => <ActivityIndicator color={theme.colors.text3} />, [theme.colors.text3]);
 
   return (
     <View style={styles.root}>
@@ -307,35 +323,31 @@ function ChatScreen({ dialogId, msgId }: { dialogId: number; msgId: number }) {
               }
               composer={
                 <BottomBar selection={selection} onForward={(msgIds) => openSheet({ kind: 'forward', msgIds })}>
-                  <Composer ref={composerRef} dialogId={dialogId} store={compose} pickerKeysRef={pickerKeysRef} mode={mode} onModeEnd={onModeEnd} onSent={onSent} attach={attach} />
+                  <Composer ref={composerRef} dialogId={dialogId} store={compose} pickerKeysRef={pickerKeysRef} mode={mode} onModeEnd={onModeEnd} onSent={onSent} attach={attach} voice={CAN_RECORD ? voice : null} />
                 </BottomBar>
               }
               bottomColor={theme.colors.surface}
               accessory={
                 <>
-                  {mentionSession && (
-                    <MentionAccessory
-                      store={compose}
-                      dialog={dialog}
-                      session={mentionSession}
-                      userId={userId}
-                      keysRef={pickerKeysRef}
-                      onPick={(start, char, item) => composerRef.current?.pick(start, char, item)}
-                    />
-                  )}
-                  <QuickEmoticons store={compose} origin={origin} enabled={mode?.kind !== 'edit'} onPick={(item) => composerRef.current?.sendEmoticon(item, true)} />
+                  {/* 录音浮层出现时只藏起来不卸载：重新挂载在 Android 上要卡一下，松手后浮层会晚收起 */}
+                  <View style={voice.hud != null && styles.hidden}>
+                    {mentionSession && (
+                      <MentionAccessory
+                        store={compose}
+                        dialog={dialog}
+                        session={mentionSession}
+                        userId={userId}
+                        keysRef={pickerKeysRef}
+                        onPick={(start, char, item) => composerRef.current?.pick(start, char, item)}
+                      />
+                    )}
+                    <QuickEmoticons store={compose} origin={origin} enabled={mode?.kind !== 'edit' && !voice.mode} onPick={(item) => composerRef.current?.sendEmoticon(item, true)} />
+                  </View>
+                  {voice.hud}
                 </>
               }
               panels={{
-                emoji: (
-                  <EmojiPanel
-                    origin={origin}
-                    onInsert={(emoji) => composerRef.current?.insert(emoji)}
-                    onDelete={() => composerRef.current?.backspace()}
-                    onSend={(item) => composerRef.current?.sendEmoticon(item, false)}
-                    onSearch={() => openSheet({ kind: 'stickerSearch' })}
-                  />
-                ),
+                emoji: emojiPanel,
                 more: <MorePanel attach={attach} />,
               }}
               keyboardDragOffset={theme.size.touch + theme.spacing.xs * 2}
@@ -344,7 +356,7 @@ function ChatScreen({ dialogId, msgId }: { dialogId: number; msgId: number }) {
               onVisibleChange={onVisibleChange}
               highlightColor={theme.colors.rowHighlight}
               listHidden={!located}
-              loadingIndicator={<ActivityIndicator color={theme.colors.text3} />}
+              loadingIndicator={loadingIndicator}
               emptyContent={win?.synced ? <Text style={styles.empty}>{t('messenger:chat.empty')}</Text> : <ActivityIndicator color={theme.colors.text3} />}
               hasEarlier={!!win?.synced && hasEarlier(win.list)}
               loadingEarlier={loading === 'earlier'}

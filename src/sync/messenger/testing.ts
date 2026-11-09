@@ -57,5 +57,6 @@ export const noFiles: UploadIO = {
   md5: () => Promise.reject(new Error('no files')),
   slice: () => Promise.reject(new Error('no files')),
   post: () => Promise.reject(new Error('no files')),
+  base64: () => Promise.reject(new Error('no files')),
   release: () => {},
 };

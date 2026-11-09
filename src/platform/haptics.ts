@@ -4,6 +4,8 @@ import * as Haptics from 'expo-haptics';
 export const haptics = {
   /** 打开弹窗、长按菜单弹出 */
   light: () => void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {}),
+  /** 开始录音 */
+  medium: () => void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {}),
   /** 切换分段、勾选、选项 */
   selection: () => void Haptics.selectionAsync().catch(() => {}),
 };
