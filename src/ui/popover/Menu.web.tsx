@@ -15,7 +15,7 @@ import type { MenuProps } from './types';
  * Web / 桌面：自绘菜单。点击（press）在触发元素下方弹出，右键（context）在鼠标位置弹出；
  * 贴边自动翻转，子菜单悬停或方向键展开；点外面、按 Esc 关闭
  */
-export function Menu({ items, trigger = 'press', onPress, accessibilityLabel, style, children }: MenuProps) {
+export function Menu({ items, trigger = 'press', onPress, accessibilityLabel, hitSlop, button, style, children }: MenuProps) {
   const ref = useRef<HostInstance>(null);
   const [opened, setOpened] = useState<{ anchor: Rect; items: readonly MenuEntry[] } | null>(null);
   const anchor = opened?.anchor ?? null;
@@ -37,11 +37,12 @@ export function Menu({ items, trigger = 'press', onPress, accessibilityLabel, st
         {/* 右键菜单的触发区（消息气泡）不渲染成 <button>：里面可能还有按钮（引用、已读圈、译文），会嵌套；点击动作照常 */}
         <Touchable
           ref={ref}
-          accessibilityRole={trigger === 'press' ? 'button' : undefined}
+          accessibilityRole={trigger === 'press' || button ? 'button' : undefined}
           accessibilityLabel={accessibilityLabel}
           accessibilityState={trigger === 'press' ? { expanded: anchor !== null } : undefined}
           onPress={trigger === 'press' ? open : onPress}
-          style={style}
+          hitSlop={hitSlop}
+        style={style}
         >
           {children}
         </Touchable>

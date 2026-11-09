@@ -570,7 +570,7 @@ function UploadProgress({ localId, size, scrim }: { localId: string; size: numbe
 
 /** 待发送项按服务器消息的样子解析正文（回复引用由服务器补齐，发送中不显示） */
 function pendingMsg(item: OutboxItem, userId: number): Msg {
-  return { id: 0, dialog_id: item.dialog_id, userid: userId, type: 'text', msg: { text: item.text }, created_at: '' };
+  return { id: 0, dialog_id: item.dialog_id, userid: userId, type: 'text', msg: { text: item.text, type: item.md ? 'md' : undefined }, created_at: '' };
 }
 
 /** 系统消息：居中一行，用户换成昵称 */

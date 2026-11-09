@@ -1,4 +1,4 @@
-import { Keyboard, Pencil, Reply, Send, Smile, X } from 'lucide-react-native';
+import { BellOff, Code, Keyboard, Pencil, Reply, Send, Smile, Type, X } from 'lucide-react-native';
 import { useEffect, useEffectEvent, useImperativeHandle, useLayoutEffect, useRef, type Ref } from 'react';
 import { Text, View, type TextInputSelectionChangeEvent } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
@@ -12,6 +12,7 @@ import {
   EMPTY_COMPOSE,
   htmlToCompose,
   insertMention,
+  looksLikeMarkdown,
   sameCompose,
   type ComposeValue,
   type PickerChar,
@@ -19,6 +20,7 @@ import {
 import { msgPreview } from '../../../sync/messenger/preview';
 import { ChatInput, useChat } from '../../../ui/chat';
 import { Icon } from '../../../ui/Icon';
+import { Menu, type MenuEntry } from '../../../ui/popover';
 import { showToast } from '../../../ui/Toast';
 import { Touchable } from '../../../ui/Touchable';
 import { useSession } from '../../session';
@@ -33,6 +35,9 @@ import { inputContent } from './inputContent';
 import { slashReplacement, type Candidate, type PickerKeys } from './MentionPicker';
 
 /** 输入框上方的条：回复某条消息，或编辑自己发的消息 */
+/** 发送方式：auto 按内容判断是否 Markdown，silence 不提醒对方 */
+type SendHow = 'auto' | 'silence' | 'md' | 'normal';
+
 export type ComposerMode = { kind: 'reply'; msg: Msg } | { kind: 'edit'; msg: Msg } | null;
 
 export interface ComposerHandle {
@@ -161,7 +166,8 @@ export function Composer({ dialogId, store, pickerKeysRef, mode, onModeEnd, onSe
 
   const slop = { left: (theme.size.touch - theme.size.chatInput) / 2, right: (theme.size.touch - theme.size.chatInput) / 2 };
   const canSend = value.text.trim().length > 0;
-  const send = () => {
+  /** auto：按内容判断是否 Markdown（Enter、点按发送）；其余是长按 / 右键菜单里选的 */
+  const send = (how: SendHow = 'auto') => {
     const content = store.get().value;
     if (!messenger || !content.text.trim()) return;
     if (editing) {
@@ -173,13 +179,20 @@ export function Composer({ dialogId, store, pickerKeysRef, mode, onModeEnd, onSe
       onModeEnd();
       return;
     }
-    messenger.sendText({ dialog_id: dialogId, text: composeToHtml(content), reply_id: replyTo?.id });
+    const md = how === 'md' || (how === 'auto' && looksLikeMarkdown(content));
+    messenger.sendText({ dialog_id: dialogId, text: md ? content.text.trim() : composeToHtml(content), md, reply_id: replyTo?.id, silence: how === 'silence' });
     update(EMPTY_COMPOSE, 0, true);
     onModeEnd();
     onSent();
   };
 
-  const enterKey = useEnterKey(enterSend, send, pickerKeysRef);
+  const enterKey = useEnterKey(enterSend, () => send(), pickerKeysRef);
+  const sendMenu: readonly MenuEntry[] = [
+    { label: t('messenger:chat.sendSilent'), icon: BellOff, onSelect: () => send('silence') },
+    { label: t('messenger:chat.sendMarkdown'), icon: Code, onSelect: () => send('md') },
+    { label: t('messenger:chat.sendNormal'), icon: Type, onSelect: () => send('normal') },
+  ];
+  const sendIcon = <Icon icon={Send} color={canSend ? theme.colors.primaryText : theme.colors.text4} size={theme.size.icon} />;
   const emojiOpen = controller.activePanel === 'emoji';
   return (
     <View style={styles.root}>
@@ -208,17 +221,30 @@ export function Composer({ dialogId, store, pickerKeysRef, mode, onModeEnd, onSe
             {...enterKey}
           />
         </View>
-        {canSend || editing ? (
+        {editing ? (
+          // 编辑按原格式改，没有发送方式菜单
           <Touchable
             accessibilityRole="button"
             accessibilityLabel={t('messenger:chat.send')}
             disabled={!canSend}
             hitSlop={slop}
-            onPress={send}
+            onPress={() => send()}
             style={({ pressed }) => [styles.button, pressed && styles.pressed]}
           >
-            <Icon icon={Send} color={canSend ? theme.colors.primaryText : theme.colors.text4} size={theme.size.icon} />
+            {sendIcon}
           </Touchable>
+        ) : canSend ? (
+          <Menu
+            items={sendMenu}
+            trigger="context"
+            button
+            onPress={() => send()}
+            accessibilityLabel={t('messenger:chat.send')}
+            hitSlop={slop}
+            style={({ pressed }) => [styles.button, pressed && styles.pressed]}
+          >
+            {sendIcon}
+          </Menu>
         ) : (
           <AttachButton attach={attach} hitSlop={slop} style={({ pressed }) => [styles.button, pressed && styles.pressed]} />
         )}

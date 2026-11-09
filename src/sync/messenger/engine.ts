@@ -809,7 +809,7 @@ export function createMessenger(deps: MessengerDeps) {
   }
 
   /** 发送文本：先进队列显示发送中，按顺序发出。返回本地 id */
-  function sendText(params: { dialog_id: number; text: string; reply_id?: number }): string {
+  function sendText(params: Pick<OutboxItem, 'dialog_id' | 'text' | 'md' | 'reply_id' | 'silence'>): string {
     const localId = `local-${now()}-${++localSeq}`;
     setOutbox([...get().outbox, { localId, ...params, queuedAt: now(), state: 'sending' }]);
     background(flushOutbox(), 'outbox');
@@ -837,7 +837,7 @@ export function createMessenger(deps: MessengerDeps) {
           continue;
         }
         try {
-          const msg = await api.sendText({ dialog_id: item.dialog_id, text: item.text, reply_id: item.reply_id });
+          const msg = await api.sendText({ dialog_id: item.dialog_id, text: item.text, md: item.md, reply_id: item.reply_id, silence: item.silence });
           set({ sentKeys: { ...get().sentKeys, [msg.id]: item.localId } });
           discardSend(item.localId);
           insertMsgs(msg.dialog_id, [msg], true);

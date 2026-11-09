@@ -7,7 +7,7 @@ import { type NativeMenuHandle, NativeMenuView } from './nativeMenu';
 import type { MenuProps } from './types';
 
 /** Android：系统弹出菜单，点击或长按时以触发元素为锚点弹出 */
-export function Menu({ items, trigger = 'press', onPress, accessibilityLabel, style, children }: MenuProps) {
+export function Menu({ items, trigger = 'press', onPress, accessibilityLabel, hitSlop, style, children }: MenuProps) {
   const { theme, rt } = useUnistyles();
   const menu = useRef<NativeMenuHandle>(null);
   const { sections, handlers } = useMemo(() => toNativeMenu(resolveItems(items)), [items]);
@@ -25,6 +25,7 @@ export function Menu({ items, trigger = 'press', onPress, accessibilityLabel, st
         accessibilityLabel={accessibilityLabel}
         onPress={trigger === 'press' ? open : onPress}
         onLongPress={trigger === 'context' ? open : undefined}
+        hitSlop={hitSlop}
         style={style}
       >
         {children}

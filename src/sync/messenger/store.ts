@@ -24,9 +24,12 @@ export interface OutboxItem {
   /** 本地 id，界面当 key 用 */
   localId: string;
   dialog_id: number;
-  /** HTML 文本 */
+  /** HTML 文本；md 为真时是 Markdown 原文 */
   text: string;
+  md?: boolean;
   reply_id?: number;
+  /** 不提醒对方 */
+  silence?: boolean;
   /** 进队列的时间（毫秒） */
   queuedAt: number;
   /** sending：发送中或等网络恢复；failed：服务端拒绝或排队超过 24 小时，等用户重发或删除 */

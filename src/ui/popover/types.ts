@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import type { StyleProp, ViewStyle } from 'react-native';
+import type { Insets, StyleProp, ViewStyle } from 'react-native';
 
 import type { TouchState } from '../Touchable';
 import type { MenuEntry } from './menuModel';
@@ -15,7 +15,11 @@ export interface MenuProps {
   trigger?: 'press' | 'context';
   /** trigger 为 context 时，普通点击做什么 */
   onPress?: () => void;
+  /** trigger 为 context 时触发元素本身也是按钮（如发送按钮）；默认不是，消息气泡里还有别的按钮，不能嵌套 */
+  button?: boolean;
   accessibilityLabel?: string;
+  /** 触发元素比触摸区小时（输入栏里的图标按钮）放大触摸区 */
+  hitSlop?: Insets;
   style?: StyleProp<ViewStyle> | ((state: TouchState) => StyleProp<ViewStyle>);
   /** 触发元素，只负责外观，点击由 Menu 处理 */
   children: ReactNode | ((state: TouchState) => ReactNode);

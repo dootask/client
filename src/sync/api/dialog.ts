@@ -243,11 +243,13 @@ export async function color(client: ApiClient, dialogId: number, value: string) 
 
 export interface SendTextParams {
   dialog_id: number;
-  /** HTML 文本 */
+  /** HTML 文本；md 为真时是 Markdown 原文 */
   text: string;
+  md?: boolean;
   reply_id?: number;
   /** 编辑这条消息 */
   update_id?: number;
+  /** 不提醒对方 */
   silence?: boolean;
 }
 
@@ -258,6 +260,7 @@ export async function sendText(client: ApiClient, params: SendTextParams) {
     data: {
       dialog_id: params.dialog_id,
       text: params.text,
+      text_type: params.md ? 'md' : undefined,
       reply_id: params.reply_id,
       update_id: params.update_id,
       silence: params.silence ? 'yes' : undefined,

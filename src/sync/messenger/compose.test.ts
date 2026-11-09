@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { applyTextChange, composeSegments, composeToHtml, htmlToCompose, insertMention, mentionQuery, type ComposeValue } from './compose';
+import { applyTextChange, composeSegments, composeToHtml, htmlToCompose, insertMention, looksLikeMarkdown, mentionQuery, type ComposeValue } from './compose';
 
 const plain = (text: string): ComposeValue => ({ text, mentions: [] });
 const zhang = { char: '@', id: 3, name: '张三' } as const;
@@ -60,5 +60,24 @@ describe('输入栏 mention 编辑', () => {
     const result = insertMention({ text: '#x @张三', mentions: [zhang] }, 0, 2, { char: '#', id: 1, name: '任务' });
     expect(result).toEqual({ value: { text: '#任务  @张三', mentions: [{ char: '#', id: 1, name: '任务' }, zhang] }, cursor: 4 });
     expect(composeSegments(result.value).map((s) => s.mention)).toEqual([true, false, true]);
+  });
+});
+
+describe('默认发送识别 Markdown', () => {
+  it('标题、代码块、链接单独就够', () => {
+    expect(looksLikeMarkdown(plain('# 标题'))).toBe(true);
+    expect(looksLikeMarkdown(plain('```\ncode\n```'))).toBe(true);
+    expect(looksLikeMarkdown(plain('看 [文档](https://a.b)'))).toBe(true);
+  });
+
+  it('普通文字里常见的写法要凑够分量', () => {
+    expect(looksLikeMarkdown(plain('- 买菜'))).toBe(false);
+    expect(looksLikeMarkdown(plain('**重点**'))).toBe(false);
+    expect(looksLikeMarkdown(plain('**重点**\n- 买菜'))).toBe(true);
+    expect(looksLikeMarkdown(plain('#没有空格不是标题'))).toBe(false);
+  });
+
+  it('带 mention 的按普通格式', () => {
+    expect(looksLikeMarkdown({ text: '# 标题 @张三', mentions: [zhang] })).toBe(false);
   });
 });

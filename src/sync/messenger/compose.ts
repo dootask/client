@@ -191,3 +191,25 @@ export function htmlToCompose(html: string): ComposeValue {
   });
   return { text: restored, mentions };
 }
+
+/** Markdown 语法的特征和分量：标题、代码块、链接最像，列表、引用这类普通文字里也常见的只占一点（与旧前端 detectMarkdownSyntaxWeight 一致） */
+const MARKDOWN_SIGNS: readonly [RegExp, number][] = [
+  [/^#{1,6}\s+.+$/m, 0.4],
+  [/```[\s\S]*?```/, 0.4],
+  [/\[[^\]]+\]\([^)]+\)/, 0.3],
+  [/!\[[^\]]*\]\([^)]+\)/, 0.3],
+  [/\*\*[^*\s][^*]*[^*\s]\*\*/, 0.2],
+  [/__[^_\s][^_]*[^_\s]__/, 0.2],
+  [/~~[^~\s][^~]*[^~\s]~~/, 0.2],
+  [/`[^`\s][^`]*[^`\s]`/, 0.15],
+  [/^[-*+]\s+.+$/m, 0.1],
+  [/^\d+\.\s+.+$/m, 0.1],
+  [/^>\s+.+$/m, 0.1],
+];
+
+/** 默认发送时是否按 Markdown 发：带 mention 的不算（Markdown 发的是纯文字，mention 会丢），其余按语法特征累计分量 */
+export function looksLikeMarkdown({ text, mentions }: ComposeValue): boolean {
+  if (mentions.length > 0) return false;
+  const weight = MARKDOWN_SIGNS.reduce((sum, [regex, w]) => (regex.test(text) ? sum + w : sum), 0);
+  return weight >= 0.3;
+}
