@@ -128,7 +128,9 @@
     "sendCount": "發送 ({{n}})",
     "uploadFailed": "上傳失敗",
     "cancelSend": "取消發送",
-    "dropHint": "鬆開發送"
+    "dropHint": "鬆開發送",
+    "searchSticker": "搜索表情",
+    "noSticker": "沒有搜尋到任何表情"
   },
   "system": {
     "tagAdd": "標註了",

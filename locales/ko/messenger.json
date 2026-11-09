@@ -128,7 +128,9 @@
     "sendCount": "보내기 ({{n}})",
     "uploadFailed": "업로드 실패",
     "cancelSend": "전송 취소",
-    "dropHint": "놓아서 보내기"
+    "dropHint": "놓아서 보내기",
+    "searchSticker": "이모티콘 검색",
+    "noSticker": "검색된 스티커가 없습니다"
   },
   "system": {
     "tagAdd": "표시됨",

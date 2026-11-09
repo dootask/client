@@ -128,7 +128,9 @@
     "sendCount": "Kirim ({{n}})",
     "uploadFailed": "Gagal mengunggah",
     "cancelSend": "Batalkan pengiriman",
-    "dropHint": "Lepas untuk mengirim"
+    "dropHint": "Lepas untuk mengirim",
+    "searchSticker": "Cari Emoji",
+    "noSticker": "Tidak ada stiker ditemukan"
   },
   "system": {
     "tagAdd": "Ditandai",

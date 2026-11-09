@@ -128,7 +128,9 @@
     "sendCount": "送信 ({{n}})",
     "uploadFailed": "アップロード失敗",
     "cancelSend": "送信をキャンセル",
-    "dropHint": "ドロップして送信"
+    "dropHint": "ドロップして送信",
+    "searchSticker": "絵文字を検索",
+    "noSticker": "スタンプが見つかりませんでした"
   },
   "system": {
     "tagAdd": "マークされました",

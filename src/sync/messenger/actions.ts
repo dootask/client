@@ -6,6 +6,7 @@ import * as projectApi from '../api/project';
 import * as reportApi from '../api/report';
 import * as usersApi from '../api/users';
 import type { Messenger } from './engine';
+import { STICKER_ASSET, type Emoticon } from './emoticon';
 import { createMentionSession, type MentionApi } from './mention';
 
 /** 消息操作用到的接口，client 已绑定；测试时注入假的 */
@@ -25,6 +26,7 @@ export interface MsgActionsApi extends MentionApi {
   msgTodoRemind: (params: Parameters<typeof dialogApi.msgTodoRemind>[1]) => Promise<string>;
   myTodos: (dialogId: number) => ReturnType<typeof dialogApi.myTodos>;
   msgDone: (todoId: number) => ReturnType<typeof dialogApi.msgDone>;
+  stickerSearch: (key: string) => ReturnType<typeof dialogApi.stickerSearch>;
 }
 
 export function bindMsgActionsApi(client: ApiClient): MsgActionsApi {
@@ -45,6 +47,7 @@ export function bindMsgActionsApi(client: ApiClient): MsgActionsApi {
     members: (id) => dialogApi.members(client, id),
     myTodos: (id) => dialogApi.myTodos(client, id),
     msgDone: (id) => dialogApi.msgDone(client, id),
+    stickerSearch: (key) => dialogApi.stickerSearch(client, key),
     searchUsers: (key, opts) => usersApi.search(client, key, opts),
     taskList: (p) => projectApi.taskList(client, p),
     fileSearch: (key) => fileApi.search(client, key),
@@ -129,6 +132,9 @@ export function createMsgActions(api: MsgActionsApi, messenger: Messenger) {
     members: (dialogId: number) => api.members(dialogId),
     myTodos: (dialogId: number) => api.myTodos(dialogId),
     searchUsers: (key: string) => api.searchUsers(key, { bots: false }),
+
+    /** 搜索在线贴纸，结果直接可以当表情发出 */
+    searchStickers: async (key: string): Promise<Emoticon[]> => (await api.stickerSearch(key)).map(({ name, src }) => ({ name, src, asset: STICKER_ASSET })),
 
     /** 会话页的输入栏候选来源，打开会话时建一个 */
     mentionSession: (dialogId: number, userId: number) => createMentionSession(api, store.getState, dialogId, userId),

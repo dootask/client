@@ -213,3 +213,14 @@ export function looksLikeMarkdown({ text, mentions }: ComposeValue): boolean {
   const weight = MARKDOWN_SIGNS.reduce((sum, [regex, w]) => (regex.test(text) ? sum + w : sum), 0);
   return weight >= 0.3;
 }
+
+/** 光标前一个字：国旗、键帽、带修饰或组合的 emoji 算一个 */
+const LAST_CHAR = /(?:[\u{1F1E6}-\u{1F1FF}]{2}|[#*0-9]️?⃣|\p{Extended_Pictographic}(?:️|[\u{1F3FB}-\u{1F3FF}]|‍\p{Extended_Pictographic})*|[\s\S])$/u;
+
+/** 表情面板的删除键：删光标前一个字，删到 mention 时整个删掉 */
+export function deleteBefore(value: ComposeValue, cursor: number): { value: ComposeValue; cursor: number } {
+  const before = value.text.slice(0, cursor);
+  const last = before.match(LAST_CHAR)?.[0];
+  if (!last) return { value, cursor };
+  return applyTextChange(value, before.slice(0, -last.length) + value.text.slice(cursor));
+}

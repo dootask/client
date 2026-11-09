@@ -20,6 +20,8 @@ function ChatViewInner<T>(props: ChatViewProps<T>, ref: React.Ref<ChatViewHandle
   const inputRef = useRef<InputInstance | null>(null);
 
   const [activePanel, setActivePanel] = useState<string | null>(null);
+  // Web 没有软键盘，keyboardShown 取「输入框聚焦着」：输入栏上方随键盘出现的内容（快捷表情）跟着焦点走
+  const [focused, setFocused] = useState(false);
   const inputProgress = useSharedValue(0);
   useEffect(() => {
     inputProgress.set(activePanel ? 1 : 0);
@@ -29,7 +31,7 @@ function ChatViewInner<T>(props: ChatViewProps<T>, ref: React.Ref<ChatViewHandle
     const focusInput = () => inputRef.current?.focus();
     return {
       activePanel,
-      keyboardShown: false,
+      keyboardShown: focused,
       togglePanel: (name) => {
         if (activePanel === name) {
           setActivePanel(null);
@@ -45,11 +47,20 @@ function ChatViewInner<T>(props: ChatViewProps<T>, ref: React.Ref<ChatViewHandle
         return activePanel !== null;
       },
     };
-  }, [activePanel]);
+  }, [activePanel, focused]);
 
+  // RN-web 的输入框实例就是 DOM 元素；换输入框时把监听挪过去
+  const focusListeners = useMemo(() => ({ focus: () => setFocused(true), blur: () => setFocused(false) }), []);
   const attachInput = useCallback((node: InputInstance | null) => {
+    const prev = inputRef.current as unknown as HTMLElement | null;
+    prev?.removeEventListener('focus', focusListeners.focus);
+    prev?.removeEventListener('blur', focusListeners.blur);
     inputRef.current = node;
-  }, []);
+    const next = node as unknown as HTMLElement | null;
+    next?.addEventListener('focus', focusListeners.focus);
+    next?.addEventListener('blur', focusListeners.blur);
+    setFocused(next !== null && document.activeElement === next);
+  }, [focusListeners]);
   const scrollBy = useCallback((delta: number) => listRef.current?.scrollBy(delta), []);
   const context = useMemo<ChatContextValue>(() => ({ controller, attachInput, scrollBy, inputProgress }), [controller, attachInput, scrollBy, inputProgress]);
 

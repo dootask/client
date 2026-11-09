@@ -5,3 +5,4 @@ export { createMsgActions, type MsgActions, type MsgActionsApi, bindMsgActionsAp
 export type { WithdrawnMsg } from './store';
 export * from './compose';
 export type { MentionCandidate, MentionGroup, MentionGroupKind, MentionSession } from './mention';
+export * from './emoticon';

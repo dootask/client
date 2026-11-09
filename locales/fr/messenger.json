@@ -128,7 +128,9 @@
     "sendCount": "Envoyer ({{n}})",
     "uploadFailed": "Échec du téléchargement",
     "cancelSend": "Annuler l'envoi",
-    "dropHint": "Déposez pour envoyer"
+    "dropHint": "Déposez pour envoyer",
+    "searchSticker": "Rechercher des émojis",
+    "noSticker": "Aucun autocollant trouvé"
   },
   "system": {
     "tagAdd": "Marqué",

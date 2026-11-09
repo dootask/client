@@ -44,6 +44,8 @@ export interface SheetProps {
   confirm?: SheetConfirm;
   /** 占满可用高度：内容是会变长的列表时，加载、搜索后不跳高；内容区可用 flex: 1 */
   fill?: boolean;
+  /** 弹层的窗口显示出来后：要弹键盘的聚焦放在这里（安卓上窗口显示前聚焦，输入框有焦点但不弹键盘） */
+  onShow?: () => void;
   children: ReactNode;
 }
 
@@ -52,7 +54,7 @@ export interface SheetProps {
  * 点遮罩、系统返回键、Web 上按 Esc 都会调 onClose。不打开不渲染，关闭动画放完才卸载。
  * 键盘弹出时整体抬到键盘上方
  */
-export function Sheet({ visible, onClose, title, wide = 'center', confirm, fill = false, children }: SheetProps) {
+export function Sheet({ visible, onClose, title, wide = 'center', confirm, fill = false, onShow, children }: SheetProps) {
   const t = useT();
   const { theme } = useUnistyles();
   const form: Form = useBreakpoint() === 'xs' ? 'bottom' : wide;
@@ -103,7 +105,7 @@ export function Sheet({ visible, onClose, title, wide = 'center', confirm, fill 
   if (!mounted) return null;
 
   return (
-    <Modal visible transparent animationType="none" statusBarTranslucent navigationBarTranslucent onRequestClose={onClose}>
+    <Modal visible transparent animationType="none" statusBarTranslucent navigationBarTranslucent onRequestClose={onClose} onShow={onShow}>
       <GestureHandlerRootView style={FILL}>
         <View style={styles.root(form)}>
           <Animated.View style={[styles.backdrop(shown), TRANSITION]}>

@@ -220,6 +220,8 @@ const size = {
   /** 加号面板：最近照片的缩略图、功能入口的方块 */
   photoThumb: 96,
   moreTile: 56,
+  /** 输入栏上方快捷表情的贴纸 */
+  quickSticker: 72,
   voiceTrack: 4,
   dot: 8,
   ...platformSize,

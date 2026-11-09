@@ -100,7 +100,7 @@ export interface ChatViewHandle {
 export interface ChatController {
   /** 目标面板：切回键盘时键盘一起步就变 null（面板内容留到键盘到位才撤），按钮图标跟它 */
   activePanel: string | null;
-  /** 本输入框的键盘是否弹着（目标状态：开始收起即为 false）。不用焦点：系统返回键收起键盘后输入框仍是聚焦的 */
+  /** 本输入框的键盘是否弹着（目标状态：开始收起即为 false）。原生不用焦点：系统返回键收起键盘后输入框仍是聚焦的；Web 没有软键盘，取输入框是否聚焦 */
   keyboardShown: boolean;
   /** 打开面板；已打开同一个面板时切回键盘 */
   togglePanel: (name: string) => void;

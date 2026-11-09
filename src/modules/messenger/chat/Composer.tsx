@@ -8,13 +8,16 @@ import type { Msg } from '../../../sync/api/dialog';
 import {
   applyTextChange,
   composeToHtml,
+  deleteBefore,
   dropLoneMention,
+  emoticonHtml,
   EMPTY_COMPOSE,
   htmlToCompose,
   insertMention,
   looksLikeMarkdown,
   sameCompose,
   type ComposeValue,
+  type Emoticon,
   type PickerChar,
 } from '../../../sync/messenger';
 import { msgPreview } from '../../../sync/messenger/preview';
@@ -47,6 +50,10 @@ export interface ComposerHandle {
   replace: (value: ComposeValue) => void;
   /** 选了候选：start 为候选符号的位置，到光标为止是查询文字 */
   pick: (start: number, char: PickerChar, item: Candidate) => void;
+  /** 删掉光标前的一个字（表情面板的删除键） */
+  backspace: () => void;
+  /** 发一个表情包或贴纸（带上正在回复的消息）；clear 时清空输入框（选了快捷表情，输入的字就是关键词） */
+  sendEmoticon: (item: Emoticon, clear: boolean) => void;
 }
 
 /** 消息正文（HTML）：只有文字消息能编辑 */
@@ -152,6 +159,18 @@ export function Composer({ dialogId, store, pickerKeysRef, mode, onModeEnd, onSe
         update(result.value, result.cursor, true);
       }
       controller.focusInput();
+    },
+    backspace: () => {
+      const { value: current, cursor } = store.get();
+      const result = deleteBefore(current, cursor);
+      if (result.value !== current) update(result.value, result.cursor, true);
+    },
+    sendEmoticon: (item, clear) => {
+      if (!messenger) return;
+      messenger.sendText({ dialog_id: dialogId, text: emoticonHtml(item), reply_id: replyTo?.id });
+      if (clear) update(EMPTY_COMPOSE, 0, true);
+      if (replyTo) onModeEnd();
+      onSent();
     },
   }));
 

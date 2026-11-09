@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { applyTextChange, composeSegments, composeToHtml, htmlToCompose, insertMention, looksLikeMarkdown, mentionQuery, type ComposeValue } from './compose';
+import { applyTextChange, composeSegments, deleteBefore, composeToHtml, htmlToCompose, insertMention, looksLikeMarkdown, mentionQuery, type ComposeValue } from './compose';
 
 const plain = (text: string): ComposeValue => ({ text, mentions: [] });
 const zhang = { char: '@', id: 3, name: '张三' } as const;
@@ -79,5 +79,19 @@ describe('默认发送识别 Markdown', () => {
 
   it('带 mention 的按普通格式', () => {
     expect(looksLikeMarkdown({ text: '# 标题 @张三', mentions: [zhang] })).toBe(false);
+  });
+});
+
+describe('表情面板删除键', () => {
+  it('emoji 整个删掉（组合、肤色、国旗、键帽）', () => {
+    for (const emoji of ['😀', '👨‍👩‍👧', '👍🏽', '🇨🇳', '#️⃣', '❤️']) {
+      expect(deleteBefore(plain(`a${emoji}`), 1 + emoji.length)).toEqual({ value: plain('a'), cursor: 1 });
+    }
+  });
+
+  it('删光标前的字，删到 mention 整个删', () => {
+    expect(deleteBefore(plain('abc'), 2)).toEqual({ value: plain('ac'), cursor: 1 });
+    expect(deleteBefore({ text: 'hi @张三', mentions: [zhang] }, 6).value).toEqual(plain('hi '));
+    expect(deleteBefore(plain('abc'), 0)).toEqual({ value: plain('abc'), cursor: 0 });
   });
 });

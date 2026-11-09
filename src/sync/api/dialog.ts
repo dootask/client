@@ -398,3 +398,11 @@ export async function myTodos(client: ApiClient, dialogId: number) {
 export async function msgDone(client: ApiClient, todoId: number) {
   return requestParsed(client, 'dialog/msg/done', msgResultSchema, { data: { id: todoId } });
 }
+
+const stickerSchema = z.looseObject({ list: z.array(z.looseObject({ name: z.string(), src: z.string() })) });
+
+/** 搜索在线贴纸（服务端转查外部贴纸库） */
+export async function stickerSearch(client: ApiClient, key: string) {
+  const { data } = await requestParsed(client, 'dialog/sticker/search', stickerSchema, { data: { key } });
+  return data.list;
+}

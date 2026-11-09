@@ -128,7 +128,9 @@
     "sendCount": "Senden ({{n}})",
     "uploadFailed": "Upload fehlgeschlagen",
     "cancelSend": "Senden abbrechen",
-    "dropHint": "Zum Senden loslassen"
+    "dropHint": "Zum Senden loslassen",
+    "searchSticker": "Emojis suchen",
+    "noSticker": "Keine Sticker gefunden"
   },
   "system": {
     "tagAdd": "Markiert",
