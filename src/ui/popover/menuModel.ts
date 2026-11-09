@@ -21,6 +21,9 @@ export interface MenuAction {
 
 export type MenuEntry = MenuAction | 'separator';
 
+/** 菜单项可以是数组，也可以是打开时才计算的函数 */
+export const resolveItems = (items: readonly MenuEntry[] | (() => readonly MenuEntry[])) => (typeof items === 'function' ? items() : items);
+
 /** 分隔线切出来的一组 */
 export type MenuSection = readonly MenuAction[];
 

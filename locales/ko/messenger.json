@@ -121,5 +121,74 @@
     "todoDone": "완료",
     "todoTarget": "대상",
     "withdrawSelf": "메시지를 회수했습니다"
+  },
+  "action": {
+    "editRemark": "비고 수정",
+    "favorite": "즐겨찾기",
+    "unfavorite": "즐겨찾기 해제",
+    "forward": "전달",
+    "hideTranslation": "번역 숨기기",
+    "pin": "고정",
+    "unpin": "고정 해제",
+    "selectMany": "다중 선택",
+    "selectText": "텍스트 선택",
+    "tag": "표시",
+    "untag": "표시 해제",
+    "todoCancel": "할 일 취소",
+    "todoCancelConfirm": "할 일을 취소하시겠습니까?",
+    "todoDetail": "할 일 상세",
+    "todoSet": "할 일 설정",
+    "translate": "번역",
+    "voice2text": "텍스트로 변환",
+    "more": "더 보기",
+    "translating": "번역 중",
+    "voice2texting": "텍스트로 변환 중"
+  },
+  "forward": {
+    "message": "메시지",
+    "hideSource": "원래 발신자 정보를 표시하지 않음",
+    "merge": "묶어서 전달",
+    "max": "최대 {{n}}개의 대화를 선택할 수 있습니다",
+    "done": "전달 성공"
+  },
+  "todos": {
+    "setTitle": "할 일 설정",
+    "all": "모든 구성원",
+    "some": "구성원 지정",
+    "self": "자신",
+    "searchMembers": "구성원 검색",
+    "remind": "알림 시간",
+    "none": "알림 없음",
+    "in1h": "1시간 후",
+    "tonight": "오늘 밤 20:00",
+    "tomorrow": "내일 아침 9:00",
+    "custom": "사용자 정의",
+    "done": "완료됨",
+    "undone": "미완료",
+    "complete": "완료",
+    "cancelRemind": "알림 취소",
+    "removeConfirm": "이 멤버의 할 일을 취소하시겠습니까?",
+    "mine": "미완료 할 일 {{n}}개",
+    "go": "완료하기"
+  },
+  "translate": {
+    "pickLanguage": "언어 선택",
+    "retranslate": "다시 번역"
+  },
+  "top": {
+    "unpinConfirm": "고정을 취소하시겠습니까?",
+    "by": "{{name}}님이 고정함"
+  },
+  "favorite": {
+    "remark": "비고"
+  },
+  "read": {
+    "read": "읽음",
+    "unread": "읽지 않음",
+    "title": "읽음 상세"
+  },
+  "selection": {
+    "max": "최대 {{n}}개의 메시지를 선택할 수 있습니다",
+    "count": "{{n}}개 선택됨"
   }
 }

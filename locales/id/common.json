@@ -14,5 +14,7 @@
   "save": "Simpan",
   "modify": "Ubah",
   "refresh": "Segarkan",
-  "clear": "Hapus"
+  "clear": "Hapus",
+  "loadFailed": "Gagal memuat",
+  "none": "Tidak ada"
 }

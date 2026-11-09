@@ -121,5 +121,74 @@
     "todoDone": "Abschließen",
     "todoTarget": "Für",
     "withdrawSelf": "Du hast eine Nachricht zurückgerufen"
+  },
+  "action": {
+    "editRemark": "Bemerkung bearbeiten",
+    "favorite": "Favorit",
+    "unfavorite": "Aus Favoriten entfernen",
+    "forward": "Weiterleiten",
+    "hideTranslation": "Übersetzung ausblenden",
+    "pin": "Anheften",
+    "unpin": "Anheften aufheben",
+    "selectMany": "Mehrfachauswahl",
+    "selectText": "Text auswählen",
+    "tag": "Markieren",
+    "untag": "Markierung entfernen",
+    "todoCancel": "Aufgabe abbrechen",
+    "todoCancelConfirm": "Sind Sie sicher, dass Sie die Aufgabe abbrechen möchten?",
+    "todoDetail": "Aufgabendetails",
+    "todoSet": "Aufgabe festlegen",
+    "translate": "Übersetzen",
+    "voice2text": "In Text umwandeln",
+    "more": "Mehr",
+    "translating": "Wird übersetzt",
+    "voice2texting": "Wird in Text umgewandelt"
+  },
+  "forward": {
+    "message": "Nachricht",
+    "hideSource": "Informationen des ursprünglichen Absenders nicht anzeigen",
+    "merge": "Zusammengefasst weiterleiten",
+    "max": "Maximal {{n}} Unterhaltungen auswählen",
+    "done": "Weiterleitung erfolgreich"
+  },
+  "todos": {
+    "setTitle": "Aufgabe festlegen",
+    "all": "Alle Mitglieder",
+    "some": "Mitglieder zuweisen",
+    "self": "Selbst",
+    "searchMembers": "Mitglieder suchen",
+    "remind": "Erinnerungszeit",
+    "none": "Keine Erinnerung",
+    "in1h": "In 1 Stunde",
+    "tonight": "Heute Abend um 20:00 Uhr",
+    "tomorrow": "Morgen früh um 9:00 Uhr",
+    "custom": "Benutzerdefiniert",
+    "done": "Abgeschlossen",
+    "undone": "Unvollständig",
+    "complete": "Abschließen",
+    "cancelRemind": "Erinnerung abbrechen",
+    "removeConfirm": "Aufgabe dieses Mitglieds entfernen?",
+    "mine": "{{n}} offene Aufgaben für mich",
+    "go": "Erledigen"
+  },
+  "translate": {
+    "pickLanguage": "Sprache auswählen",
+    "retranslate": "Neu übersetzen"
+  },
+  "top": {
+    "unpinConfirm": "Sind Sie sicher, dass Sie das Anheften aufheben möchten?",
+    "by": "Angeheftet von {{name}}"
+  },
+  "favorite": {
+    "remark": "Anmerkungen"
+  },
+  "read": {
+    "read": "Gelesen",
+    "unread": "Ungelesen",
+    "title": "Lesedetails"
+  },
+  "selection": {
+    "max": "Wählen Sie bis zu {{n}} Nachrichten aus",
+    "count": "{{n}} ausgewählt"
   }
 }

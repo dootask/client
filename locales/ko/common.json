@@ -14,5 +14,7 @@
   "save": "저장",
   "modify": "수정",
   "refresh": "새로고침",
-  "clear": "지우기"
+  "clear": "지우기",
+  "loadFailed": "로딩 실패",
+  "none": "없음"
 }

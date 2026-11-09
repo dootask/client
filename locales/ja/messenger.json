@@ -121,5 +121,74 @@
     "todoDone": "完了",
     "todoTarget": "対象",
     "withdrawSelf": "メッセージを取り消しました"
+  },
+  "action": {
+    "editRemark": "備考を修正",
+    "favorite": "お気に入り",
+    "unfavorite": "お気に入り解除",
+    "forward": "転送",
+    "hideTranslation": "翻訳を隠す",
+    "pin": "ピン留め",
+    "unpin": "ピン留めを解除",
+    "selectMany": "複数選択",
+    "selectText": "テキストを選択",
+    "tag": "マーク",
+    "untag": "マークを解除",
+    "todoCancel": "タスクをキャンセル",
+    "todoCancelConfirm": "タスクをキャンセルしてもよろしいですか？",
+    "todoDetail": "ToDo の詳細",
+    "todoSet": "タスクを設定",
+    "translate": "翻訳",
+    "voice2text": "テキストに変換",
+    "more": "もっと見る",
+    "translating": "翻訳中",
+    "voice2texting": "テキストに変換中"
+  },
+  "forward": {
+    "message": "メッセージ",
+    "hideSource": "元の送信者情報を表示しない",
+    "merge": "まとめて転送",
+    "max": "最大{{n}}件の会話を選択できます",
+    "done": "転送成功"
+  },
+  "todos": {
+    "setTitle": "タスク設定",
+    "all": "すべてのメンバー",
+    "some": "メンバーを指定",
+    "self": "自分",
+    "searchMembers": "メンバーを検索",
+    "remind": "リマインダー時間",
+    "none": "通知しない",
+    "in1h": "1時間後",
+    "tonight": "今夜 20:00",
+    "tomorrow": "明朝 9:00",
+    "custom": "カスタム",
+    "done": "完了",
+    "undone": "未完了",
+    "complete": "完了",
+    "cancelRemind": "リマインダーをキャンセル",
+    "removeConfirm": "このメンバーの ToDo を取り消しますか？",
+    "mine": "未完了の ToDo が {{n}} 件",
+    "go": "完了する"
+  },
+  "translate": {
+    "pickLanguage": "言語を選択",
+    "retranslate": "再翻訳"
+  },
+  "top": {
+    "unpinConfirm": "ピン留めを解除してもよろしいですか？",
+    "by": "{{name}} が固定"
+  },
+  "favorite": {
+    "remark": "備考"
+  },
+  "read": {
+    "read": "既読",
+    "unread": "未読",
+    "title": "既読の詳細"
+  },
+  "selection": {
+    "max": "最大{{n}}件のメッセージを選択できます",
+    "count": "{{n}}件選択中"
   }
 }

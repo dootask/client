@@ -121,5 +121,74 @@
     "todoDone": "Terminer",
     "todoTarget": "Pour",
     "withdrawSelf": "Vous avez retiré un message"
+  },
+  "action": {
+    "editRemark": "Modifier la remarque",
+    "favorite": "Favori",
+    "unfavorite": "Retirer des favoris",
+    "forward": "Transférer",
+    "hideTranslation": "Masquer la traduction",
+    "pin": "Épingler",
+    "unpin": "Désépingler",
+    "selectMany": "Sélection multiple",
+    "selectText": "Sélectionner le texte",
+    "tag": "Marquer",
+    "untag": "Retirer la marque",
+    "todoCancel": "Annuler la tâche",
+    "todoCancelConfirm": "Êtes-vous sûr de vouloir annuler la tâche ?",
+    "todoDetail": "Détails de la tâche",
+    "todoSet": "Définir une tâche",
+    "translate": "Traduire",
+    "voice2text": "Convertir en texte",
+    "more": "Plus",
+    "translating": "Traduction en cours",
+    "voice2texting": "Conversion en texte"
+  },
+  "forward": {
+    "message": "Message",
+    "hideSource": "Ne pas afficher les informations de l'expéditeur d'origine",
+    "merge": "Transférer en message groupé",
+    "max": "Sélectionnez jusqu'à {{n}} conversations",
+    "done": "Transfert réussi"
+  },
+  "todos": {
+    "setTitle": "Définir une tâche",
+    "all": "Tous les membres",
+    "some": "Attribuer des membres",
+    "self": "Soi-même",
+    "searchMembers": "Rechercher des membres",
+    "remind": "Heure du rappel",
+    "none": "Aucun rappel",
+    "in1h": "Dans 1 heure",
+    "tonight": "Ce soir à 20:00",
+    "tomorrow": "Demain matin à 9:00",
+    "custom": "Personnalisé",
+    "done": "Terminé",
+    "undone": "Incomplet",
+    "complete": "Terminer",
+    "cancelRemind": "Annuler le rappel",
+    "removeConfirm": "Supprimer la tâche de ce membre ?",
+    "mine": "{{n}} tâches à terminer",
+    "go": "Terminer"
+  },
+  "translate": {
+    "pickLanguage": "Sélectionner la langue",
+    "retranslate": "Retraduire"
+  },
+  "top": {
+    "unpinConfirm": "Êtes-vous sûr de vouloir détacher ?",
+    "by": "Épinglé par {{name}}"
+  },
+  "favorite": {
+    "remark": "Remarques"
+  },
+  "read": {
+    "read": "Lu",
+    "unread": "Non lu",
+    "title": "Détails de lecture"
+  },
+  "selection": {
+    "max": "Sélectionnez jusqu’à {{n}} messages",
+    "count": "{{n}} sélectionné(s)"
   }
 }

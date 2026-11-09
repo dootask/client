@@ -7,7 +7,7 @@ import { dateFormats, useLanguage, useT } from '../../i18n';
 import type { SearchItem } from '../../sync/api/dialog';
 import { dialogMention, dialogUnread, type StoredDialog } from '../../sync/messenger';
 import { draftPreview, lastSenderId, msgPreview } from '../../sync/messenger/preview';
-import { DialogAvatar, UserAvatar } from '../../ui/Avatar';
+import { type AvatarSize, DialogAvatar, UserAvatar } from '../../ui/Avatar';
 import { Badge } from '../../ui/Badge';
 import { Icon } from '../../ui/Icon';
 import { Menu } from '../../ui/popover';
@@ -77,12 +77,13 @@ export function DialogRowBody({ d, draft, selected = false, highlighted = false,
   );
 }
 
-function RowAvatar({ d }: { d: RowData }) {
+/** 会话头像：单聊是对方的头像，其余按群类型 */
+export function RowAvatar({ d, size = 48 }: { d: RowData; size?: AvatarSize }) {
   if (d.type === 'user') {
     const userid = d.dialog_user?.userid ?? 0;
-    return <UserAvatar uri={d.userimg} userid={userid} name={d.name ?? ''} bot={!!d.bot} size={48} />;
+    return <UserAvatar uri={d.userimg} userid={userid} name={d.name ?? ''} bot={!!d.bot} size={size} />;
   }
-  return <DialogAvatar uri={d.avatar} groupType={d.group_type} size={48} />;
+  return <DialogAvatar uri={d.avatar} groupType={d.group_type} size={size} />;
 }
 
 function Tag({ text, danger = false }: { text: string; danger?: boolean }) {

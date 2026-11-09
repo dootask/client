@@ -7,7 +7,7 @@ import { Icon } from '../Icon';
 import { Touchable } from '../Touchable';
 import { shortcutLabel } from '../shortcuts';
 import { Layer, measureAnchor, pointAnchor, Positioned } from './Layer';
-import type { MenuAction, MenuEntry } from './menuModel';
+import { type MenuAction, type MenuEntry, resolveItems } from './menuModel';
 import type { Rect } from './position';
 import type { MenuProps } from './types';
 
@@ -17,7 +17,9 @@ import type { MenuProps } from './types';
  */
 export function Menu({ items, trigger = 'press', onPress, accessibilityLabel, style, children }: MenuProps) {
   const ref = useRef<HostInstance>(null);
-  const [anchor, setAnchor] = useState<Rect | null>(null);
+  const [opened, setOpened] = useState<{ anchor: Rect; items: readonly MenuEntry[] } | null>(null);
+  const anchor = opened?.anchor ?? null;
+  const setAnchor = (rect: Rect | null) => setOpened(rect ? { anchor: rect, items: resolveItems(items) } : null);
   const open = async () => setAnchor(await measureAnchor(ref.current));
   return (
     <>
@@ -32,10 +34,10 @@ export function Menu({ items, trigger = 'press', onPress, accessibilityLabel, st
             : undefined
         }
       >
-        {/* 只有右键菜单、没有点击动作的（文字消息气泡）不是按钮：里面可能还有按钮，渲染成 <button> 会嵌套 */}
+        {/* 右键菜单的触发区（消息气泡）不渲染成 <button>：里面可能还有按钮（引用、已读圈、译文），会嵌套；点击动作照常 */}
         <Touchable
           ref={ref}
-          accessibilityRole={trigger === 'press' || onPress ? 'button' : undefined}
+          accessibilityRole={trigger === 'press' ? 'button' : undefined}
           accessibilityLabel={accessibilityLabel}
           accessibilityState={trigger === 'press' ? { expanded: anchor !== null } : undefined}
           onPress={trigger === 'press' ? open : onPress}
@@ -44,7 +46,7 @@ export function Menu({ items, trigger = 'press', onPress, accessibilityLabel, st
           {children}
         </Touchable>
       </div>
-      {anchor && <MenuLayer items={items} anchor={anchor} atPointer={trigger === 'context'} onClose={() => setAnchor(null)} />}
+      {opened && opened.items.length > 0 && <MenuLayer items={opened.items} anchor={opened.anchor} atPointer={trigger === 'context'} onClose={() => setAnchor(null)} />}
     </>
   );
 }

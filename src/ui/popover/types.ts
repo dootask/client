@@ -6,7 +6,8 @@ import type { MenuEntry } from './menuModel';
 import type { Align, Side } from './position';
 
 export interface MenuProps {
-  items: readonly MenuEntry[];
+  /** 菜单项；给函数时打开菜单才计算（列表里每行都有菜单时，不必每次渲染都算一遍） */
+  items: readonly MenuEntry[] | (() => readonly MenuEntry[]);
   /**
    * press：点击弹出（下拉菜单，默认）；
    * context：右键菜单，Web 上点右键、App 上长按弹出，点击仍走 onPress

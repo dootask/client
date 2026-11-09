@@ -14,5 +14,7 @@
   "save": "Speichern",
   "modify": "Ändern",
   "refresh": "Aktualisieren",
-  "clear": "Löschen"
+  "clear": "Löschen",
+  "loadFailed": "Laden fehlgeschlagen",
+  "none": "Keine"
 }

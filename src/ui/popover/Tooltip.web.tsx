@@ -59,7 +59,9 @@ export function Tooltip({ label, side = 'bottom', children }: TooltipProps) {
       onPointerEnter={(event) => {
         // 只响应鼠标，触屏点按不弹提示
         if (event.pointerType !== 'mouse') return;
-        const target = event.currentTarget.firstElementChild;
+        // 子元素也可能是不产生盒子的包装（如 Menu），往里找到真正画出来的那个
+        let target = event.currentTarget.firstElementChild;
+        while (target instanceof HTMLElement && target.style.display === 'contents') target = target.firstElementChild;
         if (!target) return;
         const { left, top, width, height } = target.getBoundingClientRect();
         show({ label, side, anchor: { x: left, y: top, width, height } });

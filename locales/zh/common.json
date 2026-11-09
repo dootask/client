@@ -14,5 +14,7 @@
   "save": "保存",
   "modify": "修改",
   "refresh": "刷新",
-  "clear": "清除"
+  "clear": "清除",
+  "loadFailed": "加载失败",
+  "none": "暂无"
 }

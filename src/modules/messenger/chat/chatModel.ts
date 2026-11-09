@@ -75,6 +75,8 @@ export function buildRows({ list, outbox, withdrawn, sentKeys, dialogId, userId 
   let h = 0;
   for (const msg of list) {
     while (h < holes.length && holes[h]!.id > msg.id) rows.push(withdrawnRow(holes[h++]!));
+    // 撤回请求还没回来、原消息还在：先画原消息，占位等它被删掉再顶上
+    if (h < holes.length && holes[h]!.id === msg.id) h++;
     rows.push(msgRow(msg, sentKeys[msg.id]));
   }
   while (h < holes.length) rows.push(withdrawnRow(holes[h++]!));

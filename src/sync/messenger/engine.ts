@@ -39,6 +39,7 @@ export interface MessengerApi {
   sendText: (params: SendTextParams) => ReturnType<typeof dialogApi.sendText>;
   withdraw: (msgId: number) => Promise<void>;
   emoji: (msgId: number, symbol: string) => ReturnType<typeof dialogApi.emoji>;
+  myTodos: (dialogId: number) => ReturnType<typeof dialogApi.myTodos>;
 }
 
 export function bindMessengerApi(client: ApiClient): MessengerApi {
@@ -60,6 +61,7 @@ export function bindMessengerApi(client: ApiClient): MessengerApi {
     sendText: (p) => dialogApi.sendText(client, p),
     withdraw: (id) => dialogApi.withdraw(client, id),
     emoji: (id, symbol) => dialogApi.emoji(client, id, symbol),
+    myTodos: (id) => dialogApi.myTodos(client, id),
   };
 }
 
@@ -576,6 +578,7 @@ export function createMessenger(deps: MessengerDeps) {
     const full = msgOf(data);
     if (full) {
       insertMsgs(full.dialog_id, [full], false);
+      if ('todo' in data) refreshTodo(full.dialog_id);
       return;
     }
     const id = Number(data.id) || 0;
@@ -584,12 +587,23 @@ export function createMessenger(deps: MessengerDeps) {
       const old = win.list.find((m) => m.id === id);
       if (old) {
         insertMsgs(Number(dialogId), [{ ...old, ...data } as Msg], false);
+        if ('todo' in data) refreshTodo(old.dialog_id);
         return;
       }
     }
+    if ('todo' in data && Number(data.dialog_id)) refreshTodo(Number(data.dialog_id));
     background(
       cache.getMany<Msg>('messages', [id]).then((found) => (found.length ? cache.putMany('messages', [{ ...found[0]!, ...data } as Msg]) : undefined)),
       'cache patch',
+    );
+  }
+
+  /** 消息的待办变了（设、取消、完成，自己或别人操作）：会话上「我未完成的待办数」以服务端为准 */
+  function refreshTodo(dialogId: number) {
+    if (!get().dialogs[dialogId]) return;
+    background(
+      api.myTodos(dialogId).then((list) => saveDialogs([{ id: dialogId, todo_num: list.length }])),
+      'todo',
     );
   }
 
@@ -888,6 +902,23 @@ export function createMessenger(deps: MessengerDeps) {
   }
 
   // ---------------------------------------------------------------------------
+  // 其他消息操作的结果（actions.ts）
+  // ---------------------------------------------------------------------------
+
+  /**
+   * 操作消息的接口结果：add 是新产生的消息（系统提示、转发出去的消息），插进各自的会话并更新会话的最后一条；
+   * update 是某条消息变化的字段，合并进去。推送稍后也会带来同样的内容，按 id 去重
+   */
+  function applyResult(result: { add?: unknown; update?: Record<string, unknown> | null }) {
+    if (result.update) patchMsg(result.update);
+    const added = (Array.isArray(result.add) ? result.add : [result.add]).map(msgOf).filter((m): m is Msg => !!m);
+    for (const msg of added) {
+      insertMsgs(msg.dialog_id, [msg], true);
+      if (get().dialogs[msg.dialog_id]) saveDialogs([lastMsgPatch(msg)]);
+    }
+  }
+
+  // ---------------------------------------------------------------------------
   // 生命周期
   // ---------------------------------------------------------------------------
 
@@ -969,6 +1000,10 @@ export function createMessenger(deps: MessengerDeps) {
     withdraw,
     forgetWithdrawn,
     toggleEmoji,
+    applyResult,
+    refreshTodo,
+    /** 改会话上的字段（置顶消息等操作的结果） */
+    patchDialog: (patch: DialogPatch) => saveDialogs([patch]),
     /** 别人发来的新消息（通知、横幅） */
     onIncoming(fn: (e: IncomingMessage) => void) {
       incomingListeners.add(fn);

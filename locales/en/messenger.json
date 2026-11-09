@@ -121,5 +121,74 @@
     "todoDone": "Complete",
     "todoTarget": "For",
     "withdrawSelf": "You unsent a message"
+  },
+  "action": {
+    "editRemark": "Edit remark",
+    "favorite": "Favorite",
+    "unfavorite": "Unfavorite",
+    "forward": "Forward",
+    "hideTranslation": "Hide translation",
+    "pin": "Pin",
+    "unpin": "Unpin",
+    "selectMany": "Multiple Selection",
+    "selectText": "Select Text",
+    "tag": "Mark",
+    "untag": "Unmark",
+    "todoCancel": "Cancel To-Do",
+    "todoCancelConfirm": "Are you sure you want to cancel the to-do?",
+    "todoDetail": "To-do details",
+    "todoSet": "Set To-Do",
+    "translate": "Translate",
+    "voice2text": "Convert to text",
+    "more": "More",
+    "translating": "Translating",
+    "voice2texting": "Converting to text"
+  },
+  "forward": {
+    "message": "Message",
+    "hideSource": "Do not display original sender information",
+    "merge": "Forward as a combined message",
+    "max": "Select up to {{n}} conversations",
+    "done": "Forward successful"
+  },
+  "todos": {
+    "setTitle": "Set To-Do",
+    "all": "All members",
+    "some": "Assign members",
+    "self": "Self",
+    "searchMembers": "Search members",
+    "remind": "Reminder time",
+    "none": "No reminder",
+    "in1h": "In 1 hour",
+    "tonight": "Tonight at 20:00",
+    "tomorrow": "Tomorrow morning at 9:00",
+    "custom": "Custom",
+    "done": "Completed",
+    "undone": "Incomplete",
+    "complete": "Complete",
+    "cancelRemind": "Cancel reminder",
+    "removeConfirm": "Remove this member's to-do?",
+    "mine": "{{n}} to-dos left for me",
+    "go": "Complete"
+  },
+  "translate": {
+    "pickLanguage": "Select Language",
+    "retranslate": "Re-translate"
+  },
+  "top": {
+    "unpinConfirm": "Are you sure you want to unpin?",
+    "by": "Pinned by {{name}}"
+  },
+  "favorite": {
+    "remark": "Remarks"
+  },
+  "read": {
+    "read": "Read",
+    "unread": "Unread",
+    "title": "Read details"
+  },
+  "selection": {
+    "max": "Select up to {{n}} messages",
+    "count": "{{n}} selected"
   }
 }

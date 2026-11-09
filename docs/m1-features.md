@@ -38,7 +38,7 @@
 | R9 | App 角标、桌面角标 | ✅ | 〔旧前端〕`msgAllUnread` = 所有可见会话 `getDialogNum` 之和；Electron 角标再加逾期任务数（M1 只算消息，逾期任务随 M2） |
 | R10 | 列表显示哪些会话 | ✅ | 〔旧前端〕`filterDialog`：正在看的、置顶的、有待办的、有未读的一定显示；否则 `name` 缺失、`dialog_delete=1`、`hide`、没有 `last_at` 的不显示；任务群完成 5 天、项目 / 任务群删除 2 天、归档 3 天后不显示（取与 `last_at` 的较晚者算）。〔旧前端〕`appAiHidden`：App 在系统配置 `app_ai_hidden=true` 时隐藏 AI 机器人单聊（上架审核用） |
 | R11 | 列表排序 | ✅ | 〔旧前端〕`dialogSort`：置顶时间 → 待办数 → 有草稿 → `last_at`，都倒序 |
-| R12 | 推送 `dialog` 合并 | 🟡 | 〔旧前端〕WebSocket `type=dialog` 按 `mode`：`add`（别人发的：`unread+1`，被 @ 时 `mention+1`，带 `user_at/user_ms`；更新最后消息；弹通知）、`chat`（同 add 但不加未读）、`update`/`readed`（更新消息；待办变了重拉会话待办）、`delete`（删消息，最后消息用 `last_force` 覆盖，`update_read` 时取 `dialog/msg/unread`）、`groupAdd`/`groupJoin`/`groupRestore`（取 `dialog/one`）、`groupUpdate`（合并会话）、`groupExit`/`groupDelete`（从本地删掉）、`updateTopMsg`（置顶消息）。带 `msgId` 的推送回 `receipt`（M0 已做） |
+| R12 | 推送 `dialog` 合并 | ✅ | 〔旧前端〕WebSocket `type=dialog` 按 `mode`：`add`（别人发的：`unread+1`，被 @ 时 `mention+1`，带 `user_at/user_ms`；更新最后消息；弹通知）、`chat`（同 add 但不加未读）、`update`/`readed`（更新消息；待办变了重拉会话待办）、`delete`（删消息，最后消息用 `last_force` 覆盖，`update_read` 时取 `dialog/msg/unread`）、`groupAdd`/`groupJoin`/`groupRestore`（取 `dialog/one`）、`groupUpdate`（合并会话）、`groupExit`/`groupDelete`（从本地删掉）、`updateTopMsg`（置顶消息）。带 `msgId` 的推送回 `receipt`（M0 已做） |
 | R13 | 消息合并 | ✅ | 〔旧前端〕`saveDialogMsg`：按 id 合并，本地已有 `read_at` 的保留；别人发的未读消息、会话没打开时把 `unread_one` 设成最小 id，@ 我的消息 id 并入 `mention_ids`。按会话分页：`dialog/msg/list`（`msg_id`/`prev_id`/`next_id`/`position_id`，每页 25），返回 `time` 之前、不在本页里的旧消息要删掉（服务端已删除） |
 | R14 | 已读上报 | ✅ | 〔旧前端〕`dialogMsgRead`：攒 50ms、每次最多 100 条，POST `dialog/msg/read`（`id: {消息id: 会话id}`）；成功后本会话 id ≥ 该条的消息标为已读，合并返回的会话数据，清 `unread_one`、`mention_ids`。〔App〕K6：服务端只标这条及更新的消息 |
 | R15 | 标记已读 / 未读、语音红点 | ✅ | 〔旧前端〕`dialog/msg/mark`（`type=read/unread`，`after_msg_id`）；`dialog/msg/dot` 清语音未播放红点 |
@@ -48,7 +48,7 @@
 | R19 | 草稿 | ✅ | 〔App〕D1：App 和网页共用草稿；本项目里草稿存本地键值（按账号、会话），影响列表排序（R11）和行内「[草稿]」 |
 | R20 | 正在看的会话 | ✅ | 当前打开的会话收到新消息不加未读（由已读上报清掉），不弹通知（P4）；期间收到过新消息的，关闭会话时先上报已读再向服务端取一次未读，停在历史没看到的消息仍算未读 |
 
-R12 里「待办变了重拉会话待办」随 N4 的待办功能做；R17 里联系人整表缓存随 N8 做，其余已完成。
+R12 已在 N4 补齐；R17 里联系人整表缓存随 N8 做，其余已完成。
 
 ### N1 实现说明
 
@@ -108,10 +108,10 @@ R12 里「待办变了重拉会话待办」随 N4 的待办功能做；R17 里�
 | B2 | 已读按可见区域上报 | ✅ | 改数据（R14）；Web 用虚拟列表算出的可见范围 · N3 |
 | B3 | 「@我」浮动按钮 | ✅ | 改数据（`mention_ids`）· N3 |
 | B4 | 语音未播放红点 | ✅ | 改数据（R15）· N3 |
-| B5 | 置顶消息条 | ⬜ | 改数据（`top_msg_id`、`dialog/msg/top`、`dialog/msg/topinfo`）· N4 |
-| B6 | 待办条和待办面板 | ⬜ | 改数据（`dialog/todo`）· N4 |
+| B5 | 置顶消息条 | ✅ | 改数据（`top_msg_id`、`dialog/msg/top`、`dialog/msg/topinfo`）· N4 |
+| B6 | 待办条和待办面板 | ✅ | 改数据（`dialog/todo`）· N4。提醒时间按设备时区显示，服务端时区换算没做（同 N2） |
 | B7 | 快捷消息条 | ⬜ | 改数据（`quick_msgs`）· N4。会议、位置签到 ⏸（m1-plan §5） |
-| B8 | 已读名单 | ⬜ | 改数据（`dialog/msg/readlist`）· N4 |
+| B8 | 已读名单 | ✅ | 改数据（`dialog/msg/readlist`）· N4 |
 | B9 | 表情回应名单 | ⬜ | 改数据 · N4 |
 | B10 | 滚动位置记忆 | ✅ | 照搬 · N3 |
 | B11 | 导航栏：标题、人数、其他会话未读、在线状态、标签、头像 | ✅ | 改数据（R6、`line` 推送）· N3 |
@@ -120,23 +120,23 @@ R12 里「待办变了重拉会话待办」随 N4 的待办功能做；R17 里�
 
 | # | 功能 | 状态 | 做法 |
 | --- | --- | --- | --- |
-| C1 | 长按菜单：浮起、表情条、全部表情 | ⬜ | 照搬；Web 用右键菜单 + 悬停操作条 · N4 |
-| C2 | 回复、编辑、复制、转文字、翻译、标注、收藏、撤回 | ⬜ | 改数据 · N4（回复、编辑、撤回随 N3） |
-| C3 | 菜单分组 | ⬜ | 照搬 · N4 |
-| C4 | 转发（单条、合并）和选择页 | ⬜ | 改数据 · N4 |
-| C5 | 多选、拖动连续勾选 | ⬜ | 照搬；Web 用 Shift 点选 · N4 |
+| C1 | 长按菜单：浮起、表情条、全部表情 | ✅ | 照搬；Web 用右键菜单 + 悬停操作条 · N4 |
+| C2 | 回复、编辑、复制、转文字、翻译、标注、收藏、撤回 | ✅ | 改数据 · N4（回复、编辑、撤回随 N3） |
+| C3 | 菜单分组 | ✅ | 照搬 · N4 |
+| C4 | 转发（单条、合并）和选择页 | ✅ | 改数据 · N4 |
+| C5 | 多选、拖动连续勾选 | ⬜ | 照搬；Web 用 Shift 点选 · N4。多选和 Web Shift 点选已做，原生拖动连续勾选随 N4b |
 | C6 | 新建任务 | ⏸ | 落到 M2（m1-plan §4） |
-| C7 | 设待办、取消待办 | ⬜ | 改数据（`dialog/msg/todo`、`todoremind`）；react-native-ui-datepicker · N4 |
-| C8 | 置顶 / 取消置顶消息 | ⬜ | 改数据 · N4 |
+| C7 | 设待办、取消待办 | ✅ | 改数据（`dialog/msg/todo`、`todoremind`）；react-native-ui-datepicker · N4 |
+| C8 | 置顶 / 取消置顶消息 | ✅ | 改数据 · N4 |
 | C9 | 下载、查看文件，保存 / 分享图片视频 | ⬜ | 照搬；Web 用浏览器下载 · N5 |
-| C10 | 选择文本（全屏页） | ⬜ | 照搬；Web 直接选中气泡文字，不需要这一项 · N4 |
+| C10 | 选择文本（全屏页） | ✅ | 照搬；Web 直接选中气泡文字，不需要这一项 · N4 |
 | C11 | 完整对话（回复线程） | ⬜ | 随 F7 · N6 |
-| C12 | 翻译选目标语言 | ⬜ | 改数据 · N4 |
-| C13 | 右滑回复 | ⬜ | 照搬；Web 不做（悬停操作条里有回复）· N4 |
-| C14 | 双击点赞 | ⬜ | 照搬；Web 同样双击 · N4 |
+| C12 | 翻译选目标语言 | ✅ | 改数据 · N4 |
+| C13 | 右滑回复 | ✅ | 照搬；Web 不做（悬停操作条里有回复）· N4 |
+| C14 | 双击点赞 | ✅ | 照搬；Web 同样双击 · N4 |
 | C15 | 点按回应胶囊切换 | ✅ | 改数据（`dialog/msg/emoji`）· N3 |
 | C16 | 撤回后「重新编辑」 | ✅ | 改数据（本地保留 5 分钟）· N3 |
-| C17 | 发送失败重发或删除 | ⬜ | 改数据（R18）· N4 |
+| C17 | 发送失败重发或删除 | ✅ | 改数据（R18）· N4 |
 | C18 | 编辑消息 | ✅ | 改数据 · N3 |
 
 ### D. 输入区（N3、N4）
@@ -203,7 +203,7 @@ R12 里「待办变了重拉会话待办」随 N4 的待办功能做；R17 里�
 | G7 | 文件系统预览、分享、下载进度 | ⬜ | 照搬（expo-file-system、expo-sharing）；Web 下载 · N5 |
 | G8 | 长文全屏阅读 | ⬜ | 照搬 · N5 |
 | G9 | 数学公式卡片 | ⬜ | 照搬；Web 直接渲染 MathML · N5 |
-| G10 | 译文、转文字结果 | ⬜ | 照搬 · N4 |
+| G10 | 译文、转文字结果 | ✅ | 照搬 · N4 |
 
 ### H. AI 会话（N7）
 
@@ -264,7 +264,7 @@ R12 里「待办变了重拉会话待办」随 N4 的待办功能做；R17 里�
 | # | 功能 | 状态 | 说明 |
 | --- | --- | --- | --- |
 | W1 | 聊天列表 `column-reverse` 虚拟列表 | ✅ | N3；滚轮、触控板、选中文字、页内查找顺序都正常 |
-| W2 | 消息悬停操作条 | ⬜ | N4；回复、表情、更多 |
+| W2 | 消息悬停操作条 | ✅ | N4；回复、表情、更多 |
 | W3 | Esc 关闭会话 | ⬜ | 〔kb〕`shortcut/messenger` |
 
 ## 7. 不做

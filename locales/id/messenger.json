@@ -121,5 +121,74 @@
     "todoDone": "Selesai",
     "todoTarget": "Untuk",
     "withdrawSelf": "Anda menarik kembali pesan"
+  },
+  "action": {
+    "editRemark": "Ubah catatan",
+    "favorite": "Favorit",
+    "unfavorite": "Hapus dari Favorit",
+    "forward": "Teruskan",
+    "hideTranslation": "Sembunyikan terjemahan",
+    "pin": "Sematkan",
+    "unpin": "Batalkan sematan",
+    "selectMany": "Pilihan Ganda",
+    "selectText": "Pilih teks",
+    "tag": "Tandai",
+    "untag": "Hapus tanda",
+    "todoCancel": "Batalkan Tugas",
+    "todoCancelConfirm": "Apakah Anda yakin ingin membatalkan tugas?",
+    "todoDetail": "Detail tugas",
+    "todoSet": "Atur Tugas",
+    "translate": "Terjemahkan",
+    "voice2text": "Ubah menjadi teks",
+    "more": "Lainnya",
+    "translating": "Menerjemahkan",
+    "voice2texting": "Mengubah ke teks"
+  },
+  "forward": {
+    "message": "Pesan",
+    "hideSource": "Jangan tampilkan informasi pengirim asli",
+    "merge": "Teruskan sebagai pesan gabungan",
+    "max": "Pilih maksimal {{n}} percakapan",
+    "done": "Penerusan berhasil"
+  },
+  "todos": {
+    "setTitle": "Atur Tugas",
+    "all": "Semua anggota",
+    "some": "Tetapkan anggota",
+    "self": "Diri Sendiri",
+    "searchMembers": "Cari anggota",
+    "remind": "Waktu pengingat",
+    "none": "Tidak ada pengingat",
+    "in1h": "Dalam 1 jam",
+    "tonight": "Malam ini pukul 20:00",
+    "tomorrow": "Besok pagi pukul 9:00",
+    "custom": "Kustom",
+    "done": "Selesai",
+    "undone": "Belum Selesai",
+    "complete": "Selesai",
+    "cancelRemind": "Batalkan pengingat",
+    "removeConfirm": "Hapus tugas anggota ini?",
+    "mine": "{{n}} tugas saya belum selesai",
+    "go": "Selesaikan"
+  },
+  "translate": {
+    "pickLanguage": "Pilih Bahasa",
+    "retranslate": "Terjemahkan ulang"
+  },
+  "top": {
+    "unpinConfirm": "Apakah Anda yakin ingin membatalkan penyematan?",
+    "by": "Disematkan oleh {{name}}"
+  },
+  "favorite": {
+    "remark": "Catatan"
+  },
+  "read": {
+    "read": "Dibaca",
+    "unread": "Belum dibaca",
+    "title": "Detail dibaca"
+  },
+  "selection": {
+    "max": "Pilih hingga {{n}} pesan",
+    "count": "{{n}} dipilih"
   }
 }

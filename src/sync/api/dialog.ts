@@ -276,3 +276,120 @@ export async function emoji(client: ApiClient, msgId: number, symbol: string) {
   const { data } = await requestParsed(client, 'dialog/msg/emoji', z.looseObject({ id: num, emoji: phpList(emojiItemSchema) }), { data: { msg_id: msgId, symbol } });
   return data;
 }
+
+/**
+ * 操作一条消息后的结果：add 是因此产生的系统提示（标注、置顶、待办，可能是一条或多条），
+ * update 是这条消息变化的字段（id 加变化的字段）。两者服务端也会推送，响应先到就先用
+ */
+const msgResultSchema = z.looseObject({ add: z.unknown().optional(), update: z.record(z.string(), z.unknown()).nullish() });
+export type MsgResult = z.output<typeof msgResultSchema>;
+
+/** 置顶 / 取消置顶这条消息（会话里只有一条置顶）；update 是会话的 top_msg_id、top_userid */
+export async function msgTop(client: ApiClient, msgId: number) {
+  return requestParsed(client, 'dialog/msg/top', msgResultSchema, { data: { msg_id: msgId } });
+}
+
+/** 当前置顶的消息，没有为 null */
+export async function msgTopInfo(client: ApiClient, dialogId: number) {
+  const { data } = await requestParsed(client, 'dialog/msg/topinfo', msgSchema.nullable().catch(null), { data: { dialog_id: dialogId } });
+  return data;
+}
+
+/** 标注 / 取消标注 */
+export async function msgTag(client: ApiClient, msgId: number) {
+  return requestParsed(client, 'dialog/msg/tag', msgResultSchema, { data: { msg_id: msgId } });
+}
+
+export interface MsgTodoParams {
+  msg_id: number;
+  /** all：会话全部成员；user：userids 指定的成员（空数组即取消所有人的待办） */
+  type: 'all' | 'user';
+  userids?: number[];
+  /** 提醒时间（服务器时区 `YYYY-MM-DD HH:mm:ss`），null 为不提醒；省略则不动已有的提醒 */
+  remind_at?: string | null;
+}
+
+/** 设待办 / 取消待办；add 可能有两条（取消一部分人、新增一部分人） */
+export async function msgTodo(client: ApiClient, params: MsgTodoParams) {
+  return requestParsed(client, 'dialog/msg/todo', msgResultSchema, {
+    method: 'post',
+    data: { ...params, remind_at: params.remind_at === null ? '' : params.remind_at },
+  });
+}
+
+export const todoRowSchema = z.looseObject({ id: num, userid: num, done_at: str.nullish(), remind_at: str.nullish() });
+export type TodoRow = z.output<typeof todoRowSchema>;
+
+/** 这条消息的待办名单：每人一行，完成了有 done_at */
+export async function msgTodoList(client: ApiClient, msgId: number) {
+  const { data } = await requestParsed(client, 'dialog/msg/todolist', phpList(todoRowSchema), { data: { msg_id: msgId } });
+  return data;
+}
+
+/** 设置或取消（remind_at 为空）某些成员的待办提醒 */
+export async function msgTodoRemind(client: ApiClient, params: { msg_id: number; userids: number[]; remind_at: string }) {
+  const { msg } = await client.request('dialog/msg/todoremind', { method: 'post', data: params });
+  return msg;
+}
+
+export interface ForwardParams {
+  msg_ids: number[];
+  /** 合并成一条转发（最多 100 条）；否则逐条转发 */
+  merge: boolean;
+  dialogids: number[];
+  userids: number[];
+  /** 显示原发送人 */
+  show_source: boolean;
+  /** 附言，跟在转发的消息后面发 */
+  leave_message: string;
+}
+
+/** 转发，返回在各个目标会话里产生的消息 */
+export async function forward(client: ApiClient, params: ForwardParams) {
+  const { msg_ids, merge, show_source, ...rest } = params;
+  const ids = !merge && msg_ids.length === 1 ? { msg_id: msg_ids[0] } : { msg_ids };
+  const { data, msg } = await requestParsed(client, merge ? 'dialog/msg/mergeforward' : 'dialog/msg/forward', z.looseObject({ msgs: phpList(msgSchema) }), {
+    data: { ...ids, ...rest, show_source: show_source ? 1 : 0 },
+  });
+  return { msgs: data.msgs, msg };
+}
+
+/** 翻译文字或语音转写的内容；同一语言服务端有缓存，force 重新翻译 */
+export async function msgTranslation(client: ApiClient, params: { msg_id: number; language: string; force?: boolean }) {
+  const { data } = await requestParsed(client, 'dialog/msg/translation', z.looseObject({ msg_id: num, language: str, content: str }), {
+    data: { ...params, force: params.force ? 1 : 0 },
+  });
+  return data;
+}
+
+/** 语音转文字，返回带转写内容（msg.text）的消息 */
+export async function msgVoice2text(client: ApiClient, msgId: number) {
+  const { data } = await requestParsed(client, 'dialog/msg/voice2text', msgSchema, { data: { msg_id: msgId } });
+  return data;
+}
+
+/** 已读名单（只有发送人能看）：每个接收人一行，read_at 为空是未读 */
+export async function msgReadList(client: ApiClient, msgId: number) {
+  const { data } = await requestParsed(client, 'dialog/msg/readlist', phpList(z.looseObject({ userid: num, read_at: str.nullish() })), { data: { msg_id: msgId } });
+  return data;
+}
+
+/** 会话成员（不含已停用的账号） */
+export async function members(client: ApiClient, dialogId: number) {
+  const { data } = await requestParsed(client, 'dialog/user', phpList(z.looseObject({ userid: num, bot: num.nullish() })), { data: { dialog_id: dialogId } });
+  return data;
+}
+
+export const myTodoSchema = z.looseObject({ id: num, msg_id: num, dialog_id: num });
+export type MyTodo = z.output<typeof myTodoSchema>;
+
+/** 自己在这个会话里没完成的待办（最多 50 条，新的在前） */
+export async function myTodos(client: ApiClient, dialogId: number) {
+  const { data } = await requestParsed(client, 'dialog/todo', phpList(myTodoSchema), { data: { dialog_id: dialogId } });
+  return data;
+}
+
+/** 完成自己的一条待办（id 是待办行的 id，不是消息 id） */
+export async function msgDone(client: ApiClient, todoId: number) {
+  return requestParsed(client, 'dialog/msg/done', msgResultSchema, { data: { id: todoId } });
+}

@@ -14,5 +14,7 @@
   "save": "Enregistrer",
   "modify": "Modifier",
   "refresh": "Actualiser",
-  "clear": "Effacer"
+  "clear": "Effacer",
+  "loadFailed": "Échec du chargement",
+  "none": "Aucun"
 }

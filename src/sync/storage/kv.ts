@@ -16,6 +16,8 @@ export const KV_KEYS = {
   language: 'pref.language',
   /** 按 Enter 直接发送消息（'1' / '0'），没设过按平台默认 */
   enterSend: 'pref.enterSend',
+  /** 消息翻译的目标语言，没设过用界面语言 */
+  translateLanguage: 'pref.translateLanguage',
   listPaneWidth: (id: string) => `pref.listPaneWidth.${id}`,
   /** 结构化缓存里数据所属的账号（服务器地址 + 用户 id），和当前登录对不上就清空缓存 */
   cacheOwner: 'cache.owner',

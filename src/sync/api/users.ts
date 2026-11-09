@@ -34,3 +34,27 @@ export async function basic(client: ApiClient, userids: readonly number[]) {
   const { data } = await requestParsed(client, 'users/basic', phpList(userBasicSchema), { data: { userid: JSON.stringify(userids) } });
   return data;
 }
+
+/** 消息是否已收藏 */
+export async function favoriteCheck(client: ApiClient, msgId: number) {
+  const { data } = await requestParsed(client, 'users/favorite/check', z.looseObject({ favorited: z.boolean() }), { data: { type: 'message', id: msgId } });
+  return data.favorited;
+}
+
+/** 收藏 / 取消收藏消息；msg 是服务端的提示语 */
+export async function favoriteToggle(client: ApiClient, msgId: number) {
+  const { data, msg } = await requestParsed(client, 'users/favorite/toggle', z.looseObject({ favorited: z.boolean() }), { method: 'post', data: { type: 'message', id: msgId } });
+  return { favorited: data.favorited, msg };
+}
+
+/** 修改收藏备注（1–255 字） */
+export async function favoriteRemark(client: ApiClient, msgId: number, remark: string) {
+  const { msg } = await client.request('users/favorite/remark', { method: 'post', data: { type: 'message', id: msgId, remark } });
+  return msg;
+}
+
+/** 按昵称、拼音、职位、邮箱搜索在职的成员（不含机器人） */
+export async function search(client: ApiClient, key: string, take = 30) {
+  const { data } = await requestParsed(client, 'users/search', phpList(userBasicSchema), { data: { keys: { key }, take } });
+  return data;
+}

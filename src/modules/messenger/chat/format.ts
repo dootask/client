@@ -57,3 +57,10 @@ export function formatBytes(bytes: number): string {
 
 /** 角标数字，超过 99 显示 99+ */
 export const countText = (n: number) => (n > 99 ? '99+' : String(n));
+
+/** 某个时刻（毫秒）：今年为「月日 时:分」，跨年加年份 */
+export function formatMoment(ms: number, f: DateFormats): string {
+  const date = new Date(ms);
+  const day = date.getFullYear() === new Date().getFullYear() ? f.monthDay(date) : f.full(date);
+  return `${day} ${f.time(date)}`;
+}

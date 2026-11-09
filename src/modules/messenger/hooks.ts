@@ -12,6 +12,9 @@ const emptyUsers = createStore<UserDirectoryState>()(() => ({ users: {} }));
 
 export const useMessenger = () => useMessengerInstance((s) => s.messenger);
 
+/** 长按菜单里改动消息的操作（置顶、标注、待办、转发、翻译、转文字） */
+export const useMsgActions = () => useMessengerInstance((s) => s.actions);
+
 /** 订阅消息数据层的状态；selector 要返回稳定引用（或配合 useShallow） */
 export function useMessengerState<T>(selector: (state: MessengerState) => T): T {
   const messenger = useMessenger();
@@ -31,4 +34,14 @@ export function useUser(userid: number): CachedUser | undefined {
     if (userid > 0) users?.want([userid]);
   }, [users, userid]);
   return user;
+}
+
+/** 一组用户（成员列表、已读名单）；整张表订阅，没有的向用户目录要 */
+export function useUsers(userids: readonly number[]): Record<number, CachedUser> {
+  const users = useMessengerInstance((s) => s.users);
+  const all = useStore(users?.store ?? emptyUsers, (s) => s.users);
+  useEffect(() => {
+    if (userids.length) users?.want(userids);
+  }, [users, userids]);
+  return all;
 }

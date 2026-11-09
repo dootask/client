@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react';
-import { Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { StyleSheet } from 'react-native-unistyles';
 
@@ -8,12 +8,21 @@ import { StyleSheet } from 'react-native-unistyles';
  * 全应用一个提示层（ToastHost，挂在根布局里），新的顶掉旧的
  */
 
+/** 提示里的一个按钮（如收藏后「修改备注」），点了提示随即消失 */
+export interface ToastAction {
+  label: string;
+  onPress: () => void;
+}
+
 interface ToastItem {
   id: number;
   text: string;
+  action?: ToastAction;
 }
 
 const DURATION = 2500;
+/** 带按钮的多留一会儿，来得及点 */
+const ACTION_DURATION = 5000;
 
 let current: ToastItem | null = null;
 let seq = 0;
@@ -25,10 +34,10 @@ function emit(item: ToastItem | null) {
   for (const listener of listeners) listener();
 }
 
-export function showToast(text: string) {
+export function showToast(text: string, action?: ToastAction) {
   clearTimeout(timer);
-  emit({ id: ++seq, text });
-  timer = setTimeout(() => emit(null), DURATION);
+  emit({ id: ++seq, text, action });
+  timer = setTimeout(() => emit(null), action ? ACTION_DURATION : DURATION);
 }
 
 const subscribe = (listener: () => void) => {
@@ -40,9 +49,31 @@ export function ToastHost() {
   const item = useSyncExternalStore(subscribe, () => current);
   if (!item) return null;
   return (
-    <View style={styles.root} pointerEvents="none">
-      <Animated.View key={item.id} entering={FadeIn} exiting={FadeOut} style={styles.toast} accessibilityLiveRegion="polite" accessibilityRole="alert">
+    <View style={styles.root} pointerEvents="box-none">
+      <Animated.View
+        key={item.id}
+        entering={FadeIn}
+        exiting={FadeOut}
+        style={styles.toast}
+        pointerEvents={item.action ? 'auto' : 'none'}
+        accessibilityLiveRegion="polite"
+        accessibilityRole="alert"
+      >
         <Text style={styles.text}>{item.text}</Text>
+        {item.action && (
+          <Pressable
+            accessibilityRole="button"
+            hitSlop={8}
+            onPress={() => {
+              clearTimeout(timer);
+              emit(null);
+              item.action?.onPress();
+            }}
+            style={({ pressed }) => pressed && styles.pressed}
+          >
+            <Text style={styles.action}>{item.action.label}</Text>
+          </Pressable>
+        )}
       </Animated.View>
     </View>
   );
@@ -58,6 +89,9 @@ const styles = StyleSheet.create((theme, rt) => ({
     paddingHorizontal: theme.spacing.xxl,
   },
   toast: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.md,
     maxWidth: theme.size.bubbleMaxWidth,
     paddingHorizontal: theme.spacing.lg,
     paddingVertical: theme.spacing.sm + theme.spacing.xs,
@@ -66,7 +100,10 @@ const styles = StyleSheet.create((theme, rt) => ({
   },
   text: {
     ...theme.typography.subhead,
+    flexShrink: 1,
     color: theme.colors.onToast,
     textAlign: 'center',
   },
+  action: { ...theme.typography.subhead, fontWeight: '600', color: theme.colors.primary },
+  pressed: { opacity: theme.opacity.pressedIcon },
 }));

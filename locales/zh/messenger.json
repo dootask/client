@@ -121,5 +121,74 @@
     "todoDone": "完成",
     "todoTarget": "给",
     "withdrawSelf": "你撤回了一条消息"
+  },
+  "action": {
+    "editRemark": "修改备注",
+    "favorite": "收藏",
+    "unfavorite": "取消收藏",
+    "forward": "转发",
+    "hideTranslation": "隐藏翻译",
+    "pin": "置顶",
+    "unpin": "取消置顶",
+    "selectMany": "多选",
+    "selectText": "选择文本",
+    "tag": "标注",
+    "untag": "取消标注",
+    "todoCancel": "取消待办",
+    "todoCancelConfirm": "你确定取消待办吗？",
+    "todoDetail": "待办详情",
+    "todoSet": "设待办",
+    "translate": "翻译",
+    "voice2text": "转文字",
+    "more": "更多",
+    "translating": "翻译中",
+    "voice2texting": "转文字中"
+  },
+  "forward": {
+    "message": "留言",
+    "hideSource": "不显示原发送者信息",
+    "merge": "合并转发",
+    "max": "最多选择{{n}}个会话",
+    "done": "转发成功"
+  },
+  "todos": {
+    "setTitle": "设置待办",
+    "all": "所有成员",
+    "some": "指定成员",
+    "self": "自己",
+    "searchMembers": "搜索成员",
+    "remind": "提醒时间",
+    "none": "不提醒",
+    "in1h": "1 小时后",
+    "tonight": "今晚 20:00",
+    "tomorrow": "明早 9:00",
+    "custom": "自定义",
+    "done": "已完成",
+    "undone": "未完成",
+    "complete": "完成",
+    "cancelRemind": "取消提醒",
+    "removeConfirm": "确定取消该成员的待办吗？",
+    "mine": "我有{{n}}条未完成",
+    "go": "去完成"
+  },
+  "translate": {
+    "pickLanguage": "选择语言",
+    "retranslate": "重新翻译"
+  },
+  "top": {
+    "unpinConfirm": "你确定取消置顶吗？",
+    "by": "由{{name}}置顶"
+  },
+  "favorite": {
+    "remark": "备注"
+  },
+  "read": {
+    "read": "已读",
+    "unread": "未读",
+    "title": "已读详情"
+  },
+  "selection": {
+    "max": "最多选择{{n}}条消息",
+    "count": "已选{{n}}项"
   }
 }

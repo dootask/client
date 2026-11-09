@@ -28,6 +28,10 @@ describe('聊天列表的行', () => {
     expect(buildRows({ ...base, list: [msg(5, { next_id: 9 }), msg(2)], withdrawn }).map((r) => r.id)).toEqual(['5', '3', '2']);
   });
 
+  it('原消息还在（撤回请求未返回）时不重复画占位', () => {
+    expect(buildRows({ ...base, list: [msg(5), msg(2)], withdrawn: [hole(5)] }).map((r) => r.id)).toEqual(['5', '2']);
+  });
+
   it('发出的消息沿用本地键', () => {
     const rows = buildRows({ ...base, list: [msg(5)], sentKeys: { 5: 'local-1' } });
     expect(rows[0]!.key).toBe('local-1');

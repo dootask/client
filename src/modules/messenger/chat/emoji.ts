@@ -5,3 +5,6 @@ export const EMOJIS = Array.from(
 
 /** 消息菜单里的快捷回应 */
 export const REACTIONS = ['👍', '❤️', '😂', '🎉', '🙏', '👌', '🔥', '✅'];
+
+/** 双击气泡点的赞 */
+export const LIKE = '👍';

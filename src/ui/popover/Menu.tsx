@@ -2,7 +2,7 @@ import { useMemo, useRef } from 'react';
 import { useUnistyles } from 'react-native-unistyles';
 
 import { Touchable } from '../Touchable';
-import { toNativeMenu } from './menuModel';
+import { resolveItems, toNativeMenu } from './menuModel';
 import { type NativeMenuHandle, NativeMenuView } from './nativeMenu';
 import type { MenuProps } from './types';
 
@@ -10,7 +10,7 @@ import type { MenuProps } from './types';
 export function Menu({ items, trigger = 'press', onPress, accessibilityLabel, style, children }: MenuProps) {
   const { theme, rt } = useUnistyles();
   const menu = useRef<NativeMenuHandle>(null);
-  const { sections, handlers } = useMemo(() => toNativeMenu(items), [items]);
+  const { sections, handlers } = useMemo(() => toNativeMenu(resolveItems(items)), [items]);
   const open = () => void menu.current?.show();
   return (
     <NativeMenuView

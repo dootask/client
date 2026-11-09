@@ -1,8 +1,9 @@
 import { useLocalSearchParams } from 'expo-router';
-import { AtSign, ChevronDown } from 'lucide-react-native';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, AppState, Linking, Text, View } from 'react-native';
+import { AtSign, ChevronDown, Forward } from 'lucide-react-native';
+import { type ComponentProps, type ReactNode, type Ref, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
+import { ActivityIndicator, AppState, BackHandler, Keyboard, Linking, Text, View } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
+import { useStore } from 'zustand';
 
 import { dateFormats, useLanguage, useT } from '../../../i18n';
 import type { Msg } from '../../../sync/api/dialog';
@@ -14,15 +15,26 @@ import { showToast } from '../../../ui/Toast';
 import { Touchable } from '../../../ui/Touchable';
 import { useErrorText, useSession } from '../../session';
 import { useToday } from '../clock';
-import { useDialog, useMessenger, useMessengerState } from '../hooks';
+import { useDialog, useMessenger, useMessengerState, useMsgActions } from '../hooks';
+import { ChatBanners } from './ChatBanners';
 import { ChatHeader } from './ChatHeader';
+import type { RowRef } from './bubbleTouchTypes';
 import { buildRows, type RowData } from './chatModel';
 import { Composer, type ComposerHandle, type ComposerMode } from './Composer';
 import { EmojiPanel } from './EmojiPanel';
 import { countText, dayLabel } from './format';
-import { useMessageMenus } from './messageMenu';
+import { MessageActionMenu, type LongPressTarget } from './MessageActionMenu';
+import { forwardable, type MenuHandlers, useMessageMenus } from './messageMenu';
 import { bubbleTones, MessageRow, RowContextValue, type RowContext } from './MessageRow';
 import { RichHandlersContext, type RichHandlers } from './RichText';
+import { createSelection, SELECTION_MAX, type Selection } from './selection';
+import { FavoriteRemarkSheet } from './sheets/FavoriteRemarkSheet';
+import { ForwardSheet } from './sheets/ForwardSheet';
+import { ReadListSheet } from './sheets/ReadListSheet';
+import { SelectTextSheet } from './sheets/SelectTextSheet';
+import { TodoDetailSheet } from './sheets/TodoDetailSheet';
+import { TodoSetSheet } from './sheets/TodoSetSheet';
+import { TranslateSheet } from './sheets/TranslateSheet';
 import { toggleVoice } from './voice';
 
 /** 离开会话时最上面看到的那条，下次打开回到这里（本次运行内） */
@@ -35,6 +47,15 @@ const LOCATE_TIMEOUT = 3000;
 const UNREAD_ABOVE = 2;
 
 const renderMessage = (info: MessageRenderInfo<RowData>) => <MessageRow info={info} />;
+
+/** 聊天页上弹出的弹层（一次只开一个） */
+type SheetContent =
+  | { kind: 'forward'; msgIds: number[] }
+  | { kind: 'todoSet' | 'todoDetail' | 'translate'; msg: Msg }
+  | { kind: 'remark' | 'readList'; msgId: number }
+  | { kind: 'selectText'; text: string };
+/** seq：每次打开换一个，弹层重新挂载、状态从头开始；visible 置 false 时内容留着放完关闭动画 */
+type SheetState = { seq: number; visible: boolean; content: SheetContent };
 
 /** 路由页：/messenger/[dialogId]?msg=消息 id（从搜索、回复跳过来时定位到这条） */
 export function ChatRoute() {
@@ -68,6 +89,10 @@ function ChatScreen({ dialogId, msgId }: { dialogId: number; msgId: number }) {
   const [mentions, setMentions] = useState<readonly number[]>(opening.mentions);
   const [located, setLocated] = useState(false);
   const [mode, setMode] = useState<ComposerMode>(null);
+  const menuHost = useRef<MenuHostHandle>(null);
+  const [sheet, setSheet] = useState<SheetState | null>(null);
+  const [selection] = useState(createSelection);
+  const actions = useMsgActions();
 
   const list = win?.list;
   const rows = useMemo(
@@ -146,13 +171,42 @@ function ChatScreen({ dialogId, msgId }: { dialogId: number; msgId: number }) {
     await chatRef.current?.scrollToMessage(String(id), { highlight });
   }, [messenger, dialogId, errorText]);
 
+  const onJump = useCallback((id: number) => void jumpTo(id), [jumpTo]);
+
+  const openSheet = useCallback((content: SheetContent) => {
+    Keyboard.dismiss();
+    setSheet((prev) => ({ seq: (prev?.seq ?? 0) + 1, visible: true, content }));
+  }, []);
+  const closeSheet = useCallback(() => setSheet((prev) => prev && { ...prev, visible: false }), []);
+
   const onReply = useCallback((msg: Msg) => {
     setMode({ kind: 'reply', msg });
   }, []);
-  const onEdit = useCallback((msg: Msg) => {
-    setMode({ kind: 'edit', msg });
-  }, []);
-  const { menu, pendingMenu } = useMessageMenus({ onReply, onEdit });
+  // 交给 React Compiler 记忆：手写 useMemo 包住传给 hook 的对象会让编译器放弃优化整个组件
+  const handlers: MenuHandlers = {
+    onReply,
+    onEdit: (msg: Msg) => setMode({ kind: 'edit', msg }),
+    onForward: (msg: Msg) => openSheet({ kind: 'forward', msgIds: [msg.id] }),
+    onSelectMany: (msg: Msg) => {
+      Keyboard.dismiss();
+      selection.start(msg.id);
+    },
+    onSelectText: (text: string) => openSheet({ kind: 'selectText', text }),
+    onSetTodo: (msg: Msg) => openSheet({ kind: 'todoSet', msg }),
+    onTodoDetail: (msg: Msg) => openSheet({ kind: 'todoDetail', msg }),
+    onFavoriteRemark: (msgId: number) => openSheet({ kind: 'remark', msgId }),
+  };
+  const { menu, pendingMenu } = useMessageMenus(handlers);
+
+  // 多选：Shift 连选按显示顺序（从旧到新）取可转发的消息
+  const selectable = useRef<number[]>([]);
+  useEffect(() => {
+    selectable.current = rows.flatMap((row) => (row.data.kind === 'msg' && forwardable(row.data.msg) ? [row.data.msg.id] : [])).reverse();
+  }, [rows]);
+
+  const onReact = useCallback((msg: Msg, symbol: string) => {
+    messenger?.toggleEmoji(msg, symbol).catch((err) => showToast(errorText(err)));
+  }, [messenger, errorText]);
 
   const rowContext = useMemo<RowContext>(() => ({
     group: dialog?.type === 'group',
@@ -169,15 +223,27 @@ function ChatScreen({ dialogId, msgId }: { dialogId: number; msgId: number }) {
         void Linking.openURL(body.url).catch(() => {});
       }
     },
-    onReact: (msg: Msg, symbol: string) => {
-      messenger?.toggleEmoji(msg, symbol).catch((err) => showToast(errorText(err)));
-    },
+    onReact,
     onQuote: (id: number) => void jumpTo(id),
+    onLongPress: (row: RowRef, info: MessageRenderInfo<RowData>, msg: Msg, body: MsgBody) => {
+      row.measureInWindow((x, y, width, height) => menuHost.current?.open({ anchor: { x, y, width, height }, info, msg, body }));
+    },
+    onReply,
+    onHover: (msg: Msg) => {
+      if (actions && !(msg.id in (messenger?.store.getState().favorites ?? {}))) actions.checkFavorite(msg.id).catch(() => {});
+    },
+    onTranslation: (msg: Msg) => openSheet({ kind: 'translate', msg }),
+    onReadList: (msgId: number) => openSheet({ kind: 'readList', msgId }),
+    selection: selection.store,
+    onSelect: (msg: Msg, extend: boolean) => {
+      const ok = extend ? selection.extend(msg.id, selectable.current) : selection.toggle(msg.id);
+      if (!ok) showToast(t('messenger:selection.max', { n: SELECTION_MAX }));
+    },
     onReEdit: (item: WithdrawnMsg) => {
       composerRef.current?.replace(item.md ? item.text : htmlToText(item.text));
       messenger?.forgetWithdrawn(item.id);
     },
-  }), [dialog?.type, userId, server, theme.colors, opening.unreadOne, menu, pendingMenu, messenger, errorText, jumpTo]);
+  }), [dialog?.type, userId, server, theme.colors, opening.unreadOne, menu, pendingMenu, messenger, actions, onReact, jumpTo, onReply, openSheet, selection, t]);
 
   const richHandlers = useMemo<RichHandlers>(() => ({
     onPressRun: (run) => {
@@ -214,8 +280,17 @@ function ChatScreen({ dialogId, msgId }: { dialogId: number; msgId: number }) {
             currentUserId={String(userId)}
             renderMessage={renderMessage}
             renderDay={renderDay}
-            header={<ChatHeader dialogId={dialogId} dialog={dialog} />}
-            composer={<Composer ref={composerRef} dialogId={dialogId} mode={mode} onModeEnd={onModeEnd} onSent={onSent} />}
+            header={
+              <>
+                <ChatHeader dialogId={dialogId} dialog={dialog} />
+                <ChatBanners dialog={dialog} onJump={onJump} />
+              </>
+            }
+            composer={
+              <BottomBar selection={selection} onForward={(msgIds) => openSheet({ kind: 'forward', msgIds })}>
+                <Composer ref={composerRef} dialogId={dialogId} mode={mode} onModeEnd={onModeEnd} onSent={onSent} />
+              </BottomBar>
+            }
             bottomColor={theme.colors.surface}
             panels={{ emoji: <EmojiPanel onPick={(emoji) => composerRef.current?.insert(emoji)} /> }}
             keyboardDragOffset={theme.size.touch + theme.spacing.xs * 2}
@@ -235,8 +310,85 @@ function ChatScreen({ dialogId, msgId }: { dialogId: number; msgId: number }) {
             onJumpToLatest={onJumpToLatest}
           />
         </RichHandlersContext.Provider>
+        <MenuHost ref={menuHost} group={dialog?.type === 'group'} userId={userId} menu={menu} onReact={onReact} />
       </RowContextValue.Provider>
+      {sheet && <ChatSheet key={sheet.seq} content={sheet.content} visible={sheet.visible} onClose={closeSheet} onForwarded={selection.clear} />}
     </View>
+  );
+}
+
+type MenuHostHandle = { open: (target: LongPressTarget) => void };
+
+/**
+ * 长按菜单单独持有状态：长按时只渲染这一小块，不连带整个聊天页。
+ * 整页重渲染在安卓上会被按住期间不断到来的触摸事件反复打断，菜单要等松手才出来
+ */
+function MenuHost({ ref, ...props }: Omit<ComponentProps<typeof MessageActionMenu>, 'target' | 'onClose'> & { ref: Ref<MenuHostHandle> }) {
+  const [target, setTarget] = useState<LongPressTarget | null>(null);
+  useImperativeHandle(ref, () => ({ open: setTarget }), []);
+  return target && <MessageActionMenu {...props} target={target} onClose={() => setTarget(null)} />;
+}
+
+function ChatSheet({ content, visible, onClose, onForwarded }: { content: SheetContent; visible: boolean; onClose: () => void; onForwarded: () => void }) {
+  const common = { visible, onClose };
+  switch (content.kind) {
+    case 'forward':
+      return <ForwardSheet {...common} msgIds={content.msgIds} onSent={onForwarded} />;
+    case 'todoSet':
+      return <TodoSetSheet {...common} msg={content.msg} />;
+    case 'todoDetail':
+      return <TodoDetailSheet {...common} msg={content.msg} />;
+    case 'translate':
+      return <TranslateSheet {...common} msg={content.msg} />;
+    case 'remark':
+      return <FavoriteRemarkSheet {...common} msgId={content.msgId} />;
+    case 'readList':
+      return <ReadListSheet {...common} msgId={content.msgId} />;
+    case 'selectText':
+      return <SelectTextSheet {...common} text={content.text} />;
+  }
+}
+
+/**
+ * 输入栏位置：多选时换成「取消 · 已选 n 项 · 转发」。输入栏只是藏起来，草稿、回复状态都还在。
+ * 多选时系统返回键先退出多选
+ */
+function BottomBar({ selection, onForward, children }: { selection: Selection; onForward: (msgIds: number[]) => void; children: ReactNode }) {
+  const t = useT();
+  const { theme } = useUnistyles();
+  const active = useStore(selection.store, (s) => s.active);
+  const ids = useStore(selection.store, (s) => s.ids);
+
+  useEffect(() => {
+    if (!active) return;
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      selection.clear();
+      return true;
+    });
+    return () => sub.remove();
+  }, [active, selection]);
+
+  return (
+    <>
+      {active && (
+        <View style={styles.selectBar}>
+          <Touchable accessibilityRole="button" onPress={selection.clear} style={({ pressed, hovered }) => styles.barButton(pressed, hovered)}>
+            <Text style={styles.barCancel}>{t('cancel')}</Text>
+          </Touchable>
+          <Text style={styles.barCount}>{t('messenger:selection.count', { n: ids.size })}</Text>
+          <Touchable
+            accessibilityRole="button"
+            disabled={ids.size === 0}
+            onPress={() => onForward([...ids].sort((a, b) => a - b))}
+            style={({ pressed, hovered }) => styles.barButton(pressed, hovered)}
+          >
+            <Icon icon={Forward} color={ids.size ? theme.colors.primaryText : theme.colors.text4} size={theme.size.icon} />
+            <Text style={styles.barForward(ids.size > 0)}>{t('messenger:action.forward')}</Text>
+          </Touchable>
+        </View>
+      )}
+      <View style={active && styles.hidden}>{children}</View>
+    </>
   );
 }
 
@@ -284,6 +436,30 @@ const styles = StyleSheet.create((theme) => ({
     marginBottom: theme.spacing.xs,
   },
   empty: { ...theme.typography.subhead, color: theme.colors.text3 },
+  hidden: { display: 'none' },
+  selectBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    minHeight: theme.size.navBar,
+    paddingHorizontal: theme.spacing.sm,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: theme.colors.separator,
+    backgroundColor: theme.colors.surface,
+  },
+  barButton: (pressed: boolean, hovered: boolean) => ({
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.xs,
+    minHeight: theme.size.touch,
+    paddingHorizontal: theme.spacing.sm,
+    borderRadius: theme.radius.block,
+    opacity: pressed ? theme.opacity.pressedIcon : 1,
+    backgroundColor: hovered ? theme.colors.hover : 'transparent',
+  }),
+  barCancel: { ...theme.typography.callout, color: theme.colors.text2 },
+  barCount: { ...theme.typography.callout, color: theme.colors.text, fontVariant: ['tabular-nums'] },
+  barForward: (enabled: boolean) => ({ ...theme.typography.callout, fontWeight: '600', color: enabled ? theme.colors.primaryText : theme.colors.text4 }),
   pressed: { opacity: theme.opacity.pressedIcon },
   float: {
     width: theme.size.floatButton,

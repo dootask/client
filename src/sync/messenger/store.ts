@@ -62,6 +62,17 @@ export interface MessengerState {
   /** 本次运行发出的消息 id → 发送时的本地 id，聊天列表用它认行，发送中换成发出的消息时行不重挂 */
   sentKeys: Record<number, string>;
   withdrawn: WithdrawnMsg[];
+  /** 本次运行里翻译过的消息：消息 id → 译文（同旧前端，只在本地显示，隐藏即删掉） */
+  translations: Record<number, Translation>;
+  /** 正在转文字、翻译的消息 id，气泡上显示进行中 */
+  busy: Record<number, 'voice2text' | 'translate'>;
+  /** 查过的收藏状态（按消息 id），菜单据此显示「收藏」或「取消收藏」 */
+  favorites: Record<number, boolean>;
+}
+
+export interface Translation {
+  language: string;
+  content: string;
 }
 
 export const initialMessengerState = (): MessengerState => ({
@@ -74,6 +85,9 @@ export const initialMessengerState = (): MessengerState => ({
   outbox: [],
   sentKeys: {},
   withdrawn: [],
+  translations: {},
+  busy: {},
+  favorites: {},
 });
 
 export const createMessengerStore = () => createStore<MessengerState>()(initialMessengerState);

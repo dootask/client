@@ -14,5 +14,7 @@
   "save": "Save",
   "modify": "Modify",
   "refresh": "Refresh",
-  "clear": "Clear"
+  "clear": "Clear",
+  "loadFailed": "Loading failed",
+  "none": "None"
 }

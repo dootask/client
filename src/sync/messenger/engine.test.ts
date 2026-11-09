@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ApiError } from '../api';
 import type { Dialog, Msg } from '../api/dialog';
 import type { SocketMessage } from '../ws';
+import { createMsgActions, type MsgActionsApi } from './actions';
 import { createMessenger, type MessengerApi, type MessengerDeps, toggledEmoji } from './engine';
 import { memoryCache, memoryKv } from './testing';
 
@@ -64,6 +65,7 @@ function fakeApi(over: Partial<MessengerApi> = {}): MessengerApi {
     sendText: vi.fn(),
     withdraw: vi.fn(async () => {}),
     emoji: vi.fn(),
+    myTodos: vi.fn(async () => []),
     ...over,
   } as MessengerApi;
 }
@@ -413,4 +415,131 @@ it('表情切换规则与服务端一致', () => {
   expect(toggledEmoji([], 'a', 1)).toEqual([{ symbol: 'a', userids: [1] }]);
   expect(toggledEmoji([{ symbol: 'a', userids: [2] }], 'a', 1)).toEqual([{ symbol: 'a', userids: [1, 2] }]);
   expect(toggledEmoji([{ symbol: 'a', userids: [1] }, { symbol: 'b', userids: [2] }], 'a', 1)).toEqual([{ symbol: 'b', userids: [2] }]);
+});
+
+describe('消息操作', () => {
+  async function opened(over: Partial<MsgActionsApi> = {}, engine: Partial<MessengerApi> = {}) {
+    const api = fakeApi({ msgList: vi.fn(async () => ({ list: page([90, 91], 0), time: 1 })), ...engine });
+    (api.lists as ReturnType<typeof vi.fn>).mockResolvedValue({ current_page: 1, last_page: 1, data: [dialog(10), dialog(20)] });
+    const ctx = setup(api);
+    await ctx.m.start();
+    await settle();
+    await ctx.m.openDialog(10);
+    const actionsApi = {
+      msgTop: vi.fn(),
+      msgTag: vi.fn(),
+      msgTodo: vi.fn(),
+      forward: vi.fn(),
+      msgTranslation: vi.fn(),
+      msgVoice2text: vi.fn(),
+      msgTopInfo: vi.fn(),
+      msgReadList: vi.fn(),
+      favoriteCheck: vi.fn(),
+      favoriteToggle: vi.fn(),
+      favoriteRemark: vi.fn(),
+      ...over,
+    } as MsgActionsApi;
+    return { ...ctx, actions: createMsgActions(actionsApi, ctx.m) };
+  }
+  const listIds = (s: () => ReturnType<ReturnType<typeof createMessenger>['store']['getState']>) => s().windows[10]!.list.map((x) => x.id);
+
+  it('置顶：会话记下置顶消息，系统提示插进窗口；取消置顶清空', async () => {
+    const msgTop = vi.fn(async () => ({ data: { add: msg(92, { type: 'top' }), update: { dialog_id: 10, top_msg_id: 90, top_userid: ME } }, msg: '' }));
+    const { m, s, actions } = await opened({ msgTop });
+    expect(await actions.toggleTop(msg(90))).toBe(true);
+    expect(s().dialogs[10]).toMatchObject({ top_msg_id: 90, top_userid: ME, last_msg: { id: 92 } });
+    expect(listIds(s)[0]).toBe(92);
+    msgTop.mockResolvedValueOnce({ data: { add: msg(93, { type: 'top' }), update: { dialog_id: 10, top_msg_id: 0, top_userid: 0 } }, msg: '' });
+    expect(await actions.toggleTop(msg(90))).toBe(false);
+    expect(s().dialogs[10]).toMatchObject({ top_msg_id: 0 });
+    m.stop();
+  });
+
+  it('标注合并 update，返回标注后的状态', async () => {
+    const msgTag = vi.fn(async () => ({ data: { update: { id: 90, dialog_id: 10, tag: ME } }, msg: '' }));
+    const { m, s, actions } = await opened({ msgTag });
+    expect(await actions.toggleTag(msg(90))).toBe(true);
+    expect(s().windows[10]!.list.find((x) => x.id === 90)).toMatchObject({ tag: ME, msg: { text: 'm90' } });
+    m.stop();
+  });
+
+  it('待办变化后按服务端刷新会话的待办数（设待办的 update 带 todo；完成不带，单独刷新）', async () => {
+    const msgTodo = vi.fn(async () => ({ data: { update: { id: 90, dialog_id: 10, todo: ME } }, msg: '设置成功' }));
+    const msgDone = vi.fn(async () => ({ data: {}, msg: '已完成' }));
+    const myTodos = vi.fn(async () => [{ id: 1, msg_id: 90, dialog_id: 10 }]);
+    const { m, s, actions } = await opened({ msgTodo, msgDone }, { myTodos });
+    expect(await actions.setTodo({ msg_id: 90, type: 'all', userids: [] })).toBe('设置成功');
+    await settle();
+    expect(myTodos).toHaveBeenCalledWith(10);
+    expect(s().dialogs[10]!.todo_num).toBe(1);
+    myTodos.mockResolvedValueOnce([]);
+    await actions.done(1, 10);
+    await settle();
+    expect(s().dialogs[10]!.todo_num).toBe(0);
+    m.stop();
+  });
+
+  it('转发产生的消息插进各目标会话', async () => {
+    const forward = vi.fn(async () => ({ msgs: [msg(200, { dialog_id: 20, userid: ME }), msg(201, { dialog_id: 10, userid: ME })], msg: '' }));
+    const { m, s, actions } = await opened({ forward });
+    await actions.forward({ msg_ids: [90], merge: false, dialogids: [10, 20], userids: [], show_source: true, leave_message: '' });
+    expect(s().dialogs[20]!.last_msg).toMatchObject({ id: 200 });
+    expect(listIds(s)[0]).toBe(201);
+    m.stop();
+  });
+
+  it('翻译：期间标记忙，译文只存本地，可隐藏', async () => {
+    let finish!: () => void;
+    const msgTranslation = vi.fn(
+      () => new Promise<{ msg_id: number; language: string; content: string }>((r) => (finish = () => r({ msg_id: 90, language: 'en', content: 'hello' }))),
+    );
+    const { m, s, actions } = await opened({ msgTranslation });
+    const task = actions.translate(msg(90), 'en');
+    expect(s().busy[90]).toBe('translate');
+    finish();
+    await task;
+    expect(s().busy[90]).toBeUndefined();
+    expect(s().translations[90]).toEqual({ language: 'en', content: 'hello' });
+    actions.hideTranslation(90);
+    expect(s().translations[90]).toBeUndefined();
+    m.stop();
+  });
+
+  it('翻译失败也清掉忙标记并抛出', async () => {
+    const msgTranslation = vi.fn(async () => {
+      throw new ApiError('server', 0, 'fail', null);
+    });
+    const { m, s, actions } = await opened({ msgTranslation });
+    await expect(actions.translate(msg(90), 'en')).rejects.toThrow('fail');
+    expect(s().busy[90]).toBeUndefined();
+    m.stop();
+  });
+
+  it('收藏状态：查过和切换后都记下', async () => {
+    const favoriteCheck = vi.fn(async () => true);
+    const favoriteToggle = vi.fn(async () => ({ favorited: false, msg: '已取消' }));
+    const { m, s, actions } = await opened({ favoriteCheck, favoriteToggle });
+    await actions.checkFavorite(90);
+    expect(s().favorites[90]).toBe(true);
+    expect(await actions.toggleFavorite(90)).toEqual({ favorited: false, msg: '已取消' });
+    expect(s().favorites[90]).toBe(false);
+    m.stop();
+  });
+
+  it('置顶消息：窗口里有就不请求', async () => {
+    const msgTopInfo = vi.fn(async () => msg(5));
+    const { m, actions } = await opened({ msgTopInfo });
+    expect((await actions.topMsg(10, 90))?.id).toBe(90);
+    expect(msgTopInfo).not.toHaveBeenCalled();
+    expect((await actions.topMsg(10, 5))?.id).toBe(5);
+    m.stop();
+  });
+
+  it('语音转文字写进消息', async () => {
+    const msgVoice2text = vi.fn(async () => msg(91, { type: 'record', msg: { path: 'a.mp3', text: '你好' } }));
+    const { m, s, actions } = await opened({ msgVoice2text });
+    await actions.voice2text(msg(91, { type: 'record' }));
+    expect(s().windows[10]!.list.find((x) => x.id === 91)!.msg).toMatchObject({ text: '你好' });
+    m.stop();
+  });
 });

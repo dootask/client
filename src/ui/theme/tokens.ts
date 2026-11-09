@@ -170,6 +170,12 @@ const size = {
   menuRow: 32,
   menuMinWidth: 180,
   menuMaxWidth: 320,
+  /** App 长按消息菜单：宽度、行高、表情条每格 */
+  actionMenuWidth: 220,
+  actionMenuRow: 40,
+  emojiCell: 40,
+  /** Web 悬停消息时旁边操作条的按钮 */
+  hoverAction: 28,
   /** 确认气泡、悬停提示的最大宽度 */
   bubbleMaxWidth: 280,
   tooltipMaxWidth: 240,
@@ -188,6 +194,10 @@ const size = {
   /** 分类胶囊、列表顶部搜索框的高度 */
   chip: 30,
   searchField: 36,
+  /** 多选勾选圈、分段控件、选项胶囊（提醒时间这类快捷选择） */
+  checkMark: 22,
+  segment: 32,
+  option: 36,
   /** 聊天：输入框单行高、浮动圆钮（回到底部、@ 我）、回应胶囊高、文件卡片左侧色块、气泡对侧至少留出的空白 */
   chatInput: 36,
   floatButton: 40,

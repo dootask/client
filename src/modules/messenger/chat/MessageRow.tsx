@@ -1,25 +1,33 @@
 import { Image } from 'expo-image';
 import { Bookmark, Check, CheckCheck, CircleAlert, Forward, ListTodo, MessageSquareText, Pencil } from 'lucide-react-native';
 import { createContext, memo, useContext, useEffect, type ReactNode } from 'react';
-import { Text, View } from 'react-native';
+import { ActivityIndicator, type GestureResponderEvent, Text, View } from 'react-native';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import Svg, { Circle } from 'react-native-svg';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
+import { useStore } from 'zustand';
 
 import { useT } from '../../../i18n';
 import type { Msg } from '../../../sync/api/dialog';
 import { toUnix, type OutboxItem, type WithdrawnMsg } from '../../../sync/messenger';
-import { msgContent, reactions, type BodyContext, type MsgBody, type ReplyInfo, type SystemLabel } from '../../../sync/messenger/body';
+import { msgContent, reactions, textBlocks, type BodyContext, type MsgBody, type ReplyInfo, type SystemLabel } from '../../../sync/messenger/body';
 import { UserAvatar } from '../../../ui/Avatar';
+import { CheckMark } from '../../../ui/CheckMark';
 import { RowHighlight, type MessageRenderInfo } from '../../../ui/chat';
 import { Icon } from '../../../ui/Icon';
 import { Menu, type MenuEntry } from '../../../ui/popover';
 import { Touchable } from '../../../ui/Touchable';
-import { useUser } from '../hooks';
+import { useMessengerState, useUser } from '../hooks';
 import { PreviewText } from '../PreviewText';
+import { BubbleTouch } from './BubbleTouch';
+import type { BubbleTouchProps, RowRef } from './bubbleTouchTypes';
 import { chained, isSystemRow, type ChatRow, type RowData } from './chatModel';
+import { LIKE } from './emoji';
+import { forwardable } from './messageMenu';
 import { isMediaBody, isStickerBody, MediaBody, MessageBody, StickerBody } from './MessageBody';
-import type { BubbleTone } from './RichText';
+import { msgExtra } from './msgExtra';
+import { type BubbleTone, RichBlocks } from './RichText';
+import type { Selection } from './selection';
 
 /**
  * 聊天列表的一行：气泡（文字、图片、文件、语音）、系统提示、发送中 / 失败、撤回占位。
@@ -32,16 +40,30 @@ export interface RowContext {
   tones: { own: BubbleTone; peer: BubbleTone };
   /** 打开会话时的第一条未读，上方画「以下为新消息」 */
   newFrom: number;
-  /** 长按 / 右键菜单 */
-  menu: (msg: Msg, body: MsgBody, own: boolean) => MenuEntry[];
-  pendingMenu: (item: OutboxItem) => MenuEntry[];
+  /** 菜单项，打开时才计算：Web 右键、悬停条「更多」 */
+  menu: (msg: Msg, body: MsgBody, own: boolean) => readonly MenuEntry[];
+  pendingMenu: (item: OutboxItem) => readonly MenuEntry[];
+  /** App 长按：row 是整行（量位置浮起重画） */
+  onLongPress: (row: RowRef, info: MessageRenderInfo<RowData>, msg: Msg, body: MsgBody) => void;
+  /** 右滑（App）、悬停条（Web）回复 */
+  onReply: (msg: Msg) => void;
+  /** Web 鼠标移上来：预取菜单要用的收藏状态 */
+  onHover: (msg: Msg) => void;
   /** 点气泡：打开图片、文件，播放语音，查看全文 */
   onOpen: (msg: Msg, body: MsgBody) => void;
-  /** 点回应胶囊（自己回应过的再点即取消） */
+  /** 点回应胶囊、双击、表情条（自己回应过的再点即取消） */
   onReact: (msg: Msg, symbol: string) => void;
   /** 点回复引用：跳到原消息 */
   onQuote: (id: number) => void;
+  /** 点译文：换语言、重新翻译 */
+  onTranslation: (msg: Msg) => void;
+  /** 群里点自己消息的已读圆环：已读名单 */
+  onReadList: (msgId: number) => void;
   onReEdit: (item: WithdrawnMsg) => void;
+  /** 多选：行只订阅自己是否选中 */
+  selection: Selection['store'];
+  /** 多选时点一条；extend 是按住 Shift（Web）连选 */
+  onSelect: (msg: Msg, extend: boolean) => void;
 }
 
 export const RowContextValue = createContext<RowContext | null>(null);
@@ -62,16 +84,6 @@ const SYSTEM_LABELS = {
   todoTarget: 'messenger:system.todoTarget',
   withdrawSelf: 'messenger:system.withdrawSelf',
 } as const satisfies Record<SystemLabel, string>;
-
-/** 消息里接口没有声明、显示要用的字段 */
-interface MsgExtra {
-  percentage?: number;
-  reply_num?: number;
-  tag?: number;
-  todo?: number;
-  modify?: number;
-}
-const extra = (msg: Msg) => msg as Msg & MsgExtra;
 
 export function bubbleTones(colors: ReturnType<typeof useUnistyles>['theme']['colors']): RowContext['tones'] {
   const base = { link: colors.link, overlay: colors.bubbleOverlay, separator: colors.separator, scrim: colors.mediaScrim, danger: colors.danger, accent: colors.primaryText };
@@ -108,13 +120,43 @@ export const MessageRow = memo(function MessageRow({ info }: { info: MessageRend
       {data.kind === 'msg' && data.msg.id === ctx.newFrom && <NewMsgDivider />}
       <View style={{ paddingTop: gap }}>
         <RowHighlight style={{ top: gap - pad, bottom: -pad }} />
-        {data.kind === 'msg' && (isSystemRow(message) ? <SystemRow msg={data.msg} /> : <MsgRow info={info} msg={data.msg} />)}
+        {data.kind === 'msg' &&
+          (isSystemRow(message) ? (
+            <SystemRow msg={data.msg} />
+          ) : (
+            <Selectable msg={data.msg}>
+              <MsgRow info={info} msg={data.msg} />
+            </Selectable>
+          ))}
         {data.kind === 'pending' && <PendingRow info={info} item={data.item} />}
         {data.kind === 'withdrawn' && <WithdrawnRow item={data.item} />}
       </View>
     </View>
   );
 });
+
+const shiftKey = (event: GestureResponderEvent) => !!(event.nativeEvent as { shiftKey?: boolean }).shiftKey;
+
+/** 多选模式：左侧勾选圈，点整行选中；消息本身不再响应点按、长按。不能转发的消息不能选 */
+function Selectable({ msg, children }: { msg: Msg; children: ReactNode }) {
+  const ctx = useRowContext();
+  const active = useStore(ctx.selection, (s) => s.active);
+  const checked = useStore(ctx.selection, (s) => s.ids.has(msg.id));
+  if (!active) return children;
+  const can = forwardable(msg);
+  return (
+    <Touchable
+      accessibilityRole="checkbox"
+      accessibilityState={{ checked, disabled: !can }}
+      disabled={!can}
+      onPress={(event) => ctx.onSelect(msg, shiftKey(event))}
+      style={styles.selectRow}
+    >
+      <View style={styles.selectCheck}>{can && <CheckMark checked={checked} />}</View>
+      <View style={styles.selectBody}>{children}</View>
+    </Touchable>
+  );
+}
 
 /** 与上一条的间距：连续消息收紧，系统提示多留一点 */
 function rowGap(message: ChatRow, older: ChatRow | undefined, spacing: { sm: number; md: number }): number {
@@ -147,40 +189,43 @@ function Dimmed({ on, children }: { on: boolean; children: ReactNode }) {
   return <Animated.View style={animated}>{children}</Animated.View>;
 }
 
+/** 交给 BubbleTouch 的手势与菜单（外框之外的部分） */
+type Touch = Omit<BubbleTouchProps, 'own' | 'rowStyle' | 'bubbleStyle' | 'leading' | 'children'>;
+
 /**
  * 气泡外框：左右对齐、连续消息圆角收紧、底色；对方在群里时左侧是头像列（连续消息只在最后一条显示头像）。
- * 长按（App）/ 右键（Web）出菜单
+ * 点按、长按、右键、右滑、悬停交给 BubbleTouch
  */
-function BubbleFrame({ info, variant, leading, items, onPress, children }: {
+function BubbleFrame({ info, variant, leading, touch, children }: {
   info: MessageRenderInfo<RowData>;
   /** media：图片视频（内边距收窄）；bare：不套气泡（表情） */
   variant?: 'media' | 'bare';
   leading?: ReactNode;
-  items: readonly MenuEntry[];
-  onPress?: () => void;
+  touch: Touch;
   children: ReactNode;
 }) {
   const { message, older, newer, isOwn } = info;
   const joinOlder = chained(message, older);
   const joinNewer = chained(message, newer);
   return (
-    <View style={[styles.row, isOwn ? styles.rowOwn : styles.rowPeer]}>
-      {leading !== undefined && <View style={styles.leading}>{joinNewer ? null : leading}</View>}
-      <Menu
-        items={items}
-        trigger="context"
-        onPress={onPress}
-        style={[
-          styles.bubble,
-          variant === 'bare' ? styles.bubbleBare(isOwn) : styles.bubbleColor(isOwn, joinOlder, joinNewer),
-          variant === 'media' && styles.bubbleMedia,
-        ]}
-      >
-        {children}
-      </Menu>
-    </View>
+    <BubbleTouch
+      own={isOwn}
+      rowStyle={[styles.row, isOwn ? styles.rowOwn : styles.rowPeer]}
+      leading={leading !== undefined ? <View style={styles.leading}>{joinNewer ? null : leading}</View> : undefined}
+      bubbleStyle={[
+        styles.bubble,
+        variant === 'bare' ? styles.bubbleBare(isOwn) : styles.bubbleColor(isOwn, joinOlder, joinNewer),
+        variant === 'media' && styles.bubbleMedia,
+      ]}
+      {...touch}
+    >
+      {children}
+    </BubbleTouch>
   );
 }
+
+/** 长按浮起时重画的那条消息（不带定位高亮和间距） */
+export const MessagePreview = MsgRow;
 
 function MsgRow({ info, msg }: { info: MessageRenderInfo<RowData>; msg: Msg }) {
   const ctx = useRowContext();
@@ -188,25 +233,33 @@ function MsgRow({ info, msg }: { info: MessageRenderInfo<RowData>; msg: Msg }) {
   const { isOwn, message, older } = info;
   const tone = isOwn ? ctx.tones.own : ctx.tones.peer;
   const { body, reply, forward } = msgContent(msg, ctx.body);
-  const items = ctx.menu(msg, body, isOwn);
   const name = useName(msg.userid);
   const user = useUser(msg.userid);
   const forwardName = useName(forward?.userid ?? 0);
   const peerInGroup = ctx.group && !isOwn;
   const showName = peerInGroup && !chained(message, older) && !!name;
   const leading = peerInGroup ? <UserAvatar uri={user?.userimg} userid={msg.userid} name={name} bot={!!user?.bot} size={32} /> : undefined;
-  const replyNum = extra(msg).reply_num ?? 0;
+  const replyNum = msgExtra(msg).reply_num ?? 0;
   const list = reactions(msg, ctx.body.userId);
 
   const hasHeader = showName || !!forward || !!reply;
   const hasFooter = list.length > 0 || replyNum > 0;
   const onPress = OPENABLE.has(body.kind) || (body.kind === 'rich' && body.long) ? () => ctx.onOpen(msg, body) : undefined;
+  const touch: Touch = {
+    onPress,
+    menu: () => ctx.menu(msg, body, isOwn),
+    onLongPress: (row) => ctx.onLongPress(row, info, msg, body),
+    onReply: () => ctx.onReply(msg),
+    onDoubleTap: () => ctx.onReact(msg, LIKE),
+    onReact: (symbol) => ctx.onReact(msg, symbol),
+    onHover: () => ctx.onHover(msg),
+  };
   const meta = (onMedia: boolean) => <Meta msg={msg} own={isOwn} tone={tone} onMedia={onMedia} />;
 
   // 表情：不套气泡，时间在下方
   if (isStickerBody(body) && !hasHeader && !hasFooter) {
     return (
-      <BubbleFrame info={info} variant="bare" leading={leading} items={items}>
+      <BubbleFrame info={info} variant="bare" leading={leading} touch={touch}>
         <StickerBody body={body} />
         <View style={styles.stickerMeta}>{meta(true)}</View>
       </BubbleFrame>
@@ -261,7 +314,7 @@ function MsgRow({ info, msg }: { info: MessageRenderInfo<RowData>; msg: Msg }) {
   if (media) {
     // 没有底部内容时时间浮在图片上，否则放在底部内容的右下角；只有图片时不套气泡底色
     return (
-      <BubbleFrame info={info} variant={hasHeader || hasFooter ? 'media' : 'bare'} leading={leading} items={items} onPress={onPress}>
+      <BubbleFrame info={info} variant={hasHeader || hasFooter ? 'media' : 'bare'} leading={leading} touch={touch}>
         {header}
         <MediaBody body={body} overlay={!hasFooter && <View style={styles.mediaMeta}>{meta(true)}</View>} />
         {footer}
@@ -271,13 +324,48 @@ function MsgRow({ info, msg }: { info: MessageRenderInfo<RowData>; msg: Msg }) {
   }
 
   return (
-    <BubbleFrame info={info} leading={leading} items={items} onPress={onPress}>
+    <BubbleFrame info={info} leading={leading} touch={touch}>
       {header}
       <MessageBody body={body} tone={tone} unplayed={!isOwn && !!msg.dot} />
+      <Understanding msg={msg} tone={tone} />
       {footer}
       {meta(false)}
     </BubbleFrame>
   );
+}
+
+/** 气泡里正文下方：本地显示的译文；翻译、转文字进行中的提示 */
+function Understanding({ msg, tone }: { msg: Msg; tone: BubbleTone }) {
+  const t = useT();
+  const ctx = useRowContext();
+  const translation = useMessengerState((s) => s.translations[msg.id]);
+  const busy = useMessengerState((s) => s.busy[msg.id]);
+  if (!translation && !busy) return null;
+  return (
+    <>
+      <View style={[styles.divider, { backgroundColor: tone.separator }]} />
+      {busy ? (
+        <View style={styles.busy}>
+          <ActivityIndicator size="small" color={tone.muted} />
+          <Text style={[styles.caption, { color: tone.muted }]}>{t(busy === 'translate' ? 'messenger:action.translating' : 'messenger:action.voice2texting')}</Text>
+        </View>
+      ) : (
+        translation && (
+          <Touchable accessibilityRole="button" onPress={() => ctx.onTranslation(msg)} style={({ pressed }) => pressed && styles.pressed}>
+            <TranslationText msg={msg} content={translation.content} tone={tone} />
+          </Touchable>
+        )
+      )}
+    </>
+  );
+}
+
+/** 译文：文本消息的译文和原文同格式（Markdown 或编辑器 HTML），按块结构画；其余（语音转文字）是纯文本 */
+function TranslationText({ msg, content, tone }: { msg: Msg; content: string; tone: BubbleTone }) {
+  const ctx = useRowContext();
+  if (msg.type !== 'text' && msg.type !== 'longtext') return <Text style={[styles.translation, { color: tone.text }]}>{content}</Text>;
+  const md = (msg.msg as { type?: unknown } | null)?.type === 'md';
+  return <RichBlocks blocks={textBlocks(content, md, ctx.body)} tone={tone} />;
 }
 
 function ReplyQuote({ reply, tone }: { reply: ReplyInfo; tone: BubbleTone }) {
@@ -302,10 +390,11 @@ function ReplyQuote({ reply, tone }: { reply: ReplyInfo; tone: BubbleTone }) {
 
 /** 时间行（与旧前端同序）：标注、待办、已编辑、时间、已读；onMedia 时是图片上的浮层 */
 function Meta({ msg, own, tone, onMedia }: { msg: Msg; own: boolean; tone: BubbleTone; onMedia: boolean }) {
+  const t = useT();
   const ctx = useRowContext();
   const { theme } = useUnistyles();
   const color = onMedia ? theme.colors.onMedia : tone.muted;
-  const { tag, todo, modify, percentage } = extra(msg);
+  const { tag, todo, modify, percentage } = msgExtra(msg);
   return (
     <View style={[styles.meta, onMedia && styles.metaOnMedia]}>
       {!!tag && <Icon icon={Bookmark} color={color} size={12} />}
@@ -313,7 +402,20 @@ function Meta({ msg, own, tone, onMedia }: { msg: Msg; own: boolean; tone: Bubbl
       {!!modify && <Icon icon={Pencil} color={color} size={12} />}
       <View style={styles.metaTime}>
         <Text style={[styles.time, { color }]} allowFontScaling={false}>{formatTime(toUnix(msg.created_at) * 1000)}</Text>
-        {own && <ReadMark group={ctx.group} percent={percentage ?? 0} color={color} />}
+        {own &&
+          (ctx.group ? (
+            <Touchable
+              accessibilityRole="button"
+              accessibilityLabel={t('messenger:read.title')}
+              hitSlop={theme.spacing.md}
+              onPress={() => ctx.onReadList(msg.id)}
+              style={({ pressed }) => pressed && styles.pressed}
+            >
+              <ReadMark group percent={percentage ?? 0} color={color} />
+            </Touchable>
+          ) : (
+            <ReadMark group={false} percent={percentage ?? 0} color={color} />
+          ))}
       </View>
     </View>
   );
@@ -359,7 +461,7 @@ function PendingRow({ info, item }: { info: MessageRenderInfo<RowData>; item: Ou
   const failed = item.state === 'failed';
   return (
     <Dimmed on={!failed}>
-      <BubbleFrame info={info} items={items}>
+      <BubbleFrame info={info} touch={{ menu: items.length > 0 ? () => items : undefined }}>
         <MessageBody body={body} tone={tone} />
         <View style={styles.meta}>
           <View style={styles.metaTime}>
@@ -428,6 +530,10 @@ function WithdrawnRow({ item }: { item: WithdrawnMsg }) {
 const styles = StyleSheet.create((theme) => ({
   caption: { ...theme.typography.caption },
   pressed: { opacity: theme.opacity.pressedIcon },
+  selectRow: { flexDirection: 'row', alignItems: 'center' },
+  selectCheck: { width: theme.size.checkMark + theme.spacing.page, paddingLeft: theme.spacing.page },
+  // 选择模式下消息本身不接收点按，整行交给外层
+  selectBody: { flex: 1, pointerEvents: 'none' },
   row: { paddingHorizontal: theme.spacing.page, flexDirection: 'row', alignItems: 'flex-end' },
   // 气泡最宽到对侧留出固定空白：有没有头像列，对侧空白都一样
   rowOwn: { justifyContent: 'flex-end', paddingLeft: theme.spacing.page + theme.size.bubbleFarGap },
@@ -456,6 +562,9 @@ const styles = StyleSheet.create((theme) => ({
   replyBody: { ...theme.typography.footnote },
   replyThumb: { width: theme.size.quoteThumb, height: theme.size.quoteThumb, borderRadius: theme.radius.bubbleTight },
   footer: { gap: theme.spacing.xs, marginTop: theme.spacing.xs },
+  divider: { height: StyleSheet.hairlineWidth, marginVertical: theme.spacing.sm },
+  busy: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.xs },
+  translation: { ...theme.typography.body },
   replyNum: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.xs, alignSelf: 'flex-start' },
   reactions: { flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.xs },
   reaction: {

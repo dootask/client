@@ -7,7 +7,7 @@ import { StyleSheet } from 'react-native-unistyles';
 import { useT } from '../../i18n';
 import { dialogApi } from '../../sync/api';
 import type { SearchItem } from '../../sync/api/dialog';
-import { categoryUnread, type StoredDialog } from '../../sync/messenger';
+import { categoryUnread } from '../../sync/messenger';
 import { PageHeader } from '../../ui/PageHeader';
 import { SearchField } from '../../ui/SearchField';
 import { showToast } from '../../ui/Toast';
@@ -16,7 +16,8 @@ import { api, useErrorText } from '../session';
 import { useNow } from './clock';
 import { DialogRow, ResultRow } from './DialogRow';
 import { useMessenger, useMessengerState } from './hooks';
-import { CATEGORIES, extraResults, type ListCategory, listedIds, nextUnreadId } from './listModel';
+import { CATEGORIES, type ListCategory, listedIds, nextUnreadId } from './listModel';
+import { AI_HIDDEN, searchRowKey, type SearchRow, useSearchRows } from './search';
 import { setUnreadJumpHandler, useDialogListState } from './listState';
 
 const CATEGORY_LABELS = {
@@ -30,18 +31,13 @@ const CATEGORY_LABELS = {
   mention: 'messenger:category.mention',
 } as const satisfies Record<ListCategory, string>;
 
-/** 服务端搜索的防抖（同旧前端） */
-const SEARCH_DELAY = 600;
 /** 跳到下一个未读后高亮多久 */
 const HIGHLIGHT_MS = 1500;
 
-// AI 机器人单聊只在上架审核时隐藏，配置接口接入前一律显示
-const AI_HIDDEN = false;
 
 // 新消息把会话顶到最上面时：停在顶部附近就跟着显示新的第一行，翻到下面时保持当前位置不跳
 const TOP_ANCHOR = { autoscrollToTopThreshold: 48 };
 
-type Row = { kind: 'dialog'; id: number } | { kind: 'result'; item: SearchItem };
 
 /** 当前打开的会话 id（路由 /messenger/<id>），没有为 0 */
 function useOpenRouteId(): number {
@@ -174,34 +170,12 @@ function useListedIds(category: ListCategory, key: string): number[] {
 function SearchResults({ keyword }: { keyword: string }) {
   const t = useT();
   const ids = useListedIds('', keyword);
-  const dialogs = useMessengerState((s) => s.dialogs);
   const openId = useOpenRouteId();
-  const errorText = useErrorText();
-  const [remote, setRemote] = useState<{ key: string; items: SearchItem[] } | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    const timer = setTimeout(() => {
-      dialogApi
-        .search(api, keyword)
-        .then((items) => !cancelled && setRemote({ key: keyword, items }))
-        .catch((err) => !cancelled && showToast(errorText(err)));
-    }, SEARCH_DELAY);
-    return () => {
-      cancelled = true;
-      clearTimeout(timer);
-    };
-  }, [keyword, errorText]);
-
-  const rows = useMemo<Row[]>(() => {
-    const local = ids.map((id) => dialogs[id]).filter((d): d is StoredDialog => !!d);
-    const extra = remote?.key === keyword ? extraResults(local, remote.items, AI_HIDDEN) : [];
-    return [...ids.map((id) => ({ kind: 'dialog' as const, id })), ...extra.map((item) => ({ kind: 'result' as const, item }))];
-  }, [ids, dialogs, keyword, remote]);
+  const { rows, searching } = useSearchRows(ids, keyword);
 
   const openResult = useOpenResult();
   const renderItem = useCallback(
-    ({ item }: { item: Row }) =>
+    ({ item }: { item: SearchRow }) =>
       item.kind === 'dialog' ? (
         <DialogRow id={item.id} selected={item.id === openId} highlighted={false} onOpen={openDialogRoute} />
       ) : (
@@ -210,12 +184,11 @@ function SearchResults({ keyword }: { keyword: string }) {
     [openId, openResult],
   );
 
-  const searching = remote?.key !== keyword;
   return (
     <FlashList
       data={rows}
       renderItem={renderItem}
-      keyExtractor={rowKey}
+      keyExtractor={searchRowKey}
       getItemType={(r) => r.kind}
       extraData={openId}
       ListEmptyComponent={<Hint text={searching ? t('messenger:loading') : t('messenger:noResult', { key: keyword })} />}
@@ -279,7 +252,6 @@ function useOpenResult() {
   );
 }
 
-const rowKey = (r: Row) => (r.kind === 'dialog' ? String(r.id) : `r:${r.item.id}:${r.item.search_msg_id ?? ''}`);
 
 function Hint({ text }: { text: string }) {
   return (
