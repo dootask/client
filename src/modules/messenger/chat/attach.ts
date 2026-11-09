@@ -4,7 +4,7 @@ import { useT } from '../../../i18n';
 import { CameraDenied, capture, pickDocuments, pickMedia, type PickedFile } from '../../../platform/files';
 import { compressPhoto } from '../../../platform/photos';
 import { FILE_MAX_SIZE } from '../../../sync/api';
-import { textToHtml } from '../../../sync/messenger';
+import { composeToHtml } from '../../../sync/messenger';
 import { showToast } from '../../../ui/Toast';
 import { useMessenger } from '../hooks';
 import type { ComposerMode } from './Composer';
@@ -56,7 +56,7 @@ export function useAttach({ dialogId, mode, onModeEnd, onSent }: {
     const replyId = mode?.kind === 'reply' ? mode.msg.id : undefined;
     if (replyId) onModeEnd();
     const ready = compress ? await Promise.all(accepted.map(compressPhoto)) : accepted;
-    messenger.sendFiles({ dialog_id: dialogId, files: ready, reply_id: replyId, caption: caption.trim() ? textToHtml(caption.trim()) : undefined });
+    messenger.sendFiles({ dialog_id: dialogId, files: ready, reply_id: replyId, caption: caption.trim() ? composeToHtml({ text: caption.trim(), mentions: [] }) : undefined });
     onSent();
   };
 

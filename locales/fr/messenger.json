@@ -206,5 +206,42 @@
   "selection": {
     "max": "Sélectionnez jusqu’à {{n}} messages",
     "count": "{{n}} sélectionné(s)"
+  },
+  "mention": {
+    "everyone": "Tout le monde",
+    "groupMembers": "Membres du groupe",
+    "quickMenu": "Menu rapide",
+    "botCommands": "Commandes du bot",
+    "completed": "Terminé",
+    "slash": {
+      "mention": "Mentions",
+      "task": "Tâche",
+      "file": "Fichier",
+      "report": "Rapport de travail"
+    },
+    "command": {
+      "list": "Mes bots",
+      "newbot": "Créer un nouveau bot",
+      "help": "Commandes d'aide",
+      "api": "Documentation de l'interface API",
+      "info": "Informations sur le bot",
+      "setname": "Définir le nom",
+      "deletebot": "Supprimer le bot",
+      "token": "Jeton du bot",
+      "revoke": "Mettre à jour le jeton",
+      "clearday": "Définir le temps de rétention des messages",
+      "webhook": "Définir le Webhook",
+      "dialog": "Liste des conversations"
+    },
+    "group": {
+      "outsiders": "Membres externes",
+      "projectTasks": "Tâches du projet",
+      "myTasks": "Mes tâches en attente",
+      "assistTasks": "Tâches auxquelles j'assiste",
+      "otherTasks": "Autres tâches",
+      "files": "Vue de partage de fichiers",
+      "myReports": "Mes rapports",
+      "receivedReports": "Rapports reçus"
+    }
   }
 }

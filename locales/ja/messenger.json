@@ -206,5 +206,42 @@
   "selection": {
     "max": "最大{{n}}件のメッセージを選択できます",
     "count": "{{n}}件選択中"
+  },
+  "mention": {
+    "everyone": "全員",
+    "groupMembers": "グループメンバー",
+    "quickMenu": "クイックメニュー",
+    "botCommands": "ボットコマンド",
+    "completed": "完了",
+    "slash": {
+      "mention": "メンション",
+      "task": "タスク",
+      "file": "ファイル",
+      "report": "業務報告"
+    },
+    "command": {
+      "list": "私のボット",
+      "newbot": "新しいボットを作成",
+      "help": "ヘルプコマンド",
+      "api": "APIインターフェースドキュメント",
+      "info": "ボット情報",
+      "setname": "名前を設定",
+      "deletebot": "ボットを削除",
+      "token": "ボットトークン",
+      "revoke": "トークンを更新",
+      "clearday": "メッセージ保持時間を設定",
+      "webhook": "Webhookを設定",
+      "dialog": "会話リスト"
+    },
+    "group": {
+      "outsiders": "グループ外メンバー",
+      "projectTasks": "プロジェクトタスク",
+      "myTasks": "私の未完了タスク",
+      "assistTasks": "私が協力しているタスク",
+      "otherTasks": "その他のタスク",
+      "files": "ファイル共有ビュー",
+      "myReports": "自分のレポート",
+      "receivedReports": "受信したレポート"
+    }
   }
 }

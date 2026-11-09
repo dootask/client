@@ -206,5 +206,42 @@
   "selection": {
     "max": "최대 {{n}}개의 메시지를 선택할 수 있습니다",
     "count": "{{n}}개 선택됨"
+  },
+  "mention": {
+    "everyone": "모든 사람",
+    "groupMembers": "그룹 멤버",
+    "quickMenu": "빠른 메뉴",
+    "botCommands": "봇 명령",
+    "completed": "완료됨",
+    "slash": {
+      "mention": "멘션",
+      "task": "작업",
+      "file": "파일",
+      "report": "업무 보고서"
+    },
+    "command": {
+      "list": "내 봇",
+      "newbot": "새 봇 만들기",
+      "help": "도움말 명령",
+      "api": "API 인터페이스 문서",
+      "info": "봇 정보",
+      "setname": "이름 설정",
+      "deletebot": "봇 삭제",
+      "token": "봇 토큰",
+      "revoke": "토큰 업데이트",
+      "clearday": "메시지 보존 시간 설정",
+      "webhook": "웹훅 설정",
+      "dialog": "대화 목록"
+    },
+    "group": {
+      "outsiders": "그룹 외 멤버",
+      "projectTasks": "프로젝트 작업",
+      "myTasks": "내 미완료 작업",
+      "assistTasks": "내가 협조하는 작업",
+      "otherTasks": "기타 작업",
+      "files": "파일 공유 보기",
+      "myReports": "내 보고서",
+      "receivedReports": "받은 보고서"
+    }
   }
 }

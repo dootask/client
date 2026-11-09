@@ -1,0 +1,5 @@
+{
+  "platforms": ["apple", "android"],
+  "apple": { "modules": ["DooTaskMentionInputModule"] },
+  "android": { "modules": ["expo.modules.mentioninput.DooTaskMentionInputModule"] }
+}

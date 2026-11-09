@@ -206,5 +206,42 @@
   "selection": {
     "max": "最多选择{{n}}条消息",
     "count": "已选{{n}}项"
+  },
+  "mention": {
+    "everyone": "所有人",
+    "groupMembers": "群内成员",
+    "quickMenu": "快捷菜单",
+    "botCommands": "机器人命令",
+    "completed": "已完成",
+    "slash": {
+      "mention": "提及",
+      "task": "任务",
+      "file": "文件",
+      "report": "工作报告"
+    },
+    "command": {
+      "list": "我的机器人",
+      "newbot": "新建机器人",
+      "help": "帮助指令",
+      "api": "API接口文档",
+      "info": "机器人信息",
+      "setname": "设置名称",
+      "deletebot": "删除机器人",
+      "token": "机器人Token",
+      "revoke": "更新Token",
+      "clearday": "设置保留消息时间",
+      "webhook": "设置Webhook",
+      "dialog": "对话列表"
+    },
+    "group": {
+      "outsiders": "群外成员",
+      "projectTasks": "项目任务",
+      "myTasks": "我的待完成任务",
+      "assistTasks": "我协助的任务",
+      "otherTasks": "其他任务",
+      "files": "文件分享查看",
+      "myReports": "我的报告",
+      "receivedReports": "收到的报告"
+    }
   }
 }

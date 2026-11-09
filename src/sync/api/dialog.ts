@@ -24,6 +24,8 @@ export type LastMsg = z.output<typeof lastMsgSchema>;
 
 /** 项目、任务群的关联信息，列表过滤规则要用 */
 export const groupInfoSchema = z.looseObject({
+  /** 项目群是项目 id，任务群是任务 id */
+  id: num.nullish(),
   name: str.nullish(),
   complete_at: str.nullish(),
   archived_at: str.nullish(),

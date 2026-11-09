@@ -53,8 +53,8 @@ export async function favoriteRemark(client: ApiClient, msgId: number, remark: s
   return msg;
 }
 
-/** 按昵称、拼音、职位、邮箱搜索在职的成员（不含机器人） */
-export async function search(client: ApiClient, key: string, take = 30) {
-  const { data } = await requestParsed(client, 'users/search', phpList(userBasicSchema), { data: { keys: { key }, take } });
+/** 按昵称、拼音、职位、邮箱搜索在职的成员（默认不含机器人），带在线状态 */
+export async function search(client: ApiClient, key: string, { bots = false, take = 30 }: { bots?: boolean; take?: number } = {}) {
+  const { data } = await requestParsed(client, 'users/search', phpList(userBasicSchema), { data: { keys: { key, bot: bots ? 2 : 0 }, state: 1, take } });
   return data;
 }

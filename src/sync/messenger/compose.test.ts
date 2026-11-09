@@ -1,22 +1,64 @@
 import { describe, expect, it } from 'vitest';
 
-import { htmlToText, textToHtml } from './compose';
+import { applyTextChange, composeSegments, composeToHtml, htmlToCompose, insertMention, mentionQuery, type ComposeValue } from './compose';
 
-describe('输入栏文本与 HTML', () => {
+const plain = (text: string): ComposeValue => ({ text, mentions: [] });
+const zhang = { char: '@', id: 3, name: '张三' } as const;
+
+describe('输入栏内容与 HTML', () => {
   it('每行一个段落，空行用 <br>，转义尖括号', () => {
-    expect(textToHtml('a<b>\n\nc & d\n')).toBe('<p>a&lt;b&gt;</p><p><br></p><p>c &amp; d</p>');
+    expect(composeToHtml(plain('a<b>\n\nc & d\n'))).toBe('<p>a&lt;b&gt;</p><p><br></p><p>c &amp; d</p>');
   });
 
   it('HTML 还原成多行文本', () => {
-    expect(htmlToText('<p>a&lt;b&gt;</p><p><br></p><p>c &amp; <strong>d</strong></p>')).toBe('a<b>\n\nc & d');
+    expect(htmlToCompose('<p>a&lt;b&gt;</p><p><br></p><p>c &amp; <strong>d</strong></p>')).toEqual(plain('a<b>\n\nc & d'));
   });
 
   it('表情图换成名字', () => {
-    expect(htmlToText('<p>好<img class="emoticon" src="x.png" alt="微笑"></p>')).toBe('好[微笑]');
+    expect(htmlToCompose('<p>好<img class="emoticon" src="x.png" alt="微笑"></p>').text).toBe('好[微笑]');
   });
 
-  it('来回转换不变', () => {
-    const text = '第一行\n\n  缩进 <tag>\n最后';
-    expect(htmlToText(textToHtml(text))).toBe(text);
+  it('来回转换不变（含 mention）', () => {
+    const value: ComposeValue = { text: '第一行 @张三 \n\n  缩进 <tag> #任务"A"\n最后', mentions: [zhang, { char: '#', id: 9, name: '任务"A"' }] };
+    expect(htmlToCompose(composeToHtml(value))).toEqual(value);
+  });
+
+  it('mention 转成编辑器的标签', () => {
+    expect(composeToHtml({ text: '@张三 你好', mentions: [zhang] })).toBe(
+      '<p><span class="mention" data-denotation-char="@" data-id="3" data-value="张三">﻿<span contenteditable="false"><span class="ql-mention-denotation-char">@</span>张三</span>﻿</span> 你好</p>',
+    );
+  });
+
+  it('认领不到的 mention 丢掉', () => {
+    expect(composeToHtml({ text: '你好', mentions: [zhang] })).toBe('<p>你好</p>');
+  });
+
+  it('已发出消息里的 @ 和 # 读回 mention，文件链接当文字', () => {
+    const html = '<p><span class="mention user" data-id="3">@张三</span> 看 <span class="mention task" data-id="7">#修复</span> <a class="mention file" href="x">~a.txt</a></p>';
+    expect(htmlToCompose(html)).toEqual({ text: '@张三 看 #修复 ~a.txt', mentions: [zhang, { char: '#', id: 7, name: '修复' }] });
+  });
+});
+
+describe('输入栏 mention 编辑', () => {
+  const value: ComposeValue = { text: 'hi @张三 ok', mentions: [zhang] };
+
+  it('退格删到 mention 时整个删掉', () => {
+    expect(applyTextChange(value, 'hi @张 ok')).toEqual({ value: plain('hi  ok'), cursor: 3 });
+  });
+
+  it('在 mention 中间插字它变回普通文字', () => {
+    expect(applyTextChange(value, 'hi @张x三 ok').value).toEqual(plain('hi @张x三 ok'));
+  });
+
+  it('光标前的候选查询', () => {
+    expect(mentionQuery(plain('hi @zh'), 6, ['@', '#'])).toEqual({ start: 3, char: '@', query: 'zh' });
+    expect(mentionQuery(plain('a@zh'), 4, ['@'])).toBeNull();
+    expect(mentionQuery(value, 6, ['@'])).toBeNull();
+  });
+
+  it('选中候选替换查询文字并补空格，mentions 按位置排序', () => {
+    const result = insertMention({ text: '#x @张三', mentions: [zhang] }, 0, 2, { char: '#', id: 1, name: '任务' });
+    expect(result).toEqual({ value: { text: '#任务  @张三', mentions: [{ char: '#', id: 1, name: '任务' }, zhang] }, cursor: 4 });
+    expect(composeSegments(result.value).map((s) => s.mention)).toEqual([true, false, true]);
   });
 });

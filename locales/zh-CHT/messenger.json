@@ -206,5 +206,42 @@
   "selection": {
     "max": "最多選擇{{n}}則訊息",
     "count": "已選{{n}}項"
+  },
+  "mention": {
+    "everyone": "所有人",
+    "groupMembers": "群內成員",
+    "quickMenu": "快捷選單",
+    "botCommands": "機器人命令",
+    "completed": "已完成",
+    "slash": {
+      "mention": "提及",
+      "task": "任務",
+      "file": "文件",
+      "report": "工作報告"
+    },
+    "command": {
+      "list": "我的機器人",
+      "newbot": "新建機器人",
+      "help": "幫助指令",
+      "api": "API介面文檔",
+      "info": "機器人信息",
+      "setname": "設置名稱",
+      "deletebot": "刪除機器人",
+      "token": "機器人Token",
+      "revoke": "更新Token",
+      "clearday": "設置保留消息時間",
+      "webhook": "設置Webhook",
+      "dialog": "對話列表"
+    },
+    "group": {
+      "outsiders": "群外成員",
+      "projectTasks": "項目任務",
+      "myTasks": "我的待完成任務",
+      "assistTasks": "我協助的任務",
+      "otherTasks": "其他任務",
+      "files": "文件分享查看",
+      "myReports": "我的報告",
+      "receivedReports": "收到的報告"
+    }
   }
 }

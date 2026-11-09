@@ -206,5 +206,42 @@
   "selection": {
     "max": "Wählen Sie bis zu {{n}} Nachrichten aus",
     "count": "{{n}} ausgewählt"
+  },
+  "mention": {
+    "everyone": "Alle",
+    "groupMembers": "Gruppenmitglieder",
+    "quickMenu": "Schnellmenü",
+    "botCommands": "Bot-Befehle",
+    "completed": "Abgeschlossen",
+    "slash": {
+      "mention": "Erwähnungen",
+      "task": "Aufgabe",
+      "file": "Datei",
+      "report": "Arbeitsbericht"
+    },
+    "command": {
+      "list": "Meine Bots",
+      "newbot": "Neuen Bot erstellen",
+      "help": "Hilfebefehle",
+      "api": "API-Schnittstellendokumentation",
+      "info": "Bot-Informationen",
+      "setname": "Namen festlegen",
+      "deletebot": "Bot löschen",
+      "token": "Bot-Token",
+      "revoke": "Token aktualisieren",
+      "clearday": "Nachrichtenaufbewahrungszeit festlegen",
+      "webhook": "Webhook einrichten",
+      "dialog": "Gesprächsliste"
+    },
+    "group": {
+      "outsiders": "Externe Mitglieder",
+      "projectTasks": "Projektaufgaben",
+      "myTasks": "Meine ausstehenden Aufgaben",
+      "assistTasks": "Aufgaben, bei denen ich assistiere",
+      "otherTasks": "Andere Aufgaben",
+      "files": "Dateifreigabe-Ansicht",
+      "myReports": "Meine Berichte",
+      "receivedReports": "Erhaltene Berichte"
+    }
   }
 }

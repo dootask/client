@@ -1,11 +1,15 @@
 import type { ApiClient } from '../api/client';
 import * as dialogApi from '../api/dialog';
 import type { Msg } from '../api/dialog';
+import * as fileApi from '../api/file';
+import * as projectApi from '../api/project';
+import * as reportApi from '../api/report';
 import * as usersApi from '../api/users';
 import type { Messenger } from './engine';
+import { createMentionSession, type MentionApi } from './mention';
 
 /** 消息操作用到的接口，client 已绑定；测试时注入假的 */
-export interface MsgActionsApi {
+export interface MsgActionsApi extends MentionApi {
   msgTop: (msgId: number) => ReturnType<typeof dialogApi.msgTop>;
   msgTag: (msgId: number) => ReturnType<typeof dialogApi.msgTag>;
   msgTodo: (params: dialogApi.MsgTodoParams) => ReturnType<typeof dialogApi.msgTodo>;
@@ -19,10 +23,8 @@ export interface MsgActionsApi {
   favoriteRemark: (msgId: number, remark: string) => Promise<string>;
   msgTodoList: (msgId: number) => ReturnType<typeof dialogApi.msgTodoList>;
   msgTodoRemind: (params: Parameters<typeof dialogApi.msgTodoRemind>[1]) => Promise<string>;
-  members: (dialogId: number) => ReturnType<typeof dialogApi.members>;
   myTodos: (dialogId: number) => ReturnType<typeof dialogApi.myTodos>;
   msgDone: (todoId: number) => ReturnType<typeof dialogApi.msgDone>;
-  searchUsers: (key: string) => ReturnType<typeof usersApi.search>;
 }
 
 export function bindMsgActionsApi(client: ApiClient): MsgActionsApi {
@@ -43,7 +45,10 @@ export function bindMsgActionsApi(client: ApiClient): MsgActionsApi {
     members: (id) => dialogApi.members(client, id),
     myTodos: (id) => dialogApi.myTodos(client, id),
     msgDone: (id) => dialogApi.msgDone(client, id),
-    searchUsers: (key) => usersApi.search(client, key),
+    searchUsers: (key, opts) => usersApi.search(client, key, opts),
+    taskList: (p) => projectApi.taskList(client, p),
+    fileSearch: (key) => fileApi.search(client, key),
+    reportList: (box, key) => reportApi.list(client, box, key),
   };
 }
 
@@ -123,7 +128,10 @@ export function createMsgActions(api: MsgActionsApi, messenger: Messenger) {
     todoRemind: (params: Parameters<MsgActionsApi['msgTodoRemind']>[0]) => api.msgTodoRemind(params),
     members: (dialogId: number) => api.members(dialogId),
     myTodos: (dialogId: number) => api.myTodos(dialogId),
-    searchUsers: (key: string) => api.searchUsers(key),
+    searchUsers: (key: string) => api.searchUsers(key, { bots: false }),
+
+    /** 会话页的输入栏候选来源，打开会话时建一个 */
+    mentionSession: (dialogId: number, userId: number) => createMentionSession(api, store.getState, dialogId, userId),
 
     /** 完成自己的一条待办（结果里不带待办字段，会话的待办数另外刷新）；返回服务端的提示语 */
     async done(todoId: number, dialogId: number): Promise<string> {

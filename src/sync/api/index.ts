@@ -1,6 +1,9 @@
 export * from './client';
 export * as dialogApi from './dialog';
 export * from './errors';
+export * as fileApi from './file';
+export * as projectApi from './project';
+export * as reportApi from './report';
 export * as systemApi from './system';
 export * as userApi from './user';
 export * as usersApi from './users';

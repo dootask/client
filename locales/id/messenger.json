@@ -206,5 +206,42 @@
   "selection": {
     "max": "Pilih hingga {{n}} pesan",
     "count": "{{n}} dipilih"
+  },
+  "mention": {
+    "everyone": "Semua Orang",
+    "groupMembers": "Anggota grup",
+    "quickMenu": "Menu Cepat",
+    "botCommands": "Perintah Bot",
+    "completed": "Selesai",
+    "slash": {
+      "mention": "Sebutan",
+      "task": "Tugas",
+      "file": "Berkas",
+      "report": "Laporan kerja"
+    },
+    "command": {
+      "list": "Bot saya",
+      "newbot": "Buat bot baru",
+      "help": "Perintah bantuan",
+      "api": "Dokumentasi Antarmuka API",
+      "info": "Informasi bot",
+      "setname": "Atur nama",
+      "deletebot": "Hapus bot",
+      "token": "Token Bot",
+      "revoke": "Perbarui Token",
+      "clearday": "Atur waktu penyimpanan pesan",
+      "webhook": "Atur Webhook",
+      "dialog": "Daftar percakapan"
+    },
+    "group": {
+      "outsiders": "Anggota luar grup",
+      "projectTasks": "Tugas proyek",
+      "myTasks": "Tugas saya yang tertunda",
+      "assistTasks": "Tugas yang saya bantu",
+      "otherTasks": "Tugas lainnya",
+      "files": "Tampilan Berbagi File",
+      "myReports": "Laporan Saya",
+      "receivedReports": "Laporan yang Diterima"
+    }
   }
 }

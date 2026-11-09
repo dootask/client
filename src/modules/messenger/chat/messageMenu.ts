@@ -7,7 +7,7 @@ import { useMemo } from 'react';
 
 import { useT } from '../../../i18n';
 import type { Msg } from '../../../sync/api/dialog';
-import { htmlToText, type OutboxItem, type UploadItem } from '../../../sync/messenger';
+import { htmlToCompose, type OutboxItem, type UploadItem } from '../../../sync/messenger';
 import type { MsgBody } from '../../../sync/messenger/body';
 import { confirmOnApp, type MenuAction, type MenuEntry } from '../../../ui/popover';
 import { showToast } from '../../../ui/Toast';
@@ -29,7 +29,7 @@ export function plainText(msg: Msg, body: MsgBody): string {
   if (msg.type !== 'text') return '';
   const data = (msg.msg ?? {}) as { text?: unknown; type?: unknown };
   const text = typeof data.text === 'string' ? data.text : '';
-  return data.type === 'md' ? text : htmlToText(text);
+  return data.type === 'md' ? text : htmlToCompose(text).text;
 }
 
 /** 菜单里要聊天页接手的操作（打开输入栏模式、弹层、多选） */

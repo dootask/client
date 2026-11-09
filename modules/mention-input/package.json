@@ -1,0 +1,7 @@
+{
+  "name": "dootask-mention-input",
+  "version": "1.0.0",
+  "description": "DooTask 输入框退格删到 @ 提及时整段删除（提及片段以 role=\"link\" 的 Text 标记）",
+  "private": true,
+  "license": "MIT"
+}

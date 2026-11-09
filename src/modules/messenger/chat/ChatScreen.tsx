@@ -7,7 +7,7 @@ import { useStore } from 'zustand';
 
 import { dateFormats, useLanguage, useT } from '../../../i18n';
 import type { Msg } from '../../../sync/api/dialog';
-import { atLatest, hasEarlier, htmlToText, type WithdrawnMsg } from '../../../sync/messenger';
+import { atLatest, hasEarlier, htmlToCompose, type WithdrawnMsg } from '../../../sync/messenger';
 import type { MsgBody } from '../../../sync/messenger/body';
 import { ChatView, type ChatViewHandle, type MessageRenderInfo, type ScrollToBottomInfo } from '../../../ui/chat';
 import { Icon } from '../../../ui/Icon';
@@ -23,9 +23,11 @@ import { useAttach } from './attach';
 import { ChatDropZone } from './ChatDropZone';
 import { buildRows, type RowData } from './chatModel';
 import { Composer, type ComposerHandle, type ComposerMode } from './Composer';
+import { useComposeStore } from './composeStore';
 import { EmojiPanel } from './EmojiPanel';
 import { countText, dayLabel } from './format';
 import { MessageActionMenu, type LongPressTarget } from './MessageActionMenu';
+import { MentionAccessory, type PickerKeys } from './MentionPicker';
 import { forwardable, type MenuHandlers, useMessageMenus } from './messageMenu';
 import { bubbleTones, MessageRow, RowContextValue, type RowContext } from './MessageRow';
 import { MorePanel } from './MorePanel';
@@ -88,6 +90,9 @@ function ChatScreen({ dialogId, msgId }: { dialogId: number; msgId: number }) {
   const sentKeys = useMessengerState((s) => s.sentKeys);
   const chatRef = useRef<ChatViewHandle>(null);
   const composerRef = useRef<ComposerHandle>(null);
+  // 输入栏内容：从草稿开始，输入栏和上方的候选浮层共用
+  const compose = useComposeStore(() => htmlToCompose(messenger?.store.getState().drafts[dialogId] ?? ''));
+  const pickerKeysRef: PickerKeys = useRef(null);
 
   // 打开时的未读快照：上报已读会把会话上的这两项清掉
   const [opening] = useState(() => ({ unreadOne: dialog?.unread_one ?? 0, mentions: dialog?.mention_ids ?? [] }));
@@ -98,6 +103,7 @@ function ChatScreen({ dialogId, msgId }: { dialogId: number; msgId: number }) {
   const [sheet, setSheet] = useState<SheetState | null>(null);
   const [selection] = useState(createSelection);
   const actions = useMsgActions();
+  const mentionSession = useMemo(() => actions?.mentionSession(dialogId, userId), [actions, dialogId, userId]);
 
   const list = win?.list;
   const rows = useMemo(
@@ -246,7 +252,7 @@ function ChatScreen({ dialogId, msgId }: { dialogId: number; msgId: number }) {
       if (!ok) showToast(t('messenger:selection.max', { n: SELECTION_MAX }));
     },
     onReEdit: (item: WithdrawnMsg) => {
-      composerRef.current?.replace(item.md ? item.text : htmlToText(item.text));
+      composerRef.current?.replace(item.md ? { text: item.text, mentions: [] } : htmlToCompose(item.text));
       messenger?.forgetWithdrawn(item.id);
     },
   }), [dialog?.type, userId, server, theme.colors, opening.unreadOne, menu, pendingMenu, uploadMenu, messenger, actions, onReact, jumpTo, onReply, openSheet, selection, t]);
@@ -296,10 +302,22 @@ function ChatScreen({ dialogId, msgId }: { dialogId: number; msgId: number }) {
               }
               composer={
                 <BottomBar selection={selection} onForward={(msgIds) => openSheet({ kind: 'forward', msgIds })}>
-                  <Composer ref={composerRef} dialogId={dialogId} mode={mode} onModeEnd={onModeEnd} onSent={onSent} attach={attach} />
+                  <Composer ref={composerRef} dialogId={dialogId} store={compose} pickerKeysRef={pickerKeysRef} mode={mode} onModeEnd={onModeEnd} onSent={onSent} attach={attach} />
                 </BottomBar>
               }
               bottomColor={theme.colors.surface}
+              accessory={
+                mentionSession && (
+                  <MentionAccessory
+                    store={compose}
+                    dialog={dialog}
+                    session={mentionSession}
+                    userId={userId}
+                    keysRef={pickerKeysRef}
+                    onPick={(start, char, item) => composerRef.current?.pick(start, char, item)}
+                  />
+                )
+              }
               panels={{ emoji: <EmojiPanel onPick={(emoji) => composerRef.current?.insert(emoji)} />, more: <MorePanel attach={attach} /> }}
               keyboardDragOffset={theme.size.touch + theme.spacing.xs * 2}
               renderScrollToBottom={renderScrollToBottom}

@@ -206,5 +206,42 @@
   "selection": {
     "max": "Select up to {{n}} messages",
     "count": "{{n}} selected"
+  },
+  "mention": {
+    "everyone": "Everyone",
+    "groupMembers": "Group members",
+    "quickMenu": "Quick Menu",
+    "botCommands": "Bot Commands",
+    "completed": "Completed",
+    "slash": {
+      "mention": "Mentions",
+      "task": "Task",
+      "file": "File",
+      "report": "Work report"
+    },
+    "command": {
+      "list": "My bots",
+      "newbot": "Create new bot",
+      "help": "Help commands",
+      "api": "API Documentation",
+      "info": "Bot information",
+      "setname": "Set name",
+      "deletebot": "Delete bot",
+      "token": "Bot Token",
+      "revoke": "Update Token",
+      "clearday": "Set message retention time",
+      "webhook": "Set Webhook",
+      "dialog": "Conversation list"
+    },
+    "group": {
+      "outsiders": "External members",
+      "projectTasks": "Project tasks",
+      "myTasks": "My pending tasks",
+      "assistTasks": "Tasks I assist with",
+      "otherTasks": "Other tasks",
+      "files": "File Sharing View",
+      "myReports": "My Reports",
+      "receivedReports": "Reports Received"
+    }
   }
 }
