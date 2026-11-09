@@ -62,6 +62,11 @@ const light = {
   /** 图片上的时间浮层（配白字） */
   mediaScrim: 'rgba(0,0,0,0.45)',
   onMedia: '#FFFFFF',
+  /** 全屏看图、发送前预览的底色（配 onMedia） */
+  viewer: '#000000',
+  /** 看图页上的输入框底色、次要文字 */
+  viewerField: 'rgba(255,255,255,0.12)',
+  viewerMuted: 'rgba(255,255,255,0.6)',
 };
 
 export type Colors = typeof light;
@@ -111,6 +116,9 @@ const dark: Colors = {
   bubbleOverlay: 'rgba(255,255,255,0.08)',
   mediaScrim: 'rgba(0,0,0,0.55)',
   onMedia: '#FFFFFF',
+  viewer: '#000000',
+  viewerField: 'rgba(255,255,255,0.12)',
+  viewerMuted: 'rgba(255,255,255,0.6)',
 };
 
 const font = (fontSize: number, lineHeight: number, fontWeight: TextStyle['fontWeight']) => ({ fontSize, lineHeight, fontWeight });
@@ -209,6 +217,9 @@ const size = {
   /** 回复引用右侧的缩略图 */
   quoteThumb: 36,
   voicePlay: 32,
+  /** 加号面板：最近照片的缩略图、功能入口的方块 */
+  photoThumb: 96,
+  moreTile: 56,
   voiceTrack: 4,
   dot: 8,
   ...platformSize,

@@ -1,12 +1,16 @@
 import type { Msg } from '../../../sync/api/dialog';
-import { atLatest, toUnix, type OutboxItem, type WithdrawnMsg } from '../../../sync/messenger';
+import { atLatest, toUnix, type OutboxItem, type UploadItem, type WithdrawnMsg } from '../../../sync/messenger';
 import type { ChatMessage } from '../../../ui/chat';
 
 /**
- * 聊天列表的行：服务器消息、发送队列里的消息、自己刚撤回的占位，合成一个按时间倒序的列表
+ * 聊天列表的行：服务器消息、发送队列里的文字和文件、自己刚撤回的占位，合成一个按时间倒序的列表
  */
 
-export type RowData = { kind: 'msg'; msg: Msg } | { kind: 'pending'; item: OutboxItem } | { kind: 'withdrawn'; item: WithdrawnMsg };
+export type RowData =
+  | { kind: 'msg'; msg: Msg }
+  | { kind: 'pending'; item: OutboxItem }
+  | { kind: 'upload'; item: UploadItem }
+  | { kind: 'withdrawn'; item: WithdrawnMsg };
 export type ChatRow = ChatMessage<RowData>;
 
 /** 系统消息的作者：不和任何消息连成一组，也不算自己发的 */
@@ -20,6 +24,7 @@ export interface RowSources {
   /** 消息窗口，按 id 倒序 */
   list: readonly Msg[];
   outbox: readonly OutboxItem[];
+  uploads: readonly UploadItem[];
   withdrawn: readonly WithdrawnMsg[];
   sentKeys: Readonly<Record<number, string>>;
   dialogId: number;
@@ -54,7 +59,7 @@ export function msgRow(msg: Msg, key?: string): ChatRow {
   );
 }
 
-export function buildRows({ list, outbox, withdrawn, sentKeys, dialogId, userId }: RowSources): ChatRow[] {
+export function buildRows({ list, outbox, uploads, withdrawn, sentKeys, dialogId, userId }: RowSources): ChatRow[] {
   const latest = atLatest(list);
   const newest = list[0]?.id ?? 0;
   const oldest = list[list.length - 1]?.id ?? 0;
@@ -66,10 +71,15 @@ export function buildRows({ list, outbox, withdrawn, sentKeys, dialogId, userId 
   const rows: ChatRow[] = [];
   if (latest) {
     const me = String(userId);
-    const queued = outbox.filter((item) => item.dialog_id === dialogId);
+    // 文字和文件两个队列各自按入队先后，合在一起按入队时间排（稳定排序，同一时刻的保持先后），新的在前
+    type Queued = Extract<RowData, { kind: 'pending' | 'upload' }>;
+    const queued: Queued[] = [
+      ...outbox.filter((item) => item.dialog_id === dialogId).map((item) => ({ kind: 'pending' as const, item })),
+      ...uploads.filter((item) => item.dialog_id === dialogId).map((item) => ({ kind: 'upload' as const, item })),
+    ].sort((a, b) => a.item.queuedAt - b.item.queuedAt);
     for (let i = queued.length - 1; i >= 0; i--) {
-      const item = queued[i]!;
-      rows.push(cachedRow(item, () => ({ id: item.localId, createdAt: item.queuedAt, authorId: me, data: { kind: 'pending', item } })));
+      const data = queued[i]!;
+      rows.push(cachedRow(data.item, () => ({ id: data.item.localId, createdAt: data.item.queuedAt, authorId: me, data })));
     }
   }
   let h = 0;

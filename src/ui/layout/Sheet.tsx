@@ -8,7 +8,7 @@ import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { useT } from '../../i18n';
 import { IconButton } from '../IconButton';
 import { Touchable } from '../Touchable';
-import { useBreakpoint } from '../theme';
+import { bottomInset, useBreakpoint } from '../theme';
 
 /** 进出场：Reanimated 的 CSS 过渡，Web 上是真正的 CSS transition，不占 JS 帧（性能规范第 8 条） */
 const DURATION = 220;
@@ -180,7 +180,7 @@ const styles = StyleSheet.create((theme, rt) => ({
     if (form === 'bottom') {
       return {
         maxHeight: rt.screen.height - rt.insets.top - theme.spacing.xxl * 2,
-        paddingBottom: Math.max(rt.insets.bottom, rt.insets.ime) + theme.spacing.sm,
+        paddingBottom: bottomInset(rt.insets.bottom, rt.insets.ime) + theme.spacing.sm,
         backgroundColor: theme.colors.surface,
         borderTopLeftRadius: theme.radius.sheet,
         borderTopRightRadius: theme.radius.sheet,

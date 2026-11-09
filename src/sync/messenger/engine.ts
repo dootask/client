@@ -1,4 +1,4 @@
-import { type ApiClient, ApiError } from '../api';
+import { type ApiClient, ApiError, createUploader, type LocalFile, UploadCancelled, type UploadIO, type UploadParams } from '../api';
 import * as dialogApi from '../api/dialog';
 import type { Dialog, Msg, MsgListParams, SendTextParams } from '../api/dialog';
 import type { StructuredCache } from '../storage/types';
@@ -18,7 +18,9 @@ import {
   removeMsgs,
   upsertMsgs,
 } from './rules';
-import { createMessengerStore, type MsgWindow, type OutboxItem, type StoredDialog, type WithdrawnMsg } from './store';
+import { createStore } from 'zustand/vanilla';
+
+import { createMessengerStore, type MsgWindow, type OutboxItem, type StoredDialog, type UploadItem, type WithdrawnMsg } from './store';
 
 /** 引擎用到的接口，client 已绑定；测试时注入假的 */
 export interface MessengerApi {
@@ -40,9 +42,15 @@ export interface MessengerApi {
   withdraw: (msgId: number) => Promise<void>;
   emoji: (msgId: number, symbol: string) => ReturnType<typeof dialogApi.emoji>;
   myTodos: (dialogId: number) => ReturnType<typeof dialogApi.myTodos>;
+  /** 上传并发出文件消息，resolve 服务端返回的消息数据 */
+  sendFile: (params: UploadParams) => Promise<unknown>;
+  /** 放弃发送的文件：释放本地文件、清掉服务端的分片会话 */
+  forgetFile: (key: string, file: LocalFile) => void;
 }
 
-export function bindMessengerApi(client: ApiClient): MessengerApi {
+/** io：平台的读文件和上传实现 */
+export function bindMessengerApi(client: ApiClient, io: UploadIO): MessengerApi {
+  const uploader = createUploader(client, io);
   return {
     lists: (p) => dialogApi.lists(client, p),
     beyond: (p) => dialogApi.beyond(client, p),
@@ -62,6 +70,8 @@ export function bindMessengerApi(client: ApiClient): MessengerApi {
     withdraw: (id) => dialogApi.withdraw(client, id),
     emoji: (id, symbol) => dialogApi.emoji(client, id, symbol),
     myTodos: (id) => dialogApi.myTodos(client, id),
+    sendFile: (p) => uploader.send(p),
+    forgetFile: (key, file) => uploader.forget(key, file),
   };
 }
 
@@ -107,6 +117,10 @@ const READ_DELAY = 50;
 const READ_BATCH = 100;
 const OUTBOX_RETRY = 30_000;
 const OUTBOX_EXPIRE = 24 * 3600_000;
+/** 同时上传几个文件（不同会话之间；同一会话一个一个传） */
+const UPLOAD_CONCURRENCY = 2;
+/** 进度变化不到这么多不更新界面 */
+const PROGRESS_STEP = 0.01;
 const BEYOND_INTERVAL = 3600_000;
 const PERSIST_DELAY = 300;
 /** 撤回的文本在本地保留多久（可以重新编辑） */
@@ -845,6 +859,107 @@ export function createMessenger(deps: MessengerDeps) {
   }
 
   // ---------------------------------------------------------------------------
+  // 发文件
+  // ---------------------------------------------------------------------------
+
+  /** 上传进度（本地 id → 0–1）单独一个 store：进度变化频繁，只让对应的那一行订阅 */
+  const progress = createStore<Record<string, number>>()(() => ({}));
+  const uploading = new Map<string, AbortController>();
+
+  function setProgress(localId: string, value: number | null) {
+    const current = progress.getState();
+    if (value === null) {
+      if (!(localId in current)) return;
+      const { [localId]: _, ...rest } = current;
+      progress.setState(rest, true);
+    } else if (current[localId] === undefined || value - current[localId] >= PROGRESS_STEP || value === 1) {
+      progress.setState({ [localId]: value });
+    }
+  }
+
+  function patchUpload(localId: string, patch: Partial<UploadItem>) {
+    set({ uploads: get().uploads.map((item) => (item.localId === localId ? { ...item, ...patch } : item)) });
+  }
+
+  /**
+   * 发文件：每个文件一条消息，先进队列显示发送中（带进度）。只在本次运行里保留。
+   * 上传完成即发出消息，所以同一会话一个一个传，消息顺序和选择顺序一致；不同会话之间同时最多传两个。
+   * caption（HTML）挂在最后一个文件上，它发出或失败后作为文字发出，排在文件之后
+   */
+  function sendFiles(params: { dialog_id: number; files: readonly LocalFile[]; reply_id?: number; caption?: string }) {
+    const last = params.files.length - 1;
+    const items = params.files.map((file, index): UploadItem => ({
+      localId: `local-${now()}-${++localSeq}`,
+      dialog_id: params.dialog_id,
+      reply_id: params.reply_id,
+      file,
+      queuedAt: now(),
+      state: 'sending',
+      caption: index === last ? params.caption || undefined : undefined,
+    }));
+    set({ uploads: [...get().uploads, ...items] });
+    pumpUploads();
+  }
+
+  function retryUpload(localId: string) {
+    patchUpload(localId, { state: 'sending', error: undefined });
+    pumpUploads();
+  }
+
+  /** 取消上传中的文件，或放弃发送失败的文件 */
+  function discardUpload(localId: string) {
+    const item = get().uploads.find((i) => i.localId === localId);
+    if (!item) return;
+    uploading.get(localId)?.abort();
+    set({ uploads: get().uploads.filter((i) => i.localId !== localId) });
+    api.forgetFile(localId, item.file);
+  }
+
+  function pumpUploads() {
+    const busy = new Set(get().uploads.filter((item) => uploading.has(item.localId)).map((item) => item.dialog_id));
+    for (const item of get().uploads) {
+      if (stopped || uploading.size >= UPLOAD_CONCURRENCY) return;
+      if (item.state !== 'sending' || busy.has(item.dialog_id)) continue;
+      busy.add(item.dialog_id);
+      background(upload(item), 'upload');
+    }
+  }
+
+  async function upload(item: UploadItem) {
+    const controller = new AbortController();
+    uploading.set(item.localId, controller);
+    setProgress(item.localId, 0);
+    try {
+      const data = await api.sendFile({
+        file: item.file,
+        dialogId: item.dialog_id,
+        replyId: item.reply_id ?? 0,
+        key: item.localId,
+        signal: controller.signal,
+        onProgress: (ratio) => setProgress(item.localId, ratio),
+      });
+      set({ uploads: get().uploads.filter((i) => i.localId !== item.localId) });
+      const msg = msgOf(data);
+      if (msg) {
+        set({ sentKeys: { ...get().sentKeys, [msg.id]: item.localId } });
+        insertMsgs(msg.dialog_id, [msg], true);
+        if (get().dialogs[msg.dialog_id]) saveDialogs([lastMsgPatch(msg)]);
+        else background(fetchDialog(msg.dialog_id), 'fetch dialog');
+      }
+      if (item.caption) sendText({ dialog_id: item.dialog_id, text: item.caption });
+    } catch (err) {
+      if (err instanceof UploadCancelled || controller.signal.aborted) return;
+      if (item.caption) sendText({ dialog_id: item.dialog_id, text: item.caption });
+      // 网络问题的报错对用户没有意义，留空由界面兜底
+      patchUpload(item.localId, { state: 'failed', error: err instanceof ApiError && err.kind === 'server' ? err.message : '', caption: undefined });
+    } finally {
+      uploading.delete(item.localId);
+      setProgress(item.localId, null);
+      pumpUploads();
+    }
+  }
+
+  // ---------------------------------------------------------------------------
   // 编辑、撤回、表情回应
   // ---------------------------------------------------------------------------
 
@@ -955,6 +1070,7 @@ export function createMessenger(deps: MessengerDeps) {
 
   function stop() {
     stopped = true;
+    uploading.forEach((controller) => controller.abort());
     unsubs.splice(0).forEach((fn) => fn());
     timers.forEach((t) => clearTimeout(t));
     timers.clear();
@@ -996,6 +1112,11 @@ export function createMessenger(deps: MessengerDeps) {
     sendText,
     retrySend,
     discardSend,
+    /** 上传进度（本地 id → 0–1） */
+    uploadProgress: progress,
+    sendFiles,
+    retryUpload,
+    discardUpload,
     editText,
     withdraw,
     forgetWithdrawn,

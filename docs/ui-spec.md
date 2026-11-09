@@ -62,6 +62,7 @@
 | `bubbleInMeta` | `text3` | `text3` | 别人气泡里的时间 |
 | `bubbleOverlay` | `rgba(0,0,0,0.05)` | `rgba(255,255,255,0.08)` | 气泡里的二级块：引用、代码、表情回应 |
 | `mediaScrim` | `rgba(0,0,0,0.45)` | `rgba(0,0,0,0.55)` | 图片上的时间浮层（配白字） |
+| `viewer` / `viewerField` / `viewerMuted` | `#000000` / `rgba(255,255,255,0.12)` / `rgba(255,255,255,0.6)` | 同浅色 | 全屏看图、发送前预览：黑底、输入框底色、次要文字（配 `onMedia` 白字） |
 
 气泡内容：
 
@@ -124,6 +125,8 @@
 - 头像尺寸只用：20 / 24 / 32 / 40 / 48 / 64 / 80（`size.avatar` 的 xs–huge）；会话列表 48
 - 未读角标最小宽高 18；分类胶囊高 30；列表顶部搜索框高 36
 - 输入框、整行按钮高 48；登录类表单最大宽 360，宽屏居中
+- 加号面板：最近照片缩略图 96（`photoThumb`），功能入口方块 56（`moreTile`）
+- 贴底的内容（底部弹层、发送预览）让底边用 `bottomInset(rt.insets.bottom, rt.insets.ime)`：键盘弹出时让到键盘上沿。Android 上 unistyles 的 `ime` 已减去导航栏、iOS 是键盘全高，差异在这个函数里抹平；要直接传值，unistyles 靠字面上的 `rt.insets.ime` 识别依赖
 
 ## 4. 动效与触感
 

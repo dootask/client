@@ -14,6 +14,8 @@ import { Touchable } from '../../../ui/Touchable';
 import { useEnterSend } from '../../setting';
 import { useMessenger, useUser } from '../hooks';
 import { PreviewText } from '../PreviewText';
+import type { Attach } from './attach';
+import { AttachButton } from './AttachButton';
 import { useEnterKey } from './enterKey';
 
 /** 输入框上方的条：回复某条消息，或编辑自己发的消息 */
@@ -30,11 +32,12 @@ export interface ComposerHandle {
 const editableText = (msg: Msg) => htmlToText(String((msg.msg as { text?: unknown } | null)?.text ?? ''));
 
 /**
- * 输入栏：表情面板开关、输入框、发送。
+ * 输入栏：表情面板开关、输入框、右侧有字时是发送，没字时是加号（发图片、文件）。
  * 输入的内容随时存为草稿（会话列表里显示）；编辑消息期间草稿先收起来，编辑完或取消后还原
  */
-export function Composer({ dialogId, mode, onModeEnd, onSent, ref }: {
+export function Composer({ dialogId, mode, onModeEnd, onSent, attach, ref }: {
   dialogId: number;
+  attach: Attach;
   mode: ComposerMode;
   onModeEnd: () => void;
   /** 发出一条新消息后（滚到底部） */
@@ -137,16 +140,20 @@ export function Composer({ dialogId, mode, onModeEnd, onSent, ref }: {
             {...enterKey}
           />
         </View>
-        <Touchable
-          accessibilityRole="button"
-          accessibilityLabel={t('messenger:chat.send')}
-          disabled={!canSend}
-          hitSlop={slop}
-          onPress={send}
-          style={({ pressed }) => [styles.button, pressed && styles.pressed]}
-        >
-          <Icon icon={Send} color={canSend ? theme.colors.primaryText : theme.colors.text4} size={theme.size.icon} />
-        </Touchable>
+        {canSend || editing ? (
+          <Touchable
+            accessibilityRole="button"
+            accessibilityLabel={t('messenger:chat.send')}
+            disabled={!canSend}
+            hitSlop={slop}
+            onPress={send}
+            style={({ pressed }) => [styles.button, pressed && styles.pressed]}
+          >
+            <Icon icon={Send} color={canSend ? theme.colors.primaryText : theme.colors.text4} size={theme.size.icon} />
+          </Touchable>
+        ) : (
+          <AttachButton attach={attach} hitSlop={slop} style={({ pressed }) => [styles.button, pressed && styles.pressed]} />
+        )}
       </View>
     </View>
   );

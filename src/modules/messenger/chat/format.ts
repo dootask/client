@@ -44,7 +44,8 @@ export function formatSeconds(seconds: number): string {
 }
 
 export function formatBytes(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
+  // 后端按两位小数的 KB 存再乘 1024，小文件会是带小数的字节数
+  if (bytes < 1024) return `${Math.round(bytes)} B`;
   const units = ['KB', 'MB', 'GB', 'TB'];
   let value = bytes / 1024;
   let unit = 0;

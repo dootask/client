@@ -1,6 +1,7 @@
 import { createStore } from 'zustand/vanilla';
 
 import type { Dialog, Msg } from '../api/dialog';
+import type { LocalFile } from '../api/upload';
 
 /** 本地给会话记录加的字段（只存在缓存里，服务端不返回，合并时自然保留） */
 export interface LocalDialogFields {
@@ -34,6 +35,21 @@ export interface OutboxItem {
   error?: string;
 }
 
+/** 发送中的文件（每个文件一条消息）：本地文件只在本次运行里有效，不存盘 */
+export interface UploadItem {
+  localId: string;
+  dialog_id: number;
+  reply_id?: number;
+  file: LocalFile;
+  queuedAt: number;
+  /** sending：排队或上传中；failed：等用户重发或删除 */
+  state: 'sending' | 'failed';
+  /** 服务端的提示，网络问题为空；界面兜底翻译 */
+  error?: string;
+  /** 跟在这个文件后面发的说明（HTML），文件发出或失败后发出 */
+  caption?: string;
+}
+
 /** 自己刚撤回的文本消息（只在本地保留 5 分钟）：原位置显示「你撤回了一条消息」和「重新编辑」 */
 export interface WithdrawnMsg {
   id: number;
@@ -59,6 +75,7 @@ export interface MessengerState {
   /** 草稿（R19），会话 id → HTML */
   drafts: Record<number, string>;
   outbox: OutboxItem[];
+  uploads: UploadItem[];
   /** 本次运行发出的消息 id → 发送时的本地 id，聊天列表用它认行，发送中换成发出的消息时行不重挂 */
   sentKeys: Record<number, string>;
   withdrawn: WithdrawnMsg[];
@@ -83,6 +100,7 @@ export const initialMessengerState = (): MessengerState => ({
   openId: 0,
   drafts: {},
   outbox: [],
+  uploads: [],
   sentKeys: {},
   withdrawn: [],
   translations: {},

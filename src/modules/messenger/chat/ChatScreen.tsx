@@ -19,6 +19,8 @@ import { useDialog, useMessenger, useMessengerState, useMsgActions } from '../ho
 import { ChatBanners } from './ChatBanners';
 import { ChatHeader } from './ChatHeader';
 import type { RowRef } from './bubbleTouchTypes';
+import { useAttach } from './attach';
+import { ChatDropZone } from './ChatDropZone';
 import { buildRows, type RowData } from './chatModel';
 import { Composer, type ComposerHandle, type ComposerMode } from './Composer';
 import { EmojiPanel } from './EmojiPanel';
@@ -26,8 +28,10 @@ import { countText, dayLabel } from './format';
 import { MessageActionMenu, type LongPressTarget } from './MessageActionMenu';
 import { forwardable, type MenuHandlers, useMessageMenus } from './messageMenu';
 import { bubbleTones, MessageRow, RowContextValue, type RowContext } from './MessageRow';
+import { MorePanel } from './MorePanel';
 import { RichHandlersContext, type RichHandlers } from './RichText';
 import { createSelection, SELECTION_MAX, type Selection } from './selection';
+import { SendPreview } from './SendPreview';
 import { FavoriteRemarkSheet } from './sheets/FavoriteRemarkSheet';
 import { ForwardSheet } from './sheets/ForwardSheet';
 import { ReadListSheet } from './sheets/ReadListSheet';
@@ -79,6 +83,7 @@ function ChatScreen({ dialogId, msgId }: { dialogId: number; msgId: number }) {
   const dialog = useDialog(dialogId);
   const win = useMessengerState((s) => s.windows[dialogId]);
   const outbox = useMessengerState((s) => s.outbox);
+  const uploads = useMessengerState((s) => s.uploads);
   const withdrawn = useMessengerState((s) => s.withdrawn);
   const sentKeys = useMessengerState((s) => s.sentKeys);
   const chatRef = useRef<ChatViewHandle>(null);
@@ -96,8 +101,8 @@ function ChatScreen({ dialogId, msgId }: { dialogId: number; msgId: number }) {
 
   const list = win?.list;
   const rows = useMemo(
-    () => buildRows({ list: list ?? [], outbox, withdrawn, sentKeys, dialogId, userId }),
-    [list, outbox, withdrawn, sentKeys, dialogId, userId],
+    () => buildRows({ list: list ?? [], outbox, uploads, withdrawn, sentKeys, dialogId, userId }),
+    [list, outbox, uploads, withdrawn, sentKeys, dialogId, userId],
   );
   const byId = useMemo(() => new Map((list ?? []).map((m) => [String(m.id), m])), [list]);
 
@@ -196,7 +201,7 @@ function ChatScreen({ dialogId, msgId }: { dialogId: number; msgId: number }) {
     onTodoDetail: (msg: Msg) => openSheet({ kind: 'todoDetail', msg }),
     onFavoriteRemark: (msgId: number) => openSheet({ kind: 'remark', msgId }),
   };
-  const { menu, pendingMenu } = useMessageMenus(handlers);
+  const { menu, pendingMenu, uploadMenu } = useMessageMenus(handlers);
 
   // 多选：Shift 连选按显示顺序（从旧到新）取可转发的消息
   const selectable = useRef<number[]>([]);
@@ -215,6 +220,7 @@ function ChatScreen({ dialogId, msgId }: { dialogId: number; msgId: number }) {
     newFrom: opening.unreadOne,
     menu,
     pendingMenu,
+    uploadMenu,
     onOpen: (msg: Msg, body: MsgBody) => {
       if (body.kind === 'record') {
         void toggleVoice(body.url);
@@ -243,7 +249,7 @@ function ChatScreen({ dialogId, msgId }: { dialogId: number; msgId: number }) {
       composerRef.current?.replace(item.md ? item.text : htmlToText(item.text));
       messenger?.forgetWithdrawn(item.id);
     },
-  }), [dialog?.type, userId, server, theme.colors, opening.unreadOne, menu, pendingMenu, messenger, actions, onReact, jumpTo, onReply, openSheet, selection, t]);
+  }), [dialog?.type, userId, server, theme.colors, opening.unreadOne, menu, pendingMenu, uploadMenu, messenger, actions, onReact, jumpTo, onReply, openSheet, selection, t]);
 
   const richHandlers = useMemo<RichHandlers>(() => ({
     onPressRun: (run) => {
@@ -267,6 +273,7 @@ function ChatScreen({ dialogId, msgId }: { dialogId: number; msgId: number }) {
   }, [messenger, dialogId, errorText]);
   const onSent = useCallback(() => chatRef.current?.scrollToBottom(), []);
   const onModeEnd = useCallback(() => setMode(null), []);
+  const attach = useAttach({ dialogId, mode, onModeEnd, onSent });
 
   const nextMention = mentions.length ? Math.min(...mentions) : 0;
 
@@ -274,44 +281,47 @@ function ChatScreen({ dialogId, msgId }: { dialogId: number; msgId: number }) {
     <View style={styles.root}>
       <RowContextValue.Provider value={rowContext}>
         <RichHandlersContext.Provider value={richHandlers}>
-          <ChatView
-            ref={chatRef}
-            messages={rows}
-            currentUserId={String(userId)}
-            renderMessage={renderMessage}
-            renderDay={renderDay}
-            header={
-              <>
-                <ChatHeader dialogId={dialogId} dialog={dialog} />
-                <ChatBanners dialog={dialog} onJump={onJump} />
-              </>
-            }
-            composer={
-              <BottomBar selection={selection} onForward={(msgIds) => openSheet({ kind: 'forward', msgIds })}>
-                <Composer ref={composerRef} dialogId={dialogId} mode={mode} onModeEnd={onModeEnd} onSent={onSent} />
-              </BottomBar>
-            }
-            bottomColor={theme.colors.surface}
-            panels={{ emoji: <EmojiPanel onPick={(emoji) => composerRef.current?.insert(emoji)} /> }}
-            keyboardDragOffset={theme.size.touch + theme.spacing.xs * 2}
-            renderScrollToBottom={renderScrollToBottom}
-            floating={nextMention > 0 && <MentionJump count={mentions.length} onPress={() => void jumpTo(nextMention)} />}
-            onVisibleChange={onVisibleChange}
-            highlightColor={theme.colors.rowHighlight}
-            listHidden={!located}
-            loadingIndicator={<ActivityIndicator color={theme.colors.text3} />}
-            emptyContent={win?.synced ? <Text style={styles.empty}>{t('messenger:chat.empty')}</Text> : <ActivityIndicator color={theme.colors.text3} />}
-            hasEarlier={!!win?.synced && hasEarlier(win.list)}
-            loadingEarlier={loading === 'earlier'}
-            onLoadEarlier={onLoadEarlier}
-            hasNewer={!!list && !atLatest(list)}
-            loadingNewer={loading === 'newer'}
-            onLoadNewer={onLoadNewer}
-            onJumpToLatest={onJumpToLatest}
-          />
+          <ChatDropZone onFiles={attach.offer}>
+            <ChatView
+              ref={chatRef}
+              messages={rows}
+              currentUserId={String(userId)}
+              renderMessage={renderMessage}
+              renderDay={renderDay}
+              header={
+                <>
+                  <ChatHeader dialogId={dialogId} dialog={dialog} />
+                  <ChatBanners dialog={dialog} onJump={onJump} />
+                </>
+              }
+              composer={
+                <BottomBar selection={selection} onForward={(msgIds) => openSheet({ kind: 'forward', msgIds })}>
+                  <Composer ref={composerRef} dialogId={dialogId} mode={mode} onModeEnd={onModeEnd} onSent={onSent} attach={attach} />
+                </BottomBar>
+              }
+              bottomColor={theme.colors.surface}
+              panels={{ emoji: <EmojiPanel onPick={(emoji) => composerRef.current?.insert(emoji)} />, more: <MorePanel attach={attach} /> }}
+              keyboardDragOffset={theme.size.touch + theme.spacing.xs * 2}
+              renderScrollToBottom={renderScrollToBottom}
+              floating={nextMention > 0 && <MentionJump count={mentions.length} onPress={() => void jumpTo(nextMention)} />}
+              onVisibleChange={onVisibleChange}
+              highlightColor={theme.colors.rowHighlight}
+              listHidden={!located}
+              loadingIndicator={<ActivityIndicator color={theme.colors.text3} />}
+              emptyContent={win?.synced ? <Text style={styles.empty}>{t('messenger:chat.empty')}</Text> : <ActivityIndicator color={theme.colors.text3} />}
+              hasEarlier={!!win?.synced && hasEarlier(win.list)}
+              loadingEarlier={loading === 'earlier'}
+              onLoadEarlier={onLoadEarlier}
+              hasNewer={!!list && !atLatest(list)}
+              loadingNewer={loading === 'newer'}
+              onLoadNewer={onLoadNewer}
+              onJumpToLatest={onJumpToLatest}
+            />
+          </ChatDropZone>
         </RichHandlersContext.Provider>
         <MenuHost ref={menuHost} group={dialog?.type === 'group'} userId={userId} menu={menu} onReact={onReact} />
       </RowContextValue.Provider>
+      {attach.preview && <SendPreview {...attach.preview} onClose={attach.closePreview} onSend={attach.send} />}
       {sheet && <ChatSheet key={sheet.seq} content={sheet.content} visible={sheet.visible} onClose={closeSheet} onForwarded={selection.clear} />}
     </View>
   );

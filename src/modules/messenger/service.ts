@@ -1,6 +1,7 @@
 import { AppState } from 'react-native';
 import { create } from 'zustand';
 
+import { fileIO } from '../../platform/files';
 import { usersApi } from '../../sync/api';
 import { bindMessengerApi, bindMsgActionsApi, createMessenger, createMsgActions, type Messenger, type MsgActions } from '../../sync/messenger';
 import { kv, KV_KEYS, openAppCache, type StructuredCache } from '../../sync/storage';
@@ -60,7 +61,7 @@ function switchTo(owner: string) {
       // 等待期间状态又变了，交给下一轮
       if (ownerOf(useSession.getState()) !== owner) return;
       const messenger = createMessenger({
-        api: bindMessengerApi(api),
+        api: bindMessengerApi(api, fileIO),
         socket,
         cache,
         kv: {

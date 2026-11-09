@@ -1,5 +1,5 @@
 import { Image } from 'expo-image';
-import { Bookmark, Check, CheckCheck, CircleAlert, Forward, ListTodo, MessageSquareText, Pencil } from 'lucide-react-native';
+import { Bookmark, Check, CheckCheck, CircleAlert, Forward, ListTodo, MessageSquareText, Pencil, X } from 'lucide-react-native';
 import { createContext, memo, useContext, useEffect, type ReactNode } from 'react';
 import { ActivityIndicator, type GestureResponderEvent, Text, View } from 'react-native';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
@@ -9,7 +9,7 @@ import { useStore } from 'zustand';
 
 import { useT } from '../../../i18n';
 import type { Msg } from '../../../sync/api/dialog';
-import { toUnix, type OutboxItem, type WithdrawnMsg } from '../../../sync/messenger';
+import { toUnix, type OutboxItem, type UploadItem, type WithdrawnMsg } from '../../../sync/messenger';
 import { msgContent, reactions, textBlocks, type BodyContext, type MsgBody, type ReplyInfo, type SystemLabel } from '../../../sync/messenger/body';
 import { UserAvatar } from '../../../ui/Avatar';
 import { CheckMark } from '../../../ui/CheckMark';
@@ -17,20 +17,20 @@ import { RowHighlight, type MessageRenderInfo } from '../../../ui/chat';
 import { Icon } from '../../../ui/Icon';
 import { Menu, type MenuEntry } from '../../../ui/popover';
 import { Touchable } from '../../../ui/Touchable';
-import { useMessengerState, useUser } from '../hooks';
+import { useMessenger, useMessengerState, useUser } from '../hooks';
 import { PreviewText } from '../PreviewText';
 import { BubbleTouch } from './BubbleTouch';
 import type { BubbleTouchProps, RowRef } from './bubbleTouchTypes';
 import { chained, isSystemRow, type ChatRow, type RowData } from './chatModel';
 import { LIKE } from './emoji';
 import { forwardable } from './messageMenu';
-import { isMediaBody, isStickerBody, MediaBody, MessageBody, StickerBody } from './MessageBody';
+import { FileCard, isMediaBody, isStickerBody, LocalMedia, MediaBody, MessageBody, StickerBody } from './MessageBody';
 import { msgExtra } from './msgExtra';
 import { type BubbleTone, RichBlocks } from './RichText';
 import type { Selection } from './selection';
 
 /**
- * 聊天列表的一行：气泡（文字、图片、文件、语音）、系统提示、发送中 / 失败、撤回占位。
+ * 聊天列表的一行：气泡（文字、图片、文件、语音）、系统提示、发送中 / 失败（文字、文件）、撤回占位。
  * 行组件 memo，数据没变的行不重画；行里要用的回调都在 RowContext 里，聊天页给的是稳定对象
  */
 
@@ -43,6 +43,7 @@ export interface RowContext {
   /** 菜单项，打开时才计算：Web 右键、悬停条「更多」 */
   menu: (msg: Msg, body: MsgBody, own: boolean) => readonly MenuEntry[];
   pendingMenu: (item: OutboxItem) => readonly MenuEntry[];
+  uploadMenu: (item: UploadItem) => readonly MenuEntry[];
   /** App 长按：row 是整行（量位置浮起重画） */
   onLongPress: (row: RowRef, info: MessageRenderInfo<RowData>, msg: Msg, body: MsgBody) => void;
   /** 右滑（App）、悬停条（Web）回复 */
@@ -129,6 +130,7 @@ export const MessageRow = memo(function MessageRow({ info }: { info: MessageRend
             </Selectable>
           ))}
         {data.kind === 'pending' && <PendingRow info={info} item={data.item} />}
+        {data.kind === 'upload' && <UploadRow info={info} item={data.item} />}
         {data.kind === 'withdrawn' && <WithdrawnRow item={data.item} />}
       </View>
     </View>
@@ -454,7 +456,6 @@ function ReadMark({ group, percent, color }: { group: boolean; percent: number; 
 function PendingRow({ info, item }: { info: MessageRenderInfo<RowData>; item: OutboxItem }) {
   const ctx = useRowContext();
   const t = useT();
-  const { theme } = useUnistyles();
   const tone = ctx.tones.own;
   const items = ctx.pendingMenu(item);
   const { body } = msgContent(pendingMsg(item, ctx.body.userId), ctx.body);
@@ -463,21 +464,107 @@ function PendingRow({ info, item }: { info: MessageRenderInfo<RowData>; item: Ou
     <Dimmed on={!failed}>
       <BubbleFrame info={info} touch={{ menu: items.length > 0 ? () => items : undefined }}>
         <MessageBody body={body} tone={tone} />
-        <View style={styles.meta}>
-          <View style={styles.metaTime}>
-            <Text style={[styles.time, { color: tone.muted }]} allowFontScaling={false}>{formatTime(item.queuedAt)}</Text>
-            {/* 发送中按未读占位，发出后时间行宽度不跳 */}
-            <ReadMark group={ctx.group} percent={0} color={tone.muted} />
-          </View>
-        </View>
+        <PendingMeta at={item.queuedAt} tone={tone} />
       </BubbleFrame>
-      {failed && (
-        <Menu items={items} accessibilityLabel={t('messenger:chat.sendFailed')} style={styles.failedRow}>
-          <Icon icon={CircleAlert} color={theme.colors.danger} size={14} />
-          <Text style={styles.failedText}>{item.error || t('messenger:chat.sendFailed')}</Text>
-        </Menu>
-      )}
+      {failed && <FailedNote items={items} error={item.error || t('messenger:chat.sendFailed')} />}
     </Dimmed>
+  );
+}
+
+/** 发送失败的提示：气泡下方一行红字，点了选择重新发送或删除 */
+function FailedNote({ items, error }: { items: readonly MenuEntry[]; error: string }) {
+  const { theme } = useUnistyles();
+  return (
+    <Menu items={items} accessibilityLabel={error} style={styles.failedRow}>
+      <Icon icon={CircleAlert} color={theme.colors.danger} size={14} />
+      <Text style={styles.failedText}>{error}</Text>
+    </Menu>
+  );
+}
+
+/** 时间行的占位：发送中按未读画，发出后时间行宽度不跳 */
+function PendingMeta({ at, tone }: { at: number; tone: BubbleTone }) {
+  const ctx = useRowContext();
+  return (
+    <View style={styles.meta}>
+      <View style={styles.metaTime}>
+        <Text style={[styles.time, { color: tone.muted }]} allowFontScaling={false}>{formatTime(at)}</Text>
+        <ReadMark group={ctx.group} percent={0} color={tone.muted} />
+      </View>
+    </View>
+  );
+}
+
+const extOf = (name: string) => (name.includes('.') ? name.split('.').pop()! : '');
+
+/**
+ * 发送中的文件：图片、视频按本地内容占位，中间是进度环（点了取消发送）；其他文件是文件卡片，色块上是进度环。
+ * 失败时下方一行红字，点了重新发送或删除
+ */
+function UploadRow({ info, item }: { info: MessageRenderInfo<RowData>; item: UploadItem }) {
+  const ctx = useRowContext();
+  const t = useT();
+  const { theme } = useUnistyles();
+  const items = ctx.uploadMenu(item);
+  const failed = item.state === 'failed';
+  const { file } = item;
+  const touch: Touch = { menu: () => items };
+  return (
+    <View>
+      {file.media ? (
+        <BubbleFrame info={info} variant="bare" touch={touch}>
+          <LocalMedia file={file}>{!failed && <UploadProgress localId={item.localId} size={theme.size.mediaPlay} scrim />}</LocalMedia>
+        </BubbleFrame>
+      ) : (
+        <BubbleFrame info={info} touch={touch}>
+          <FileCard
+            name={file.name}
+            ext={extOf(file.name)}
+            size={file.size}
+            tone={ctx.tones.own}
+            tile={failed ? undefined : <UploadProgress localId={item.localId} size={theme.size.fileTile} />}
+          />
+          <PendingMeta at={item.queuedAt} tone={ctx.tones.own} />
+        </BubbleFrame>
+      )}
+      {failed && <FailedNote items={items} error={item.error || t('messenger:chat.uploadFailed')} />}
+    </View>
+  );
+}
+
+const PROGRESS_STROKE = 3;
+
+/** 上传进度环，中间的叉取消发送；只有这一块订阅进度，进度变化不重画整行 */
+function UploadProgress({ localId, size, scrim }: { localId: string; size: number; scrim?: boolean }) {
+  const t = useT();
+  const { theme } = useUnistyles();
+  const messenger = useMessenger();
+  const ratio = useStore(messenger!.uploadProgress, (s) => s[localId] ?? 0);
+  const center = size / 2;
+  const r = center - PROGRESS_STROKE;
+  const length = 2 * Math.PI * r;
+  return (
+    <Touchable
+      accessibilityRole="button"
+      accessibilityLabel={t('messenger:chat.cancelSend')}
+      onPress={() => messenger?.discardUpload(localId)}
+      style={({ pressed }) => [styles.progress(size), scrim && styles.progressScrim, pressed && styles.pressed]}
+    >
+      <Svg width={size} height={size} style={[StyleSheet.absoluteFill, RING_START]}>
+        <Circle cx={center} cy={center} r={r} stroke={theme.palette.tileProgress} strokeWidth={PROGRESS_STROKE} fill="none" />
+        <Circle
+          cx={center}
+          cy={center}
+          r={r}
+          stroke={theme.colors.onMedia}
+          strokeWidth={PROGRESS_STROKE}
+          fill="none"
+          strokeLinecap="round"
+          strokeDasharray={`${length * ratio} ${length}`}
+        />
+      </Svg>
+      <Icon icon={X} color={theme.colors.onMedia} size={theme.size.iconSmall} />
+    </Touchable>
   );
 }
 
@@ -587,6 +674,8 @@ const styles = StyleSheet.create((theme) => ({
     paddingHorizontal: theme.spacing.page, paddingVertical: theme.spacing.xs,
   },
   failedText: { ...theme.typography.caption, color: theme.colors.danger },
+  progress: (size: number) => ({ width: size, height: size, borderRadius: theme.radius.pill, alignItems: 'center', justifyContent: 'center' }),
+  progressScrim: { backgroundColor: theme.colors.mediaScrim },
   system: { alignSelf: 'center', maxWidth: '80%', paddingHorizontal: theme.spacing.page },
   systemText: { ...theme.typography.caption, color: theme.colors.text3, textAlign: 'center' },
   systemUser: { color: theme.colors.text2 },

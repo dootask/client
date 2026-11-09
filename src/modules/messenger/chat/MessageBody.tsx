@@ -1,7 +1,7 @@
 import { Image } from 'expo-image';
 import type { LucideIcon } from 'lucide-react-native';
 import {
-  File, FileArchive, FileCode, FileImage, FileMusic, FileSpreadsheet, FileText, FileVideoCamera, Pause, Play, Presentation,
+  File, FileArchive, FileCode, FileImage, FileMusic, FileSpreadsheet, FileText, FileVideoCamera, Film, Pause, Play, Presentation,
 } from 'lucide-react-native';
 import { useEffect, type ReactNode } from 'react';
 import { Text, View } from 'react-native';
@@ -9,6 +9,7 @@ import Animated, { useAnimatedStyle, useSharedValue, withDelay, withRepeat, with
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { useT } from '../../../i18n';
+import type { LocalFile } from '../../../sync/api';
 import type { MsgBody } from '../../../sync/messenger/body';
 import { Icon } from '../../../ui/Icon';
 import type { AppTheme } from '../../../ui/theme';
@@ -40,6 +41,25 @@ export function MediaBody({ body, overlay }: { body: Body<'image' | 'video'>; ov
         </View>
       )}
       {overlay}
+    </View>
+  );
+}
+
+/** 发送中的图片、视频：本地图按发出后的尺寸占位（视频本地没有封面，画一个图标）；children 盖在中间 */
+export function LocalMedia({ file, children }: { file: LocalFile; children?: ReactNode }) {
+  const { theme } = useUnistyles();
+  const media = file.media!;
+  const box = fitSize(media.width, media.height, MEDIA_BOX);
+  return (
+    <View style={[box, styles.media]}>
+      {media.kind === 'image' ? (
+        <Image source={file.uri} style={StyleSheet.absoluteFill} contentFit="cover" recyclingKey={file.uri} />
+      ) : (
+        <View style={[styles.center, styles.localVideo]}>
+          <Icon icon={Film} color={theme.colors.onMedia} size={theme.size.icon} />
+        </View>
+      )}
+      <View style={styles.center}>{children}</View>
     </View>
   );
 }
@@ -111,14 +131,14 @@ function fileKind(ext: string): [TileKind, LucideIcon] {
   return found ? [found[0], found[1]] : ['other', File];
 }
 
-/** 文件：左侧色块图标，右侧文件名和大小 */
-export function FileCard({ name, ext, size, tone }: { name: string; ext: string; size: number; tone: BubbleTone }) {
+/** 文件：左侧色块图标，右侧文件名和大小；发送中色块上换成进度（tile） */
+export function FileCard({ name, ext, size, tone, tile }: { name: string; ext: string; size: number; tone: BubbleTone; tile?: ReactNode }) {
   const { theme } = useUnistyles();
   const [kind, icon] = fileKind(ext);
   return (
     <View style={styles.fileCard}>
       <View style={[styles.tile, { backgroundColor: theme.palette.tile[kind] }]}>
-        <Icon icon={icon} color={theme.palette.onTile} size={theme.size.icon} />
+        {tile ?? <Icon icon={icon} color={theme.palette.onTile} size={theme.size.icon} />}
       </View>
       <View style={styles.fileText}>
         <Text style={[styles.fileName, { color: tone.text }]} numberOfLines={2}>{name}</Text>
@@ -184,6 +204,7 @@ const styles = StyleSheet.create((theme) => ({
   // 外层气泡留了 xs 内边距，圆角相应收一点，和气泡同心
   media: { borderRadius: theme.radius.bubble - theme.spacing.xs, overflow: 'hidden', backgroundColor: theme.colors.bubbleOverlay },
   center: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center' },
+  localVideo: { backgroundColor: theme.colors.mediaScrim },
   play: {
     width: theme.size.mediaPlay, height: theme.size.mediaPlay, borderRadius: theme.radius.pill,
     alignItems: 'center', justifyContent: 'center', backgroundColor: theme.colors.mediaScrim,

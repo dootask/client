@@ -1,13 +1,13 @@
 import * as Clipboard from 'expo-clipboard';
 import {
   Captions, Copy, Flag, FlagOff, Forward, Languages, ListChecks, ListTodo, ListX, Pencil, Pin, PinOff, Reply, RotateCw, SmilePlus, Star, StarOff,
-  TextSelect, Trash2, Undo2,
+  TextSelect, Trash2, Undo2, X,
 } from 'lucide-react-native';
 import { useMemo } from 'react';
 
 import { useT } from '../../../i18n';
 import type { Msg } from '../../../sync/api/dialog';
-import { htmlToText, type OutboxItem } from '../../../sync/messenger';
+import { htmlToText, type OutboxItem, type UploadItem } from '../../../sync/messenger';
 import type { MsgBody } from '../../../sync/messenger/body';
 import { confirmOnApp, type MenuAction, type MenuEntry } from '../../../ui/popover';
 import { showToast } from '../../../ui/Toast';
@@ -46,7 +46,7 @@ export interface MenuHandlers {
 
 /**
  * 消息的长按 / 右键菜单，分三组：① 回复、转发、复制等最常用的；② 处理这条消息（编辑、撤回、置顶、标注、待办、收藏）；
- * ③ 理解这条消息（翻译、转文字）。发送失败的消息：重新发送、删除
+ * ③ 理解这条消息（翻译、转文字）。发送失败的消息：重新发送、删除；发送中的文件：取消
  */
 export function useMessageMenus(handlers: MenuHandlers) {
   const t = useT();
@@ -168,6 +168,18 @@ export function useMessageMenus(handlers: MenuHandlers) {
       ];
     };
 
-    return { menu, pendingMenu };
+    // 发送中的文件：取消发送；失败的：重新发送、删除
+    const uploadMenu = (item: UploadItem): MenuEntry[] => {
+      if (!messenger) return [];
+      if (item.state === 'sending') {
+        return [{ label: t('messenger:chat.cancelSend'), icon: X, destructive: true, onSelect: () => messenger.discardUpload(item.localId) }];
+      }
+      return [
+        { label: t('messenger:chat.resend'), icon: RotateCw, onSelect: () => messenger.retryUpload(item.localId) },
+        { label: t('messenger:chat.delete'), icon: Trash2, destructive: true, onSelect: () => messenger.discardUpload(item.localId) },
+      ];
+    };
+
+    return { menu, pendingMenu, uploadMenu };
   }, [t, messenger, actions, errorText, handlers]);
 }

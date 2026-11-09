@@ -113,19 +113,53 @@ export function createApiClient(options: ApiClientOptions) {
   const doFetch = options.fetch ?? fetch;
   const hooks = options.hooks ?? {};
 
-  async function request<T = unknown>(path: string, opts: RequestOptions = {}): Promise<ApiResult<T>> {
+  function serverOf(): string {
     const server = options.getServer().replace(/\/+$/, '');
     if (!server) throw new ApiError('no-server', 0, 'No server address', {});
+    return server;
+  }
 
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
+  function baseHeaders(): Record<string, string> {
+    return {
       language: options.language(),
       'dootask-token': options.getToken(),
       fd: options.getFd?.() ?? '',
       version: options.version,
       platform: options.platform,
-      ...opts.headers,
     };
+  }
+
+  /** 按返回码处理响应：成功返回数据，特殊返回码触发全局钩子，其余抛出服务端错误。补填资料后用 retry 重发，没有 retry 的不提示补填 */
+  async function settle<T>(json: unknown, path: string, opts: { checkAuth?: boolean; checkProfile?: boolean }, token: string, retry?: () => Promise<ApiResult<T>>): Promise<ApiResult<T>> {
+    const ret = isRecord(json) ? Number(json.ret) : NaN;
+    if (!isRecord(json) || !Number.isFinite(ret)) {
+      throw new ApiError('invalid', 0, `Response of ${path} has no ret`, {});
+    }
+    const msg = typeof json.msg === 'string' ? json.msg : '';
+    const data = (json.data ?? {}) as T;
+
+    if (ret === RET.SUCCESS) return { data, msg };
+
+    if (ret === RET.AUTH_LOST && opts.checkAuth !== false) hooks.onAuthLost?.(msg, token);
+    if ((ret === RET.NEED_NICKNAME || ret === RET.NEED_TEL) && opts.checkProfile !== false && retry && hooks.onNeedProfile) {
+      const filled = await hooks.onNeedProfile(ret === RET.NEED_NICKNAME ? 'nickname' : 'tel').then(
+        () => true,
+        () => false,
+      );
+      if (filled) return retry();
+    }
+    if (ret in GONE) {
+      const [kind, key] = GONE[ret as keyof typeof GONE];
+      hooks.onGone?.(kind, idOf(data, key), data as Record<string, unknown>);
+    }
+    if (ret === RET.TASK_PARENT_STALE) hooks.onTaskParentStale?.(idOf(data, 'task_id'));
+
+    throw new ApiError('server', ret, msg, data);
+  }
+
+  async function request<T = unknown>(path: string, opts: RequestOptions = {}): Promise<ApiResult<T>> {
+    const server = serverOf();
+    const headers: Record<string, string> = { 'Content-Type': 'application/json', ...baseHeaders(), ...opts.headers };
 
     let method: ApiMethod = opts.method ?? 'get';
     let body = opts.data ? (serializeValue(opts.data) as Record<string, unknown>) : undefined;
@@ -165,33 +199,30 @@ export function createApiClient(options: ApiClientOptions) {
     if (encrypt && encryptor && isRecord(json) && typeof json.encrypted === 'string') {
       json = await encryptor.decrypt(json.encrypted);
     }
-    const ret = isRecord(json) ? Number(json.ret) : NaN;
-    if (!isRecord(json) || !Number.isFinite(ret)) {
-      throw new ApiError('invalid', 0, `Response of ${path} has no ret`, {});
-    }
-    const msg = typeof json.msg === 'string' ? json.msg : '';
-    const data = (json.data ?? {}) as T;
-
-    if (ret === RET.SUCCESS) return { data, msg };
-
-    if (ret === RET.AUTH_LOST && opts.checkAuth !== false) hooks.onAuthLost?.(msg, headers['dootask-token']);
-    if ((ret === RET.NEED_NICKNAME || ret === RET.NEED_TEL) && opts.checkProfile !== false && hooks.onNeedProfile) {
-      const filled = await hooks.onNeedProfile(ret === RET.NEED_NICKNAME ? 'nickname' : 'tel').then(
-        () => true,
-        () => false,
-      );
-      if (filled) return request<T>(path, opts);
-    }
-    if (ret in GONE) {
-      const [kind, key] = GONE[ret as keyof typeof GONE];
-      hooks.onGone?.(kind, idOf(data, key), data as Record<string, unknown>);
-    }
-    if (ret === RET.TASK_PARENT_STALE) hooks.onTaskParentStale?.(idOf(data, 'task_id'));
-
-    throw new ApiError('server', ret, msg, data);
+    return settle<T>(json, path, opts, headers['dootask-token']!, () => request<T>(path, opts));
   }
 
-  return { request };
+  /**
+   * 文件上传（multipart）由平台层传输，这里只给出地址和请求头、按返回码解析响应。
+   * 上传不走加密（W6 只加密 JSON 请求体）
+   */
+  function endpoint(path: string): { url: string; headers: Record<string, string> } {
+    return { url: `${serverOf()}/api/${path.replace(/^\/+/, '')}`, headers: baseHeaders() };
+  }
+
+  /** 解析上传的响应正文；token 是发出请求时带的 */
+  function parse<T = unknown>(path: string, status: number, body: string, token: string): Promise<ApiResult<T>> {
+    let json: unknown;
+    try {
+      json = JSON.parse(body);
+    } catch {
+      // 网关错误页这类非 JSON 响应按网络问题处理，可以重试
+      throw new ApiError('network', 0, `HTTP ${status}`, {});
+    }
+    return settle<T>(json, path, {}, token);
+  }
+
+  return { request, endpoint, parse };
 }
 
 export type ApiClient = ReturnType<typeof createApiClient>;

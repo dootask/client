@@ -3,7 +3,7 @@ import { afterAll, describe, expect, it, vi } from 'vitest';
 import { type ApiClient, createApiClient, userApi } from '../api';
 import { createSocket } from '../ws';
 import { bindMessengerApi, createMessenger, type IncomingMessage, type Messenger } from './engine';
-import { memoryCache, memoryKv } from './testing';
+import { memoryCache, memoryKv, noFiles } from './testing';
 
 /**
  * 消息数据层对真实服务端联调，默认跳过。需要两个账号：A 收消息（跑引擎），B 发消息。
@@ -50,7 +50,7 @@ describe.skipIf(!server || !emailB)('live messenger', () => {
     socket = createSocket({ getServer: () => server, getToken: () => a.token, language: () => 'zh', platform: 'web', heartbeatInterval: 0 });
     const opened = new Promise<void>((resolve) => socket.onOpen(({ fd }) => ((fdA = fd), resolve())));
 
-    messenger = createMessenger({ api: bindMessengerApi(a.client), socket, cache: memoryCache(), kv: memoryKv(), userId: a.userid });
+    messenger = createMessenger({ api: bindMessengerApi(a.client, noFiles), socket, cache: memoryCache(), kv: memoryKv(), userId: a.userid });
     const s = () => messenger.store.getState();
     await messenger.start();
     socket.connect();

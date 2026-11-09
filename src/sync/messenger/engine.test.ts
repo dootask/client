@@ -66,6 +66,8 @@ function fakeApi(over: Partial<MessengerApi> = {}): MessengerApi {
     withdraw: vi.fn(async () => {}),
     emoji: vi.fn(),
     myTodos: vi.fn(async () => []),
+    sendFile: vi.fn(),
+    forgetFile: vi.fn(),
     ...over,
   } as MessengerApi;
 }
@@ -334,6 +336,68 @@ describe('发送队列', () => {
     await settle(100);
     expect(s().outbox[0]!.state).toBe('failed');
     expect(sendText).not.toHaveBeenCalled();
+    m.stop();
+  });
+});
+
+describe('发文件', () => {
+  const file = (name: string) => ({ uri: `file:///${name}`, name, size: 100, mimeType: 'image/png' });
+
+  it('同一会话按顺序一个一个传，不同会话同时最多两个；进度单独记录，成功后换成发出的消息', async () => {
+    const pending: ((v: unknown) => void)[] = [];
+    let onProgress: ((ratio: number) => void) | undefined;
+    const sendFile = vi.fn(
+      (p: { dialogId: number; onProgress: (r: number) => void }) =>
+        new Promise((resolve) => {
+          onProgress ??= p.onProgress;
+          pending.push(resolve);
+        }),
+    );
+    const { m, s } = setup(fakeApi({ sendFile }));
+    await m.start();
+    m.sendFiles({ dialog_id: 10, files: [file('a'), file('b')], reply_id: 5 });
+    m.sendFiles({ dialog_id: 11, files: [file('c')] });
+    m.sendFiles({ dialog_id: 12, files: [file('d')] });
+    await settle(10);
+    expect(sendFile).toHaveBeenCalledTimes(2);
+    expect(sendFile.mock.calls.map((call) => call[0].dialogId)).toEqual([10, 11]);
+    expect(sendFile.mock.calls[0]![0]).toMatchObject({ replyId: 5 });
+    const [a] = s().uploads;
+    onProgress!(0.5);
+    expect(m.uploadProgress.getState()[a!.localId]).toBe(0.5);
+    pending[0]!(msg(400, { userid: ME, type: 'file' }));
+    await settle(10);
+    expect(sendFile).toHaveBeenCalledTimes(3);
+    expect(sendFile.mock.calls[2]![0]).toMatchObject({ dialogId: 10, file: { name: 'b' } });
+    expect(s().uploads).toHaveLength(3);
+    expect(s().sentKeys[400]).toBe(a!.localId);
+    expect(m.uploadProgress.getState()[a!.localId]).toBeUndefined();
+    m.stop();
+  });
+
+  it('失败的标失败等重发；取消时中止上传并清掉服务端会话', async () => {
+    let signal: AbortSignal | undefined;
+    const sendFile = vi
+      .fn()
+      .mockRejectedValueOnce(new ApiError('server', 0, '文件太大', null))
+      .mockImplementation((p: { signal: AbortSignal }) => {
+        signal = p.signal;
+        return new Promise(() => {});
+      });
+    const forgetFile = vi.fn();
+    const { m, s } = setup(fakeApi({ sendFile, forgetFile }));
+    await m.start();
+    m.sendFiles({ dialog_id: 10, files: [file('a')] });
+    await settle(10);
+    const [a] = s().uploads;
+    expect(a).toMatchObject({ state: 'failed', error: '文件太大' });
+    m.retryUpload(a!.localId);
+    await settle(10);
+    expect(s().uploads[0]!.state).toBe('sending');
+    m.discardUpload(a!.localId);
+    expect(signal!.aborted).toBe(true);
+    expect(s().uploads).toEqual([]);
+    expect(forgetFile).toHaveBeenCalledWith(a!.localId, a!.file);
     m.stop();
   });
 });

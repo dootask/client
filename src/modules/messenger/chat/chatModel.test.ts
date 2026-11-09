@@ -1,20 +1,28 @@
 import { describe, expect, it } from 'vitest';
 
 import type { Msg } from '../../../sync/api/dialog';
-import type { OutboxItem, WithdrawnMsg } from '../../../sync/messenger';
+import type { OutboxItem, UploadItem, WithdrawnMsg } from '../../../sync/messenger';
 import { buildRows, chained, msgRow, SYSTEM_AUTHOR } from './chatModel';
 
 const ME = 1;
 const msg = (id: number, patch: Partial<Msg> = {}): Msg => ({ id, dialog_id: 10, userid: 2, type: 'text', msg: {}, created_at: '2026-11-08 10:00:00', ...patch });
 const pending = (localId: string, dialog_id = 10): OutboxItem => ({ localId, dialog_id, text: 'x', queuedAt: 1, state: 'sending' });
 const hole = (id: number): WithdrawnMsg => ({ id, dialog_id: 10, text: 'x', md: false, created_at: '2026-11-08 10:00:00', at: 1 });
-const base = { outbox: [], withdrawn: [], sentKeys: {}, dialogId: 10, userId: ME };
+const upload = (localId: string, queuedAt: number): UploadItem => ({
+  localId, dialog_id: 10, file: { uri: 'u', name: 'a.txt', size: 1, mimeType: 'text/plain' }, queuedAt, state: 'sending',
+});
+const base = { outbox: [], uploads: [], withdrawn: [], sentKeys: {}, dialogId: 10, userId: ME };
 
 describe('聊天列表的行', () => {
   it('窗口在最新一端：发送中的排最前，新的在前', () => {
     const rows = buildRows({ ...base, list: [msg(5), msg(4)], outbox: [pending('a'), pending('b', 11), pending('c')] });
     expect(rows.map((r) => r.id)).toEqual(['c', 'a', '5', '4']);
     expect(rows[0]!.authorId).toBe('1');
+  });
+
+  it('发送中的文字和文件按入队时间合在一起', () => {
+    const rows = buildRows({ ...base, list: [msg(5)], outbox: [{ ...pending('a'), queuedAt: 2 }], uploads: [upload('f1', 1), upload('f2', 3)] });
+    expect(rows.map((r) => [r.id, r.data.kind])).toEqual([['f2', 'upload'], ['a', 'pending'], ['f1', 'upload'], ['5', 'msg']]);
   });
 
   it('窗口不在最新一端时不显示发送中的', () => {

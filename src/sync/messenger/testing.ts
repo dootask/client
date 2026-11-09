@@ -1,3 +1,4 @@
+import type { UploadIO } from '../api/upload';
 import type { CacheQuery, StructuredCache } from '../storage/types';
 import type { MessengerKv } from './engine';
 
@@ -50,3 +51,11 @@ export function memoryKv(): MessengerKv & { map: Map<string, string> } {
   };
 }
 
+
+/** 不发文件的测试用：读文件、上传都报错 */
+export const noFiles: UploadIO = {
+  md5: () => Promise.reject(new Error('no files')),
+  slice: () => Promise.reject(new Error('no files')),
+  post: () => Promise.reject(new Error('no files')),
+  release: () => {},
+};
