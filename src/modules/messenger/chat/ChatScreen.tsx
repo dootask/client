@@ -7,7 +7,7 @@ import { useStore } from 'zustand';
 
 import { dateFormats, useLanguage, useT } from '../../../i18n';
 import type { Msg } from '../../../sync/api/dialog';
-import { atLatest, hasEarlier, htmlToCompose, type Emoticon, type WithdrawnMsg } from '../../../sync/messenger';
+import { atLatest, composerBlock, hasEarlier, htmlToCompose, type Emoticon, type WithdrawnMsg } from '../../../sync/messenger';
 import type { MsgBody } from '../../../sync/messenger/body';
 import { ChatView, type ChatViewHandle, type MessageRenderInfo, type ScrollToBottomInfo } from '../../../ui/chat';
 import { Icon } from '../../../ui/Icon';
@@ -91,10 +91,13 @@ function ChatScreen({ dialogId, msgId }: { dialogId: number; msgId: number }) {
   const messenger = useMessenger();
   const errorText = useErrorText();
   const userId = useSession((s) => s.user?.userid ?? 0);
+  const isAdmin = useSession((s) => s.user?.identity.includes('admin') ?? false);
   const server = useSession((s) => s.server);
   /** 服务器根地址（带结尾的 /）：消息里的相对地址、表情包图片按它拼 */
   const origin = `${server}/`;
   const dialog = useDialog(dialogId);
+  const block = dialog ? composerBlock(dialog, isAdmin) : null;
+  const canSend = block == null;
   const win = useMessengerState((s) => s.windows[dialogId]);
   const outbox = useMessengerState((s) => s.outbox);
   const uploads = useMessengerState((s) => s.uploads);
@@ -207,8 +210,8 @@ function ChatScreen({ dialogId, msgId }: { dialogId: number; msgId: number }) {
   }, []);
   // useMessageMenus 只在选中菜单项时读取，不要求稳定
   const handlers: MenuHandlers = {
-    onReply,
-    onEdit: (msg: Msg) => setMode({ kind: 'edit', msg }),
+    onReply: canSend ? onReply : undefined,
+    onEdit: canSend ? (msg: Msg) => setMode({ kind: 'edit', msg }) : undefined,
     onForward: (msg: Msg) => openSheet({ kind: 'forward', msgIds: [msg.id] }),
     onSelectMany: (msg: Msg) => {
       Keyboard.dismiss();
@@ -252,7 +255,7 @@ function ChatScreen({ dialogId, msgId }: { dialogId: number; msgId: number }) {
     onLongPress: (row: RowRef, info: MessageRenderInfo<RowData>, msg: Msg, body: MsgBody) => {
       row.measureInWindow((x, y, width, height) => menuHost.current?.open({ anchor: { x, y, width, height }, info, msg, body }));
     },
-    onReply,
+    onReply: canSend ? onReply : undefined,
     onHover: (msg: Msg) => {
       if (actions && !(msg.id in (messenger?.store.getState().favorites ?? {}))) actions.checkFavorite(msg.id).catch(() => {});
     },
@@ -263,11 +266,13 @@ function ChatScreen({ dialogId, msgId }: { dialogId: number; msgId: number }) {
       const ok = extend ? selection.extend(msg.id, selectable.current) : selection.toggle(msg.id);
       if (!ok) showToast(t('messenger:selection.max', { n: SELECTION_MAX }));
     },
-    onReEdit: (item: WithdrawnMsg) => {
-      composerRef.current?.replace(item.md ? { text: item.text, mentions: [] } : htmlToCompose(item.text));
-      messenger?.forgetWithdrawn(item.id);
-    },
-  }), [dialog?.type, userId, origin, theme.colors, opening.unreadOne, menu, pendingMenu, uploadMenu, messenger, actions, onReact, jumpTo, onReply, openSheet, selection, t]);
+    onReEdit: canSend
+      ? (item: WithdrawnMsg) => {
+          composerRef.current?.replace(item.md ? { text: item.text, mentions: [] } : htmlToCompose(item.text));
+          messenger?.forgetWithdrawn(item.id);
+        }
+      : undefined,
+  }), [canSend, dialog?.type, userId, origin, theme.colors, opening.unreadOne, menu, pendingMenu, uploadMenu, messenger, actions, onReact, jumpTo, onReply, openSheet, selection, t]);
 
   const richHandlers = useMemo<RichHandlers>(() => ({
     onPressRun: (run) => {
@@ -314,7 +319,7 @@ function ChatScreen({ dialogId, msgId }: { dialogId: number; msgId: number }) {
     <View style={styles.root}>
       <RowContextValue.Provider value={rowContext}>
         <RichHandlersContext.Provider value={richHandlers}>
-          <ChatDropZone onFiles={attach.offer}>
+          <ChatDropZone onFiles={attach.offer} disabled={!canSend}>
             <ChatView
               ref={chatRef}
               messages={rows}
@@ -329,7 +334,11 @@ function ChatScreen({ dialogId, msgId }: { dialogId: number; msgId: number }) {
               }
               composer={
                 <BottomBar selection={selection} onForward={(msgIds) => openSheet({ kind: 'forward', msgIds })}>
-                  <Composer ref={composerRef} dialogId={dialogId} store={compose} pickerKeysRef={pickerKeysRef} mentionSession={mentionSession} mode={mode} onModeEnd={onModeEnd} onSent={onSent} attach={attach} extras={extras} voice={CAN_RECORD ? voice : null} />
+                  {block ? (
+                    <ComposerNotice text={t(block === 'muted' ? 'messenger:chat.muted' : 'messenger:chat.disabled')} />
+                  ) : (
+                    <Composer ref={composerRef} dialogId={dialogId} store={compose} pickerKeysRef={pickerKeysRef} mentionSession={mentionSession} mode={mode} onModeEnd={onModeEnd} onSent={onSent} attach={attach} extras={extras} voice={CAN_RECORD ? voice : null} />
+                  )}
                 </BottomBar>
               }
               bottomColor={theme.colors.surface}
@@ -474,6 +483,17 @@ function BottomBar({ selection, onForward, children }: { selection: Selection; o
   );
 }
 
+/** D15 不能发言时代替输入区：与输入框同高同底色，居中一行说明 */
+function ComposerNotice({ text }: { text: string }) {
+  return (
+    <View style={styles.notice}>
+      <View style={styles.noticeBody}>
+        <Text style={styles.noticeText} numberOfLines={1}>{text}</Text>
+      </View>
+    </View>
+  );
+}
+
 /** 回到底部：离开底部后新到的消息数 */
 function ScrollToBottom({ newCount }: { newCount: number }) {
   const t = useT();
@@ -543,6 +563,22 @@ const styles = StyleSheet.create((theme) => ({
   barCount: { ...theme.typography.callout, color: theme.colors.text, fontVariant: ['tabular-nums'] },
   barForward: (enabled: boolean) => ({ ...theme.typography.callout, fontWeight: '600', color: enabled ? theme.colors.primaryText : theme.colors.text4 }),
   pressed: { opacity: theme.opacity.pressedIcon },
+  notice: {
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.xs + (theme.size.touch - theme.size.chatInput) / 2,
+    backgroundColor: theme.colors.surface,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: theme.colors.separator,
+  },
+  noticeBody: {
+    minHeight: theme.size.chatInput,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: theme.spacing.md,
+    borderRadius: theme.radius.block,
+    backgroundColor: theme.colors.fill,
+  },
+  noticeText: { ...theme.typography.subhead, color: theme.colors.text3 },
   float: {
     width: theme.size.floatButton,
     height: theme.size.floatButton,

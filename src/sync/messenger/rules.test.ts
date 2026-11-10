@@ -10,6 +10,7 @@ import {
   badgeText,
   categoryUnread,
   compareDialog,
+  composerBlock,
   dialogNum,
   dialogUnread,
   earlierCursor,
@@ -231,5 +232,18 @@ describe('消息窗口', () => {
     const list = [msg(50), msg(49, { prev_id: 40 })];
     expect(applyAroundPage(list, [msg(40, { next_id: 49 }), msg(39)]).map((m) => m.id)).toEqual([50, 49, 40, 39]);
     expect(applyAroundPage(list, [msg(20, { next_id: 21 }), msg(19)]).map((m) => m.id)).toEqual([20, 19]);
+  });
+});
+
+describe('D15 composerBlock', () => {
+  it('禁言只拦普通成员，管理员照常发言', () => {
+    expect(composerBlock(dialog({ dialog_mute: 'close' }), false)).toBe('muted');
+    expect(composerBlock(dialog({ dialog_mute: 'close' }), true)).toBeNull();
+    expect(composerBlock(dialog({ dialog_mute: 'open' }), false)).toBeNull();
+  });
+  it('对方停用：布尔、停用时间、1 都算；禁言优先', () => {
+    for (const is_disable of [true, 1, '2026-11-01 10:00:00']) expect(composerBlock(dialog({ type: 'user', is_disable }), true)).toBe('disabled');
+    expect(composerBlock(dialog({ type: 'user', is_disable: false }), false)).toBeNull();
+    expect(composerBlock(dialog({ type: 'user', is_disable: 1, dialog_mute: 'close' }), false)).toBe('muted');
   });
 });

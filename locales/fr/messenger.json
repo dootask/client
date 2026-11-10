@@ -130,7 +130,9 @@
     "cancelSend": "Annuler l'envoi",
     "dropHint": "Déposez pour envoyer",
     "searchSticker": "Rechercher des émojis",
-    "noSticker": "Aucun autocollant trouvé"
+    "noSticker": "Aucun autocollant trouvé",
+    "muted": "Parole interdite",
+    "disabled": "Ce compte a été désactivé"
   },
   "system": {
     "tagAdd": "Marqué",

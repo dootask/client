@@ -130,7 +130,9 @@
     "cancelSend": "取消发送",
     "dropHint": "松开发送",
     "searchSticker": "搜索表情",
-    "noSticker": "没有搜索到任何表情"
+    "noSticker": "没有搜索到任何表情",
+    "muted": "禁言发言",
+    "disabled": "此账号已停用"
   },
   "system": {
     "tagAdd": "标注了",

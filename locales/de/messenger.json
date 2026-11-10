@@ -130,7 +130,9 @@
     "cancelSend": "Senden abbrechen",
     "dropHint": "Zum Senden loslassen",
     "searchSticker": "Emojis suchen",
-    "noSticker": "Keine Sticker gefunden"
+    "noSticker": "Keine Sticker gefunden",
+    "muted": "Redeverbot",
+    "disabled": "Dieses Konto wurde deaktiviert"
   },
   "system": {
     "tagAdd": "Markiert",

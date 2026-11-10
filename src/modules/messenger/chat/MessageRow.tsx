@@ -46,8 +46,8 @@ export interface RowContext {
   uploadMenu: (item: UploadItem) => readonly MenuEntry[];
   /** App 长按：row 是整行（量位置浮起重画） */
   onLongPress: (row: RowRef, info: MessageRenderInfo<RowData>, msg: Msg, body: MsgBody) => void;
-  /** 右滑（App）、悬停条（Web）回复 */
-  onReply: (msg: Msg) => void;
+  /** 右滑（App）、悬停条（Web）回复；不能发言时没有 */
+  onReply?: (msg: Msg) => void;
   /** Web 鼠标移上来：预取菜单要用的收藏状态 */
   onHover: (msg: Msg) => void;
   /** 点气泡：打开图片、文件，播放语音，查看全文 */
@@ -60,7 +60,8 @@ export interface RowContext {
   onTranslation: (msg: Msg) => void;
   /** 群里点自己消息的已读圆环：已读名单 */
   onReadList: (msgId: number) => void;
-  onReEdit: (item: WithdrawnMsg) => void;
+  /** 撤回后重新编辑；不能发言时没有 */
+  onReEdit?: (item: WithdrawnMsg) => void;
   /** 多选：行只订阅自己是否选中 */
   selection: Selection['store'];
   /** 多选时点一条；extend 是按住 Shift（Web）连选 */
@@ -258,7 +259,7 @@ function MsgRow({ info, msg }: { info: MessageRenderInfo<RowData>; msg: Msg }) {
     onPress,
     menu: () => ctx.menu(msg, body, isOwn),
     onLongPress: (row) => ctx.onLongPress(row, info, msg, body),
-    onReply: () => ctx.onReply(msg),
+    onReply: ctx.onReply && (() => ctx.onReply?.(msg)),
     onDoubleTap: () => ctx.onReact(msg, LIKE),
     onReact: (symbol) => ctx.onReact(msg, symbol),
     onHover: () => ctx.onHover(msg),
@@ -620,8 +621,12 @@ function WithdrawnRow({ item }: { item: WithdrawnMsg }) {
     <View style={styles.system}>
       <Text style={styles.systemText}>
         {t('messenger:system.withdrawSelf')}
-        {'  '}
-        <Text style={styles.link} onPress={() => ctx.onReEdit(item)}>{t('messenger:chat.reEdit')}</Text>
+        {ctx.onReEdit && (
+          <>
+            {'  '}
+            <Text style={styles.link} onPress={() => ctx.onReEdit?.(item)}>{t('messenger:chat.reEdit')}</Text>
+          </>
+        )}
       </Text>
     </View>
   );

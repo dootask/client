@@ -66,6 +66,10 @@ export const dialogSchema = z.looseObject({
   email: str.nullish(),
   userimg: str.nullish(),
   dialog_delete: num.nullish(),
+  /** 禁言设置（系统设置里按单聊、个人群、全员群分别配）：'close' 时只有管理员能发言 */
+  dialog_mute: str.nullish(),
+  /** 单聊对方已停用或已删除：布尔、停用时间或 1，按真假判断 */
+  is_disable: z.union([z.boolean(), num, str]).nullish(),
 });
 export type Dialog = z.output<typeof dialogSchema>;
 

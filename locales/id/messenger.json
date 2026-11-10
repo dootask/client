@@ -130,7 +130,9 @@
     "cancelSend": "Batalkan pengiriman",
     "dropHint": "Lepas untuk mengirim",
     "searchSticker": "Cari Emoji",
-    "noSticker": "Tidak ada stiker ditemukan"
+    "noSticker": "Tidak ada stiker ditemukan",
+    "muted": "Bisu",
+    "disabled": "Akun ini telah dinonaktifkan"
   },
   "system": {
     "tagAdd": "Ditandai",

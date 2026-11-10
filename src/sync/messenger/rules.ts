@@ -77,6 +77,13 @@ export function isAiBotDialog(d: Dialog): boolean {
   return d.type === 'user' && !!d.bot && /^ai-[^@]+@bot\.system$/.test(d.email ?? '');
 }
 
+/** D15 输入区换成提示条的原因：禁言（管理员不受限）优先于对方账号停用 */
+export function composerBlock(d: Dialog, isAdmin: boolean): 'muted' | 'disabled' | null {
+  if (d.dialog_mute === 'close' && !isAdmin) return 'muted';
+  if (d.is_disable) return 'disabled';
+  return null;
+}
+
 export type DialogCategory = 'project' | 'task' | 'user' | 'group' | 'bot' | 'mention';
 
 /** R7 会话属于哪个分类（「全部」「标注」不在这里判断） */

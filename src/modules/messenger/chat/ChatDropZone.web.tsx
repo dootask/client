@@ -8,14 +8,15 @@ import { DropZone } from '../../../ui/DropZone';
 
 /**
  * 聊天区（Web）：文件拖进来松手、往页面里粘贴文件（截图、复制的文件）都交给 onFiles。
- * 粘贴只认带文件的，纯文字照常粘进输入框
+ * 粘贴只认带文件的，纯文字照常粘进输入框；disabled（不能发言）时都不接
  */
-export function ChatDropZone({ onFiles, children }: { onFiles: (files: PickedFile[]) => void; children: ReactNode }) {
+export function ChatDropZone({ onFiles, disabled, children }: { onFiles: (files: PickedFile[]) => void; disabled: boolean; children: ReactNode }) {
   const t = useT();
   const take = (files: File[]) => void fromBrowserFiles(files).then(onFiles);
   const onPasteFiles = useEffectEvent(take);
 
   useEffect(() => {
+    if (disabled) return;
     const onPaste = (event: ClipboardEvent) => {
       const files = Array.from(event.clipboardData?.files ?? []);
       if (files.length === 0) return;
@@ -24,10 +25,10 @@ export function ChatDropZone({ onFiles, children }: { onFiles: (files: PickedFil
     };
     document.addEventListener('paste', onPaste);
     return () => document.removeEventListener('paste', onPaste);
-  }, []);
+  }, [disabled]);
 
   return (
-    <DropZone label={t('messenger:chat.dropHint')} onFiles={take} style={styles.root}>
+    <DropZone label={t('messenger:chat.dropHint')} onFiles={take} disabled={disabled} style={styles.root}>
       {children}
     </DropZone>
   );

@@ -32,10 +32,10 @@ export function plainText(msg: Msg, body: MsgBody): string {
   return data.type === 'md' ? text : htmlToCompose(text).text;
 }
 
-/** 菜单里要聊天页接手的操作（打开输入栏模式、弹层、多选） */
+/** 菜单里要聊天页接手的操作（打开输入栏模式、弹层、多选）；不能发言时没有回复、编辑 */
 export interface MenuHandlers {
-  onReply: (msg: Msg) => void;
-  onEdit: (msg: Msg) => void;
+  onReply?: (msg: Msg) => void;
+  onEdit?: (msg: Msg) => void;
   onForward: (msg: Msg) => void;
   onSelectMany: (msg: Msg) => void;
   onSelectText: (text: string) => void;
@@ -75,7 +75,9 @@ export function useMessageMenus(handlers: MenuHandlers) {
       const text = plainText(msg, body);
       const { tag, todo } = msgExtra(msg);
 
-      const main: MenuAction[] = [{ label: t('messenger:chat.reply'), icon: Reply, onSelect: () => latest.current.onReply(msg) }];
+      const { onReply, onEdit } = latest.current;
+      const main: MenuAction[] = [];
+      if (onReply) main.push({ label: t('messenger:chat.reply'), icon: Reply, onSelect: () => onReply(msg) });
       if (menuTraits.reactSubmenu) {
         main.push({
           label: t('messenger:chat.react'),
@@ -91,7 +93,7 @@ export function useMessageMenus(handlers: MenuHandlers) {
       if (forwardable(msg)) main.push({ label: t('messenger:action.selectMany'), icon: ListChecks, onSelect: () => latest.current.onSelectMany(msg) });
 
       const manage: MenuAction[] = [];
-      if (own && msg.type === 'text') manage.push({ label: t('messenger:chat.edit'), icon: Pencil, onSelect: () => latest.current.onEdit(msg) });
+      if (own && msg.type === 'text' && onEdit) manage.push({ label: t('messenger:chat.edit'), icon: Pencil, onSelect: () => onEdit(msg) });
       if (own) {
         manage.push({
           label: t('messenger:chat.withdraw'),

@@ -130,7 +130,9 @@
     "cancelSend": "Cancel sending",
     "dropHint": "Drop to send",
     "searchSticker": "Search Emojis",
-    "noSticker": "No stickers found"
+    "noSticker": "No stickers found",
+    "muted": "Mute Speaking",
+    "disabled": "This account has been deactivated"
   },
   "system": {
     "tagAdd": "Marked",

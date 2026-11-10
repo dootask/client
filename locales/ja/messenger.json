@@ -130,7 +130,9 @@
     "cancelSend": "送信をキャンセル",
     "dropHint": "ドロップして送信",
     "searchSticker": "絵文字を検索",
-    "noSticker": "スタンプが見つかりませんでした"
+    "noSticker": "スタンプが見つかりませんでした",
+    "muted": "発言禁止",
+    "disabled": "このアカウントは停止されました"
   },
   "system": {
     "tagAdd": "マークされました",
