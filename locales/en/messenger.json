@@ -296,5 +296,21 @@
     "entry": "Call",
     "confirm": "Call ({{name}})?",
     "action": "Make a call"
+  },
+  "editor": {
+    "expand": "Full-screen editing",
+    "collapse": "Collapse",
+    "done": "Complete",
+    "insertLink": "Insert Link",
+    "linkPlaceholder": "Please enter the complete link address",
+    "bold": "Bold",
+    "strike": "Strikethrough",
+    "italic": "Italic",
+    "underline": "Underline",
+    "quote": "Quote",
+    "link": "Link",
+    "ordered": "Ordered list",
+    "bullet": "Unordered list",
+    "check": "To-Do"
   }
 }

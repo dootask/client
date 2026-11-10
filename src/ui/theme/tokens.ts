@@ -169,11 +169,17 @@ const size = {
   listPaneMax: 480,
   /** 宽屏居中弹窗 */
   dialogWidth: 480,
+  /** 全屏编辑：中屏、宽屏上弹窗的宽度，格式工具栏的按钮宽 */
+  editorWidth: 720,
+  toolButton: 36,
   icon: 22,
   /** 底部弹层顶部的拖拽条 */
   grabberWidth: 36,
   grabberHeight: 5,
   iconSmall: 18,
+  /** 小圆钮（输入栏的全屏编辑按钮）和里面的图标 */
+  miniButton: 24,
+  iconTiny: 14,
   /** 自绘菜单（Web / 桌面）的行高和宽度范围 */
   menuRow: 32,
   menuMinWidth: 180,

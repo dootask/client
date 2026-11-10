@@ -1,7 +1,8 @@
 /**
  * 输入栏内容：纯文本 + mentions（@成员、#任务、~文件、%报告 的 id），与消息 HTML 互转。
  * mention 在文本里是「符号 + 名称」，mentions 按出现顺序排列，转 HTML 时依次在文本里认领。
- * 发送、草稿都存 HTML（与旧前端的编辑器格式一致，草稿两端通用）：一行一个段落
+ * 发送、草稿都存 HTML（与旧前端的编辑器格式一致，草稿两端通用）：一行一个段落。
+ * 带格式的内容（全屏编辑器写的、带格式的草稿和消息）另存编辑器 HTML，输入栏只读预览，改动都去全屏编辑
  */
 
 export type MentionChar = '@' | '#' | '~' | '%';
@@ -18,6 +19,8 @@ export interface Mention {
 export interface ComposeValue {
   text: string;
   mentions: Mention[];
+  /** 带格式时的编辑器 HTML；text、mentions 是它的纯文本（判断能否发送、Markdown 识别、预览） */
+  html?: string;
 }
 
 export const EMPTY_COMPOSE: ComposeValue = { text: '', mentions: [] };
@@ -117,7 +120,7 @@ export function composeSegments(value: ComposeValue): { text: string; mention: b
 }
 
 export function sameCompose(a: ComposeValue, b: ComposeValue): boolean {
-  return a.text === b.text && JSON.stringify(a.mentions) === JSON.stringify(b.mentions);
+  return a.text === b.text && JSON.stringify(a.mentions) === JSON.stringify(b.mentions) && a.html === b.html;
 }
 
 const ESCAPES: Record<string, string> = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' };
@@ -131,8 +134,9 @@ function mentionHtml({ char, id, name }: Mention) {
   return `<span class="mention" data-denotation-char="${char}" data-id="${id}" data-value="${value}">﻿<span contenteditable="false"><span class="ql-mention-denotation-char">${char}</span>${value}</span>﻿</span>`;
 }
 
-/** 输入栏内容 → HTML：每行一个 `<p>`，空行写 `<br>`；首尾空行去掉 */
-export function composeToHtml({ text, mentions }: ComposeValue): string {
+/** 输入栏内容 → HTML：带格式的用编辑器 HTML；否则每行一个 `<p>`，空行写 `<br>`，首尾空行去掉 */
+export function composeToHtml({ text, mentions, html: rich }: ComposeValue): string {
+  if (rich) return rich;
   const trimmed = text.replace(/\r\n?/g, '\n').replace(/^\n+|\s+$/g, '');
   let html = '';
   let pos = 0;
@@ -156,7 +160,16 @@ const attr = (attrs: string, name: string) => attrs.match(new RegExp(`${name}="(
 /** 占位符：私用区字符包住 mention 的序号，转纯文本时原样保留 */
 const SLOT = /(\d+)/g;
 
-/** HTML → 输入栏内容：段落、换行变成换行，表情图换成 [名字]，mention 记进 mentions，其余标签去掉 */
+/**
+ * 输入栏能表达的标签：段落、换行、表情图（变成 [名字]），已发出消息里的文件、报告链接（当文字）；
+ * @ 和 # 的 mention 在检查前已换成占位符
+ */
+const PLAIN_TAG = /^<\/?(p|br)\s*\/?>$|^<img\s+class="emoticon"|^<a\s+class="mention |^<\/a>$/i;
+
+/**
+ * HTML → 输入栏内容：段落、换行变成换行，表情图换成 [名字]，mention 记进 mentions，其余标签去掉。
+ * 还有别的标签（加粗、列表、链接、图片等）时是带格式的内容，原 HTML 留在 html 里
+ */
 export function htmlToCompose(html: string): ComposeValue {
   const found: Mention[] = [];
   const slot = (mention: Mention | null, raw: string) => {
@@ -173,6 +186,7 @@ export function htmlToCompose(html: string): ComposeValue {
       const name = unescapeHtml(content).replace(/﻿/g, '');
       return slot(name.startsWith(char) ? { char, id: Number(id), name: name.slice(1) } : null, raw);
     });
+  const rich = (marked.match(/<[^>]*>/g) ?? []).some((tag) => !PLAIN_TAG.test(tag));
   const text = unescapeHtml(
     marked
       .replace(/<img\s+class="emoticon"[^>]*?alt="([^"]+)"[^>]*?>/g, '[$1]')
@@ -189,7 +203,7 @@ export function htmlToCompose(html: string): ComposeValue {
     mentions.push(mention);
     return mention.char + mention.name;
   });
-  return { text: restored, mentions };
+  return rich ? { text: restored, mentions, html } : { text: restored, mentions };
 }
 
 /** Markdown 语法的特征和分量：标题、代码块、链接最像，列表、引用这类普通文字里也常见的只占一点（与旧前端 detectMarkdownSyntaxWeight 一致） */
@@ -207,9 +221,9 @@ const MARKDOWN_SIGNS: readonly [RegExp, number][] = [
   [/^>\s+.+$/m, 0.1],
 ];
 
-/** 默认发送时是否按 Markdown 发：带 mention 的不算（Markdown 发的是纯文字，mention 会丢），其余按语法特征累计分量 */
-export function looksLikeMarkdown({ text, mentions }: ComposeValue): boolean {
-  if (mentions.length > 0) return false;
+/** 默认发送时是否按 Markdown 发：带 mention、带格式的不算（Markdown 发的是纯文字，mention 和格式会丢），其余按语法特征累计分量 */
+export function looksLikeMarkdown({ text, mentions, html }: ComposeValue): boolean {
+  if (mentions.length > 0 || html) return false;
   const weight = MARKDOWN_SIGNS.reduce((sum, [regex, w]) => (regex.test(text) ? sum + w : sum), 0);
   return weight >= 0.3;
 }

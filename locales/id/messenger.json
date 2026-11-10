@@ -296,5 +296,21 @@
     "entry": "Telepon",
     "confirm": "Telepon ({{name}})?",
     "action": "Lakukan panggilan"
+  },
+  "editor": {
+    "expand": "Edit layar penuh",
+    "collapse": "Ciutkan",
+    "done": "Selesai",
+    "insertLink": "Sisipkan Tautan",
+    "linkPlaceholder": "Silakan masukkan alamat tautan lengkap",
+    "bold": "Tebal",
+    "strike": "Coret",
+    "italic": "Miring",
+    "underline": "Garis Bawah",
+    "quote": "Kutipan",
+    "link": "Tautan",
+    "ordered": "Daftar berurutan",
+    "bullet": "Daftar tidak berurutan",
+    "check": "Tugas"
   }
 }

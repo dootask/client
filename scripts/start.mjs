@@ -21,6 +21,9 @@ if (!(await isPortFree(PORT))) {
   process.exit(1);
 }
 
+// App 全屏编辑页的内联脚本（改了 src/embed/editor/core.ts 后重启 Metro 即重新生成）
+await import('./editor-page.mjs');
+
 const env = { ...process.env };
 if (!env.EXPO_PACKAGER_PROXY_URL && env.VSCODE_PROXY_URI) {
   env.EXPO_PACKAGER_PROXY_URL = env.VSCODE_PROXY_URI.replace('{{port}}', String(PORT)).replace(/\/+$/, '');

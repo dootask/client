@@ -6,13 +6,13 @@
     "start": "node scripts/start.mjs",
     "web:export": "expo export --platform web",
     "web:preview": "node scripts/serve-web.mjs",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "node scripts/editor-page.mjs && tsc --noEmit",
     "lint": "eslint . --max-warnings 0",
     "test": "vitest run",
     "check": "npm run typecheck && npm run lint && npm run test && npm run i18n:check",
     "i18n:check": "node scripts/check-i18n.mjs",
     "i18n:find": "node scripts/i18n-find.mjs",
-    "postinstall": "patch-package"
+    "postinstall": "patch-package && node scripts/editor-page.mjs"
   },
   "dependencies": {
     "@expo/metro-runtime": "~58.0.14",
@@ -46,6 +46,8 @@
     "i18next": "^27.0.1",
     "lucide-react-native": "1.66.0",
     "markdown-it": "^14.3.3",
+    "quill-hi": "2.0.0-rc1",
+    "quill-mention-hi": "4.0.0-10",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "react-i18next": "^18.0.0",

@@ -19,7 +19,7 @@ const QUICK_IDLE_FADE = 800;
 
 /**
  * 快捷表情：输入的文字恰好是某个表情包的名称或关键词时，在输入栏上方横排列出，点按直接发送并清空输入。
- * 编辑消息、带 @ 等提及时不出；origin 是服务器根地址（带结尾的 /）
+ * 编辑消息、带 @ 等提及、带格式时不出；origin 是服务器根地址（带结尾的 /）
  */
 export function QuickEmoticons({ store, origin, enabled, onPick }: {
   store: ComposeStore;
@@ -29,7 +29,7 @@ export function QuickEmoticons({ store, origin, enabled, onPick }: {
 }) {
   const { theme } = useUnistyles();
   const { value, cursor } = useComposeState(store);
-  const keyword = enabled && value.mentions.length === 0 && !mentionQuery(value, cursor, PICKER_CHARS) ? quickKeyword(value.text) : '';
+  const keyword = enabled && !value.html && value.mentions.length === 0 && !mentionQuery(value, cursor, PICKER_CHARS) ? quickKeyword(value.text) : '';
   const items = useMemo(() => matchEmoticons(emoticonPacks(origin), keyword), [origin, keyword]);
   const quick = useQuickShown(value.text, cursor, items.length > 0);
   if (!quick.shown) return null;

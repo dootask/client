@@ -33,7 +33,7 @@ const MAX_ROWS = 4.5;
 /** 边打字边搜，停下来才发请求 */
 const SEARCH_DELAY = 250;
 /** 机器人命令只在 / 写在内容开头、内容不长时出（与旧前端一致） */
-const BOT_COMMAND_MAX_TEXT = 100;
+export const BOT_COMMAND_MAX_TEXT = 100;
 
 const ICONS: Partial<Record<PickerChar, LucideIcon>> = { '#': ListTodo, '~': FileText, '%': ClipboardList, '/': SquareSlash };
 /** / 菜单里换成另一种候选的项，图标同那种候选 */
@@ -179,6 +179,11 @@ const CHARS: readonly MentionChar[] = ['#', '~', '%'];
 const GROUP_CHARS: readonly MentionChar[] = ['@', ...CHARS];
 const BOT_MANAGER_EMAIL = 'bot-manager@bot.system';
 
+/** 会话里可用的候选符号：单聊没有 @，都有 / 快捷菜单 */
+export function pickerChars(dialog: StoredDialog | undefined): PickerChar[] {
+  return [...(dialog?.type === 'group' ? GROUP_CHARS : CHARS), '/'];
+}
+
 /** 输入 / 时可用的机器人命令：机器人管理员会话（含管理命令）或自己创建的机器人单聊 */
 function botCommandsOf(dialog: StoredDialog | undefined, userId: number): 'manager' | 'own' | null {
   if (dialog?.type !== 'user' || !dialog.bot) return null;
@@ -186,10 +191,39 @@ function botCommandsOf(dialog: StoredDialog | undefined, userId: number): 'manag
   return dialog.bot === userId ? 'own' : null;
 }
 
+/** 正在输入的候选查询；commands 为能出机器人命令（/ 写在内容开头、内容不长） */
+export interface PickerQuery {
+  char: PickerChar;
+  query: string;
+  commands: boolean;
+}
+
 /**
- * 输入栏上方的浮层：光标前正在输入 @ # ~ % 时弹出对应候选，输入 / 时弹出快捷菜单。
- * 一直挂着（候选数据跨多次弹出保留），没有候选也不在加载时不显示
+ * 候选浮层：@ # ~ % 弹出对应候选，/ 弹出快捷菜单。一直挂着（候选数据跨多次弹出保留），没有候选也不在加载时不显示。
+ * 输入栏和全屏编辑共用，查询由调用方给
  */
+export function MentionCandidates({ query, dialog, session, userId, keysRef, onPick, onDismiss }: {
+  query: PickerQuery | null;
+  dialog: StoredDialog | undefined;
+  session: MentionSession;
+  userId: number;
+  keysRef: PickerKeys;
+  onPick: (char: PickerChar, item: Candidate) => void;
+  /** Web 上按 Esc 收起 */
+  onDismiss: () => void;
+}) {
+  const chars = pickerChars(dialog).filter((char) => char !== '/');
+  const slash = query?.char === '/';
+  const slashSections = useSlashSections(slash ? query.query : '', chars, slash && query.commands ? botCommandsOf(dialog, userId) : null);
+  const remote = useMentionSections(query && !slash ? { char: query.char as MentionChar, query: query.query } : null, session, userId);
+  if (!query) return null;
+  const sections = slash ? slashSections : remote.sections;
+  const loading = !slash && remote.loading;
+  if (sections.length === 0 && !loading) return null;
+  return <PickerCard sections={sections} loading={loading} char={query.char} keysRef={keysRef} onPick={onPick} onDismiss={onDismiss} />;
+}
+
+/** 输入栏上方的候选：光标前正在输入的查询；带格式的内容在全屏编辑里改，这里不弹 */
 export function MentionAccessory({ store, dialog, session, userId, keysRef, onPick }: {
   store: ComposeStore;
   dialog: StoredDialog | undefined;
@@ -200,28 +234,21 @@ export function MentionAccessory({ store, dialog, session, userId, keysRef, onPi
   onPick: (start: number, char: PickerChar, item: Candidate) => void;
 }) {
   const { value, cursor } = useComposeState(store);
-  const chars = dialog?.type === 'group' ? GROUP_CHARS : CHARS;
-  const found = mentionQuery(value, cursor, [...chars, '/']);
+  const found = value.html ? null : mentionQuery(value, cursor, pickerChars(dialog));
   // Esc 收起的那个符号不再弹，换了位置或删掉后恢复
   const [dismissed, setDismissed] = useState<number | null>(null);
   if (dismissed !== null && found?.start !== dismissed) setDismissed(null);
   const query = found && found.start !== dismissed ? found : null;
-  const slash = query?.char === '/';
-  const atStart = slash && !value.text.slice(0, query.start).trim() && value.text.length <= BOT_COMMAND_MAX_TEXT;
-  const slashSections = useSlashSections(slash ? query.query : '', chars, atStart ? botCommandsOf(dialog, userId) : null);
-  const remote = useMentionSections(query && !slash ? { char: query.char as MentionChar, query: query.query } : null, session, userId);
-  if (!query) return null;
-  const sections = slash ? slashSections : remote.sections;
-  const loading = !slash && remote.loading;
-  if (sections.length === 0 && !loading) return null;
+  const commands = !!query && !value.text.slice(0, query.start).trim() && value.text.length <= BOT_COMMAND_MAX_TEXT;
   return (
-    <PickerCard
-      sections={sections}
-      loading={loading}
-      char={query.char}
+    <MentionCandidates
+      query={query && { char: query.char, query: query.query, commands }}
+      dialog={dialog}
+      session={session}
+      userId={userId}
       keysRef={keysRef}
-      onPick={(char, item) => onPick(query.start, char, item)}
-      onDismiss={() => setDismissed(query.start)}
+      onPick={(char, item) => query && onPick(query.start, char, item)}
+      onDismiss={() => query && setDismissed(query.start)}
     />
   );
 }

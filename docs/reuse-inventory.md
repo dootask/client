@@ -116,7 +116,7 @@
 | --- | --- | --- |
 | `@react-native+virtualized-lists+0.88.0.patch` | 直接搬 | 列表开头插入时跳位（性能规范第 13 条） |
 | `react-native-keyboard-controller+1.22.7.patch` + `react-native-screens+4.30.0.patch` | 直接搬 | 一对：iOS 侧滑返回前立刻收起键盘 |
-| `react-native-webview+14.0.1.patch` | 改造后搬 | 384 行，混了两类：音视频权限回调、Android 程序聚焦弹键盘、iOS 键盘滚动露出输入框（嵌入页需要，保留）；长按消费、文档起始脚本注册顺序（为旧前端和 eeui，去掉）。W10 用到 WebView 时拆 |
+| `react-native-webview+14.0.1.patch` | 改造后搬 | 原 384 行，混了两类：音视频权限回调、Android 程序聚焦弹键盘、iOS 键盘滚动露出输入框（嵌入页需要）；长按消费、文档起始脚本注册顺序（为旧前端和 eeui，去掉）。D14 已拆出「Android 程序聚焦弹键盘」一段（`requestFocus` 后 `showSoftInput`）；其余随用到的嵌入页再搬 |
 | `expo-audio+58.0.11.patch` | 直接搬 | 录音时允许触感，M1 语音消息 |
 | `react-native-agora+4.6.4.patch` | 直接搬 | 头文件路径，随会议 |
 

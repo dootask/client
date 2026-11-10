@@ -296,5 +296,21 @@
     "entry": "打电话",
     "confirm": "是否拨打电话给 ({{name}})？",
     "action": "拨打电话"
+  },
+  "editor": {
+    "expand": "全屏编辑",
+    "collapse": "收起",
+    "done": "完成",
+    "insertLink": "插入链接",
+    "linkPlaceholder": "请输入完整的链接地址",
+    "bold": "粗体",
+    "strike": "删除线",
+    "italic": "斜体",
+    "underline": "下划线",
+    "quote": "引用",
+    "link": "链接",
+    "ordered": "有序列表",
+    "bullet": "无序列表",
+    "check": "待办"
   }
 }

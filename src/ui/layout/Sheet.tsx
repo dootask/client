@@ -1,5 +1,5 @@
 import { X } from 'lucide-react-native';
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { ActivityIndicator, Modal, Pressable, Text, View } from 'react-native';
 import { GestureDetector, GestureHandlerRootView, usePanGesture } from 'react-native-gesture-handler';
 import Animated, { type CSSTransitionProperties, runOnJS, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
@@ -46,6 +46,8 @@ export interface SheetProps {
   fill?: boolean;
   /** 弹层展开后：要弹键盘的聚焦放在这里（安卓上弹层窗口拿到焦点前聚焦，输入框有焦点但不弹键盘） */
   onShow?: () => void;
+  /** 关闭动画放完、弹层卸载后：要把焦点还给底下的输入框放在这里（弹层还在时聚焦会被它收走） */
+  onHidden?: () => void;
   children: ReactNode;
 }
 
@@ -54,7 +56,7 @@ export interface SheetProps {
  * 点遮罩、系统返回键、Web 上按 Esc 都会调 onClose。不打开不渲染，关闭动画放完才卸载。
  * 键盘弹出时整体抬到键盘上方
  */
-export function Sheet({ visible, onClose, title, wide = 'center', confirm, fill = false, onShow, children }: SheetProps) {
+export function Sheet({ visible, onClose, title, wide = 'center', confirm, fill = false, onShow, onHidden, children }: SheetProps) {
   const t = useT();
   const { theme } = useUnistyles();
   const form: Form = useBreakpoint() === 'xs' ? 'bottom' : wide;
@@ -62,6 +64,19 @@ export function Sheet({ visible, onClose, title, wide = 'center', confirm, fill 
   const [shown, setShown] = useState(false);
   const drag = useSharedValue(0);
   const showTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const hidden = useRef(onHidden);
+  useLayoutEffect(() => {
+    hidden.current = onHidden;
+  });
+  // 卸载之后再回调：Web 上弹窗卸载时把焦点还给打开前的元素，早了会被它覆盖
+  const wasMounted = useRef(false);
+  useEffect(() => {
+    if (mounted) wasMounted.current = true;
+    else if (wasMounted.current) {
+      wasMounted.current = false;
+      hidden.current?.();
+    }
+  }, [mounted]);
 
   // 打开、关闭的状态在渲染时同步，effect 里只做定时
   if (visible && !mounted) setMounted(true);

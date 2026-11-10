@@ -13,3 +13,4 @@ tests/playwright-results/
 .DS_Store
 expo-env.d.ts
 .metro-health-check*
+src/embed/editor/page.generated.ts

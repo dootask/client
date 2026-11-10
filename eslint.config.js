@@ -8,7 +8,7 @@ const upperLayers = ['./src/app', './src/modules'];
 module.exports = defineConfig([
   expoConfig,
   {
-    ignores: ['dist/*', 'ios/*', 'android/*', '.expo/*', 'expo-env.d.ts'],
+    ignores: ['dist/*', 'ios/*', 'android/*', '.expo/*', 'expo-env.d.ts', 'src/embed/editor/page.generated.ts'],
   },
   {
     files: ['src/**/*.{ts,tsx}'],

@@ -186,6 +186,16 @@ ios-locales/      iOS 权限说明（InfoPlist.strings 各语言）
 
 **难点在性能**，不在技术：原生页与 WebView 混排时的首屏白屏、内存占用、页面切换卡顿、WebView 复用和预热，要在第一个用到嵌入的里程碑实测并定下做法。
 
+### 全屏编辑器（D14，2026-11-10 定）
+
+第一个用到嵌入的地方，是聊天输入的全屏编辑（Quill，`src/embed/editor/`）：
+
+- **App**：页面不是网址，由 `scripts/editor-page.mjs` 把 Quill、mention 插件和 `core.ts` 拼成内联脚本（`page.generated.ts`），WebView 用 `source.html` 加载，不依赖网络和服务器版本。宿主和页面走 `protocol.ts` 的消息（页面报 boot / ready / change / state / query，宿主发 toggle / link / unlink / mention / replaceQuery / focus）
+- **Web / 桌面**：不用 iframe，打开时动态 `import` Quill 直接挂在页面里，候选列表、发送快捷键在捕获阶段先交给宿主
+- 同一套 `core.ts` 两端共用；@ / # / 斜杠候选、链接输入、工具栏都是原生组件，编辑区只负责编辑和报告状态
+- **不预热**：机柜模拟器开发包实测，首次打开约 1 秒出内容、1.3 秒键盘到位，再次打开约 0.8 秒 / 1.1 秒；WebView 渲染进程关闭编辑器后仍保留复用。全屏编辑是低频操作，常驻一个隐藏 WebView 换这点时间不划算。正式包再量一次，超过 1 秒再考虑
+- Android 上程序聚焦不弹键盘，用 `react-native-webview` 补丁在 `requestFocus` 后补一次 `showSoftInput`
+
 ## 11. 后端改动规则
 
 后端在主仓库，改动按主仓库 `CLAUDE.md` 的规矩做，和本项目分开提交。

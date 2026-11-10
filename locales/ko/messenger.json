@@ -296,5 +296,21 @@
     "entry": "전화하기",
     "confirm": "({{name}})에게 전화하시겠습니까?",
     "action": "전화 걸기"
+  },
+  "editor": {
+    "expand": "전체 화면 편집",
+    "collapse": "접기",
+    "done": "완료",
+    "insertLink": "링크 삽입",
+    "linkPlaceholder": "전체 링크 주소를 입력하세요",
+    "bold": "굵게",
+    "strike": "취소선",
+    "italic": "이탤릭체",
+    "underline": "밑줄",
+    "quote": "인용",
+    "link": "링크",
+    "ordered": "순서 있는 목록",
+    "bullet": "순서 없는 목록",
+    "check": "할 일"
   }
 }

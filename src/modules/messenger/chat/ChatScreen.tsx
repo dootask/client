@@ -329,7 +329,7 @@ function ChatScreen({ dialogId, msgId }: { dialogId: number; msgId: number }) {
               }
               composer={
                 <BottomBar selection={selection} onForward={(msgIds) => openSheet({ kind: 'forward', msgIds })}>
-                  <Composer ref={composerRef} dialogId={dialogId} store={compose} pickerKeysRef={pickerKeysRef} mode={mode} onModeEnd={onModeEnd} onSent={onSent} attach={attach} extras={extras} voice={CAN_RECORD ? voice : null} />
+                  <Composer ref={composerRef} dialogId={dialogId} store={compose} pickerKeysRef={pickerKeysRef} mentionSession={mentionSession} mode={mode} onModeEnd={onModeEnd} onSent={onSent} attach={attach} extras={extras} voice={CAN_RECORD ? voice : null} />
                 </BottomBar>
               }
               bottomColor={theme.colors.surface}

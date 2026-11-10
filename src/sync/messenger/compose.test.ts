@@ -11,7 +11,14 @@ describe('输入栏内容与 HTML', () => {
   });
 
   it('HTML 还原成多行文本', () => {
-    expect(htmlToCompose('<p>a&lt;b&gt;</p><p><br></p><p>c &amp; <strong>d</strong></p>')).toEqual(plain('a<b>\n\nc & d'));
+    expect(htmlToCompose('<p>a&lt;b&gt;</p><p><br></p><p>c &amp; d</p>')).toEqual(plain('a<b>\n\nc & d'));
+  });
+
+  it('带格式的内容留着原 HTML，发送时原样发出', () => {
+    const html = '<p>c &amp; <strong>d</strong></p><ol><li data-list="bullet">e</li></ol>';
+    const value = htmlToCompose(html);
+    expect(value).toEqual({ text: 'c & d\ne', mentions: [], html });
+    expect(composeToHtml(value)).toBe(html);
   });
 
   it('表情图换成名字', () => {

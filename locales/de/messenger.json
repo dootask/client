@@ -296,5 +296,21 @@
     "entry": "Anrufen",
     "confirm": "({{name}}) anrufen?",
     "action": "Anrufen"
+  },
+  "editor": {
+    "expand": "Vollbildbearbeitung",
+    "collapse": "Einklappen",
+    "done": "Abschließen",
+    "insertLink": "Link einfügen",
+    "linkPlaceholder": "Bitte geben Sie die vollständige Link-Adresse ein",
+    "bold": "Fett",
+    "strike": "Durchstreichen",
+    "italic": "Kursiv",
+    "underline": "Unterstreichen",
+    "quote": "Zitat",
+    "link": "Link",
+    "ordered": "Geordnete Liste",
+    "bullet": "Ungeordnete Liste",
+    "check": "Aufgabe"
   }
 }

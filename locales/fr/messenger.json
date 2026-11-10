@@ -296,5 +296,21 @@
     "entry": "Appeler",
     "confirm": "Appeler ({{name}}) ?",
     "action": "Passer un appel"
+  },
+  "editor": {
+    "expand": "Édition plein écran",
+    "collapse": "Réduire",
+    "done": "Terminer",
+    "insertLink": "Insérer un lien",
+    "linkPlaceholder": "Veuillez saisir l'adresse complète du lien",
+    "bold": "Gras",
+    "strike": "Barré",
+    "italic": "Italique",
+    "underline": "Souligner",
+    "quote": "Citation",
+    "link": "Lien",
+    "ordered": "Liste ordonnée",
+    "bullet": "Liste non ordonnée",
+    "check": "À faire"
   }
 }

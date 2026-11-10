@@ -296,5 +296,21 @@
     "entry": "打電話",
     "confirm": "是否撥打電話給 ({{name}})？",
     "action": "撥打電話"
+  },
+  "editor": {
+    "expand": "全螢幕編輯",
+    "collapse": "收合",
+    "done": "完成",
+    "insertLink": "插入連結",
+    "linkPlaceholder": "請輸入完整的連結地址",
+    "bold": "粗體",
+    "strike": "刪除線",
+    "italic": "斜體",
+    "underline": "下劃線",
+    "quote": "引用",
+    "link": "鏈接",
+    "ordered": "有序列表",
+    "bullet": "無序列表",
+    "check": "待辦"
   }
 }

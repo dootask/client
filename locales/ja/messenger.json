@@ -296,5 +296,21 @@
     "entry": "電話する",
     "confirm": "({{name}}) に電話をかけますか？",
     "action": "電話をかける"
+  },
+  "editor": {
+    "expand": "全画面編集",
+    "collapse": "折りたたむ",
+    "done": "完了",
+    "insertLink": "リンクを挿入",
+    "linkPlaceholder": "完全なリンクアドレスを入力してください",
+    "bold": "太字",
+    "strike": "取り消し線",
+    "italic": "斜体",
+    "underline": "下線",
+    "quote": "引用",
+    "link": "リンク",
+    "ordered": "番号付きリスト",
+    "bullet": "箇条書きリスト",
+    "check": "タスク"
   }
 }
