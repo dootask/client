@@ -296,6 +296,13 @@ function ChatScreen({ dialogId, msgId }: { dialogId: number; msgId: number }) {
   }, [messenger, dialogId, errorText]);
   const onSent = useCallback(() => chatRef.current?.scrollToBottom(), []);
   const onModeEnd = useCallback(() => setMode(null), []);
+  // ↑ 编辑上一条：自己最新的一条已发出的文字消息（列表从新到旧）
+  const onEditLast = () => {
+    const last = rows.find((row) => row.data.kind === 'msg' && row.data.msg.userid === userId && row.data.msg.type === 'text');
+    if (last?.data.kind !== 'msg') return false;
+    setMode({ kind: 'edit', msg: last.data.msg });
+    return true;
+  };
   const attach = useAttach({ dialogId, mode, onModeEnd, onSent });
   const onConverted = useCallback((text: string) => composerRef.current?.dictate(text), []);
   const voice = useVoiceInput({ dialogId, mode, onModeEnd, onSent, onConverted });
@@ -337,7 +344,7 @@ function ChatScreen({ dialogId, msgId }: { dialogId: number; msgId: number }) {
                   {block ? (
                     <ComposerNotice text={t(block === 'muted' ? 'messenger:chat.muted' : 'messenger:chat.disabled')} />
                   ) : (
-                    <Composer ref={composerRef} dialogId={dialogId} store={compose} pickerKeysRef={pickerKeysRef} mentionSession={mentionSession} mode={mode} onModeEnd={onModeEnd} onSent={onSent} attach={attach} extras={extras} voice={CAN_RECORD ? voice : null} />
+                    <Composer ref={composerRef} dialogId={dialogId} store={compose} pickerKeysRef={pickerKeysRef} mentionSession={mentionSession} mode={mode} onModeEnd={onModeEnd} onEditLast={onEditLast} onSent={onSent} attach={attach} extras={extras} voice={CAN_RECORD ? voice : null} />
                   )}
                 </BottomBar>
               }

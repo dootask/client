@@ -1,5 +1,6 @@
 import type { TextInputProps } from 'react-native';
 
+import type { ComposerKeys } from './enterKeyTypes';
 import type { PickerKeys } from './MentionPicker';
 
 interface KeyEvent {
@@ -14,15 +15,19 @@ interface KeyEvent {
 /**
  * Web、桌面：开了「Enter 发送」时 Enter 发送、Shift+Enter 换行；没开时 Enter 换行。
  * 两种设置下 Ctrl / Command+Enter 都发送。输入法选字时的按键不算。
- * 弹出候选时上下键、Enter、Tab、Esc 先交给候选列表
+ * 弹出候选时上下键、Enter、Tab、Esc 先交给候选列表；没有候选时 Esc、↑ 交给 keys（返回 true 表示处理了）
  */
-export function useEnterKey(enterSend: boolean, onSend: () => void, pickerKeysRef?: PickerKeys): Partial<TextInputProps> {
+export function useEnterKey(enterSend: boolean, onSend: () => void, pickerKeysRef?: PickerKeys, keys?: ComposerKeys): Partial<TextInputProps> {
   return {
     onKeyPress: (event) => {
       const key = event.nativeEvent as unknown as KeyEvent;
       if (key.isComposing || key.keyCode === 229) return;
       const mod = !!key.ctrlKey || !!key.metaKey;
       if (!mod && !key.shiftKey && pickerKeysRef?.current?.(key.key)) {
+        event.preventDefault();
+        return;
+      }
+      if (!mod && !key.shiftKey && ((key.key === 'Escape' && keys?.escape()) || (key.key === 'ArrowUp' && keys?.up()))) {
         event.preventDefault();
         return;
       }

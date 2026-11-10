@@ -79,7 +79,7 @@ const expandHeight = (lineHeight: number, chatInput: number) => chatInput - line
  * 编辑消息期间草稿先收起来，编辑完或取消后还原。群里回复别人时自动 @ 对方。
  * 内容多了可以展开全屏编辑（带格式）；带格式的内容在输入框里只读预览，点它、插表情、语音转文字都回到全屏编辑
  */
-export function Composer({ dialogId, store, pickerKeysRef, mentionSession, mode, onModeEnd, onSent, attach, extras, voice, ref }: {
+export function Composer({ dialogId, store, pickerKeysRef, mentionSession, mode, onModeEnd, onEditLast, onSent, attach, extras, voice, ref }: {
   dialogId: number;
   store: ComposeStore;
   /** 全屏编辑里的候选；会话还没加载好时为 undefined */
@@ -91,6 +91,8 @@ export function Composer({ dialogId, store, pickerKeysRef, mentionSession, mode,
   voice: VoiceInput | null;
   mode: ComposerMode;
   onModeEnd: () => void;
+  /** ↑ 编辑自己的上一条（Web）；有可编辑的消息时返回 true */
+  onEditLast: () => boolean;
   /** 发出一条新消息后（滚到底部） */
   onSent: () => void;
   ref?: Ref<ComposerHandle>;
@@ -262,7 +264,14 @@ export function Composer({ dialogId, store, pickerKeysRef, mentionSession, mode,
     onSent();
   };
 
-  const enterKey = useEnterKey(enterSend, () => send(), pickerKeysRef);
+  const enterKey = useEnterKey(enterSend, () => send(), pickerKeysRef, {
+    escape: () => {
+      if (!mode) return false;
+      onModeEnd();
+      return true;
+    },
+    up: () => !mode && !store.get().value.text && onEditLast(),
+  });
   // 带格式的内容按 HTML 发，没有 Markdown 一项
   const sendMenu: readonly MenuEntry[] = [
     { label: t('messenger:chat.sendSilent'), icon: BellOff, onSelect: () => send('silence') },
