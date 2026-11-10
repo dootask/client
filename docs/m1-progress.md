@@ -173,5 +173,9 @@ App 上点麦克风切到语音模式，输入框换成「按住说话」长条�
 - 打开耗时（开发包，排查时自测）：首次约 1 秒出内容、1.3 秒键盘到位，再次约 0.8 / 1.1 秒；WebView 渲染进程关闭后保留
 - 修了几处：Quill 自带 13px 字号和网页衬线字体（改为继承令牌字号和系统字体栈）；Web 上候选打开时按 Esc 连编辑器一起关（宿主处理过的键连同 keyup 一起拦下）
 - 未做 / 已知：
-  - Web 聊天输入框固定 2 行高、不随内容增高（react-native-web 多行输入框的旧问题，下一块单独修）
+  - Web 聊天输入框固定 2 行高、不随内容增高（react-native-web 多行输入框的旧问题），随后单独修复，见下
   - 带格式内容进出编辑器时末尾空白会丢
+
+### 修复：Web 聊天输入框随内容增高
+
+react-native-web 的多行输入框不设 `rows` 时是浏览器默认的两行，也不会自动增高；它的 `onContentSizeChange` 量 `scrollHeight` 前不复位高度，删字后缩不回去。新增 `ui/chat/ChatInput.web.tsx`：从一行起，内容或宽度变了先复位再按 `scrollHeight` 撑开，最多 8 行后框内滚动，量到的高度照常交给全屏编辑按钮判断。Web（本机 Playwright）：空 36px、三行 80px、十四行封顶 190px，删回一行恢复 36px；长句在窄窗四行、拉宽后两行、再缩回四行。截图 `tests/playwright-results/textarea-grow-*.png`
