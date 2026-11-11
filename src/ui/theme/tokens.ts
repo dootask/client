@@ -362,6 +362,9 @@ const size = {
   /** 底部弹层顶部的拖拽条 */
   grabberWidth: 36,
   grabberHeight: 5,
+  /** 底部弹层：撑满时顶边离状态栏的距离、标题栏高（下面再隔 sm，同旧版 App） */
+  sheetTopGap: 40,
+  sheetBar: 48,
   iconSmall: 18,
   /** 小圆钮（输入栏的全屏编辑按钮）和里面的图标 */
   miniButton: 24,

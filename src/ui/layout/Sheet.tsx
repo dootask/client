@@ -153,7 +153,7 @@ export function Sheet({ visible, onClose, title, wide = 'center', confirm, left,
                 <View collapsable={false}>
                   {form === 'bottom' && <View style={styles.grabber} />}
                   {title !== undefined && (
-                    <View style={styles.bar}>
+                    <View style={styles.bar(form)}>
                       <View style={styles.barSide}>
                         {left}
                         {!left && confirm && (
@@ -219,7 +219,7 @@ const styles = StyleSheet.create((theme, rt) => ({
   panel: (form: Form, shown: boolean) => {
     if (form === 'bottom') {
       return {
-        maxHeight: rt.screen.height - rt.insets.top - theme.spacing.xxl * 2,
+        maxHeight: rt.screen.height - rt.insets.top - theme.size.sheetTopGap,
         paddingBottom: bottomInset(rt.insets.bottom, rt.insets.ime) + theme.spacing.sm,
         backgroundColor: theme.colors.surface,
         borderTopLeftRadius: theme.radius.sheet,
@@ -250,7 +250,7 @@ const styles = StyleSheet.create((theme, rt) => ({
       transform: [{ scale: shown ? 1 : 0.96 }],
     };
   },
-  panelFill: (form: Form) => (form === 'bottom' ? { height: rt.screen.height - rt.insets.top - theme.spacing.xxl * 2 } : form === 'center' ? { height: '85%' } : {}),
+  panelFill: (form: Form) => (form === 'bottom' ? { height: rt.screen.height - rt.insets.top - theme.size.sheetTopGap } : form === 'center' ? { height: '85%' } : {}),
   // 内容裁到面板的圆角里（面板本身不裁，阴影才不被切掉）
   panelInner: (form: Form) => ({
     flexShrink: 1,
@@ -270,12 +270,12 @@ const styles = StyleSheet.create((theme, rt) => ({
     marginTop: theme.spacing.sm,
     backgroundColor: theme.colors.text4,
   },
-  bar: {
+  bar: (form: Form) => ({
     flexDirection: 'row',
     alignItems: 'center',
-    minHeight: theme.size.navBar,
     paddingHorizontal: theme.spacing.sm,
-  },
+    ...(form === 'bottom' ? { minHeight: theme.size.sheetBar, marginBottom: theme.spacing.sm } : { minHeight: theme.size.navBar }),
+  }),
   // 两侧等宽，标题居中；放得下「取消」和确认文字
   barSide: {
     minWidth: theme.size.touch,
