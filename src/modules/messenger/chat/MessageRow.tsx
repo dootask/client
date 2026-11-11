@@ -28,6 +28,8 @@ import { forwardable } from './messageMenu';
 import { FileCard, isMediaBody, isStickerBody, LocalMedia, MediaBody, MessageBody, RecordBody, StickerBody } from './MessageBody';
 import { msgExtra } from './msgExtra';
 import { type BubbleTone, RichBlocks } from './RichText';
+import type { SelectDrag } from './selectDrag';
+import { SelectHandle } from './SelectHandle';
 import type { Selection } from './selection';
 
 /**
@@ -69,6 +71,8 @@ export interface RowContext {
   selection: Selection['store'];
   /** 多选时点一条；extend 是按住 Shift（Web）连选 */
   onSelect: (msg: Msg, extend: boolean) => void;
+  /** 多选：App 从勾选圈上下拖动连续勾选 */
+  selectDrag: SelectDrag;
 }
 
 export const RowContextValue = createContext<RowContext | null>(null);
@@ -163,9 +167,20 @@ function Selectable({ msg, children }: { msg: Msg; children: ReactNode }) {
       aria-checked={checked} aria-disabled={!can}
       disabled={!can}
       onPress={(event) => ctx.onSelect(msg, shiftKey(event))}
+      ref={(view) => {
+        if (!can) return undefined;
+        ctx.selectDrag.register(msg.id, view);
+        return () => ctx.selectDrag.register(msg.id, null);
+      }}
       style={styles.selectRow}
     >
-      <View style={styles.selectCheck}>{can && <CheckMark checked={checked} />}</View>
+      {can ? (
+        <SelectHandle msgId={msg.id} drag={ctx.selectDrag} style={styles.selectCheck}>
+          <CheckMark checked={checked} />
+        </SelectHandle>
+      ) : (
+        <View style={styles.selectCheck} />
+      )}
       <View style={styles.selectBody}>{children}</View>
     </Touchable>
   );

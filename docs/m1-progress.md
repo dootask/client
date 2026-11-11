@@ -219,3 +219,12 @@ Web 输入框：Enter / `mod+Enter` 发送在 D5 已做；补上 Esc 取消回�
 - Web 验收（qoder，机柜 Chromium，2026-11-11）：机器人管理三个按钮同一行在输入框上方，点「帮助指令」发出并收到回复、输入框仍空；回复时整行从 DOM 移除，Esc 后恢复；匿名消息机器人两个按钮；会议通知、何翔单聊、签到机器人（测试服只开了人脸、自动、定位签到，定位被过滤）没有按钮。视觉清单按文字证据核对（灰底、圆角、高 30、不遮挡）
 - Android 验收（qoder，机柜模拟器）：同上各项，另验键盘弹出时胶囊行在输入框上方完整可见。我抽查键盘截图核对。结果在机柜 `~/qa/b7-web-qoder/`、`~/qa/b7-android-qoder/`
 - 已知：机器人回复是模板消息，目前只显示标题，随 E1（N5）
+
+## N4b 第 12 块：拖动连续勾选（C5 后半）
+
+多选时 App 从左侧勾选圈上下拖动，手指经过的消息连续勾上；起点那条原来已选就改为连续取消。拖动期间锁住列表滚动，超过上限（`SELECTION_MAX`）提示一次。Web 不接这个手势，继续用 Shift 点选。
+
+- 实现：开始拖时用 `measureInWindow` 量一遍屏幕上已登记的可选行，按手指的屏幕 y 找到所在行，`selection.paint` 以拖动开始时的选择为底按区间整段重算（来回拖能撤回），带单测；手势在 `SelectHandle.tsx`（RNGH，竖向移动 8 像素才接管，轻点仍是切换勾选），Web 版只是普通 View
+- Android 验收（qoder，机柜模拟器，2026-11-11）：从第 1 条勾选圈向下拖过 4 条，`已选4项`、列表 y 不动；拖回去取消；点气泡切换勾选；退出多选后列表正常滚动。复测（改 aria 后）uiautomator 中 `checked="true"` 数与底栏「已选 N 项」一致
+- Web 验收（qoder，机柜 Chromium）：Shift 点选连选 4 条，`[role=checkbox][aria-checked="true"]` = 4，退出后 checkbox 全部消失
+- 发现：react-native-web 不认 `accessibilityState`，Web DOM 上没有勾选状态；全项目 17 处改为 `aria-*`，坑记在 `docs/dev.md`

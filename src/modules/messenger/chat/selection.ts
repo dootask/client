@@ -51,5 +51,25 @@ export function createSelection() {
       store.setState({ ids, anchor: id });
       return ok;
     },
+    /**
+     * 拖动连续勾选：base 是开始拖动时已选的，order 是按屏幕从上到下排好的可选消息，
+     * 把 anchor 到 to 这一段统一勾上（adding）或取消；超过上限时勾到上限为止并返回 false
+     */
+    paint(base: ReadonlySet<number>, anchor: number, to: number, order: readonly number[], adding: boolean): boolean {
+      const from = order.indexOf(anchor);
+      const end = order.indexOf(to);
+      if (from < 0 || end < 0) return true;
+      const range = order.slice(Math.min(from, end), Math.max(from, end) + 1);
+      const ids = new Set(base);
+      let ok = true;
+      for (const target of range) {
+        if (!adding) ids.delete(target);
+        else if (ids.has(target)) continue;
+        else if (ids.size >= SELECTION_MAX) ok = false;
+        else ids.add(target);
+      }
+      store.setState({ ids, anchor: to });
+      return ok;
+    },
   };
 }

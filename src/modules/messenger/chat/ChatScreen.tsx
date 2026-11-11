@@ -35,6 +35,7 @@ import { forwardable, type MenuHandlers, useMessageMenus } from './messageMenu';
 import { bubbleTones, MessageRow, RowContextValue, type RowContext } from './MessageRow';
 import { MorePanel } from './MorePanel';
 import { RichHandlersContext, type RichHandlers } from './RichText';
+import { useSelectDrag } from './selectDrag';
 import { createSelection, SELECTION_MAX, type Selection } from './selection';
 import { SendPreview } from './SendPreview';
 import { AnonSheet } from './sheets/AnonSheet';
@@ -233,6 +234,9 @@ function ChatScreen({ dialogId, msgId }: { dialogId: number; msgId: number }) {
     selectable.current = rows.flatMap((row) => (row.data.kind === 'msg' && forwardable(row.data.msg) ? [row.data.msg.id] : [])).reverse();
   }, [rows]);
 
+  const onSelectLimit = useCallback(() => showToast(t('messenger:selection.max', { n: SELECTION_MAX })), [t]);
+  const selectDrag = useSelectDrag(selection, onSelectLimit);
+
   const onReact = useCallback((msg: Msg, symbol: string) => {
     messenger?.toggleEmoji(msg, symbol).catch((err) => showToast(errorText(err)));
   }, [messenger, errorText]);
@@ -268,15 +272,16 @@ function ChatScreen({ dialogId, msgId }: { dialogId: number; msgId: number }) {
     selection: selection.store,
     onSelect: (msg: Msg, extend: boolean) => {
       const ok = extend ? selection.extend(msg.id, selectable.current) : selection.toggle(msg.id);
-      if (!ok) showToast(t('messenger:selection.max', { n: SELECTION_MAX }));
+      if (!ok) onSelectLimit();
     },
+    selectDrag,
     onReEdit: canSend
       ? (item: WithdrawnMsg) => {
           composerRef.current?.replace(item.md ? { text: item.text, mentions: [] } : htmlToCompose(item.text));
           messenger?.forgetWithdrawn(item.id);
         }
       : undefined,
-  }), [canSend, dialog?.type, userId, origin, theme.colors, opening.unreadOne, menu, pendingMenu, uploadMenu, messenger, actions, onReact, jumpTo, onReply, openSheet, selection, t]);
+  }), [canSend, dialog?.type, userId, origin, theme.colors, opening.unreadOne, menu, pendingMenu, uploadMenu, messenger, actions, onReact, jumpTo, onReply, openSheet, selection, selectDrag, onSelectLimit]);
 
   const richHandlers = useMemo<RichHandlers>(() => ({
     onPressRun: (run) => {
@@ -334,6 +339,7 @@ function ChatScreen({ dialogId, msgId }: { dialogId: number; msgId: number }) {
             <ChatView
               ref={chatRef}
               messages={rows}
+              scrollLock={selectDrag.scrollLock}
               currentUserId={String(userId)}
               renderMessage={renderMessage}
               renderDay={renderDay}
