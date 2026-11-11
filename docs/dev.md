@@ -21,7 +21,7 @@
 - **验收和排查分开**：每块的验收（含复测、补验）一律派 qoder；定位问题时的试探操作（查日志、`dumpsys`、试点按）可以自己用 orchestrator 直接跑命令，汇报里注明是排查，不算验收
 - **账号密码不进 qoder 的提示词**（模型服务在外部）：登录自己做。Web 用登录脚本保存浏览器状态文件给它复用；安卓用 adb 自己登录，它接着用已登录的 App
 - **测试以安卓为主**；iOS 模拟器非必要不测（只影响 iOS 的改动才测，先说明），iOS 真机交给用户
-- 测试机上的辅助文件放在测试目录（`~/qa`）：`login-web.mjs`（Web 登录并保存状态）、`ui.sh`（安卓：`dump` 列出屏幕文字和无障碍标签及坐标，`tap <文字>` 点元素，`type <英文>` 输入，`shot <文件>` 截图）、`rn-m2` + `rn-m2.gradle`（见下面的坑）
+- 测试机上的辅助文件放在测试目录（`~/qa`）：`browser.mjs`（启动测试浏览器，Web 测试脚本都用它，见下面的坑）、`login-web.mjs`（Web 登录并保存状态，管理员和普通账号各一份）、`ui.sh`（安卓：`dump` 列出屏幕文字和无障碍标签及坐标，`tap <文字>` 点元素，`type <英文>` 输入，`shot <文件>` 截图）、`rn-m2` + `rn-m2.gradle`（见下面的坑）
 - 派任务时写明：只读项目目录、只在自己的结果目录写文件、不登出不重装不改系统设置、拿不准就标 INCONCLUSIVE 不要猜 PASS；指定机器用任务的 `target: {type: "machine_id", machineId}`，写成 `machineId` 字段会被派到别的机器
 
 ## 测试机和 Mac mini（只构建和运行，不改代码）
@@ -42,6 +42,8 @@
 用 `.claude/skills/app-build` 技能（本机文件，不进 git）：出 IPA / APK 放进下载页，由用户自己装到真机测试。安卓模拟器自测不走这个技能。
 
 ## 坑
+
+- **测试机的 Chromium 打不开开发地址**（`ERR_ADDRESS_UNREACHABLE`，`curl` 却正常）：域名同时有 IPv6 记录，测试机连不通，Chromium 优先走 IPv6 就失败。不是 macOS 本地网络权限的问题。测试机上用 `~/qa/browser.mjs` 的 `launch([地址…])` 启动浏览器，它先查出 IPv4 再用 `--host-resolver-rules` 指定
 
 - **全屏编辑器的 WebView 页面是生成的**：`scripts/editor-page.mjs` 把 Quill、mention 插件和 `src/embed/editor/core.ts` 打成一段 HTML，写到 `src/embed/editor/page.generated.ts`（不进 git）。`npm install`（postinstall）、`npm start`、`npm run typecheck` 都会先生成；改了 `core.ts` 后 Metro 已经在跑时，要手动 `node scripts/editor-page.mjs` 或重启 Metro，App 里才看得到。Web 不走这个页面，直接动态加载 `quill.web.ts`
 - **`npx expo install` 会装 SDK 里最新的补丁版本**（例如 RN 0.88.1、safe-area 5.11），和 `resources/app` 不一致，补丁文件也对不上版本。装完对照 `resources/app` 的 `package-lock.json` 改回同一版本（`npm install --save-prefix='~' 包@版本`；RN、React 写死版本号）
