@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { applyTextChange, composeSegments, deleteBefore, composeToHtml, htmlToCompose, insertMention, looksLikeMarkdown, mentionQuery, type ComposeValue } from './compose';
+import { applyTextChange, composeSegments, deleteBefore, composeToHtml, htmlToCompose, insertMention, looksLikeMarkdown, mentionQuery, quickMsgHtml, type ComposeValue } from './compose';
 
 const plain = (text: string): ComposeValue => ({ text, mentions: [] });
 const zhang = { char: '@', id: 3, name: '张三' } as const;
@@ -100,5 +100,12 @@ describe('表情面板删除键', () => {
     expect(deleteBefore(plain('abc'), 2)).toEqual({ value: plain('ac'), cursor: 1 });
     expect(deleteBefore({ text: 'hi @张三', mentions: [zhang] }, 6).value).toEqual(plain('hi '));
     expect(deleteBefore(plain('abc'), 0)).toEqual({ value: plain('abc'), cursor: 0 });
+  });
+});
+
+describe('B7 quickMsgHtml', () => {
+  it('与旧前端一致的结构，并转义', () => {
+    expect(quickMsgHtml({ key: '/help', label: '帮助指令' })).toBe('<p><span data-quick-key="/help">帮助指令</span></p>');
+    expect(quickMsgHtml({ key: 'a"b', label: '<x>' })).toBe('<p><span data-quick-key="a&quot;b">&lt;x&gt;</span></p>');
   });
 });

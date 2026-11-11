@@ -70,6 +70,8 @@ export const dialogSchema = z.looseObject({
   dialog_mute: str.nullish(),
   /** 单聊对方已停用或已删除：布尔、停用时间或 1，按真假判断 */
   is_disable: z.union([z.boolean(), num, str]).nullish(),
+  /** B7 机器人单聊的快捷消息（服务端按机器人给出，其余会话为空） */
+  quick_msgs: phpList(z.looseObject({ key: str, label: str })).nullish(),
 });
 export type Dialog = z.output<typeof dialogSchema>;
 

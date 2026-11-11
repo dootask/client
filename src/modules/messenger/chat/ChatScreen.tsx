@@ -27,6 +27,7 @@ import { useComposeStore } from './composeStore';
 import { EmojiPanel } from './EmojiPanel';
 import { type ExtraSheet, useExtras } from './extras';
 import { QuickEmoticons } from './QuickEmoticons';
+import { QuickMsgBar } from './QuickMsgBar';
 import { countText, dayLabel } from './format';
 import { MessageActionMenu, type LongPressTarget } from './MessageActionMenu';
 import { MentionAccessory, type PickerKeys } from './MentionPicker';
@@ -347,7 +348,10 @@ function ChatScreen({ dialogId, msgId }: { dialogId: number; msgId: number }) {
                   {block ? (
                     <ComposerNotice text={t(block === 'muted' ? 'messenger:chat.muted' : 'messenger:chat.disabled')} />
                   ) : (
-                    <Composer ref={composerRef} dialogId={dialogId} store={compose} pickerKeysRef={pickerKeysRef} mentionSession={mentionSession} mode={mode} onModeEnd={onModeEnd} onEditLast={onEditLast} onSent={onSent} attach={attach} extras={extras} voice={CAN_RECORD ? voice : null} />
+                    <>
+                      {dialog && !mode && <QuickMsgBar dialog={dialog} onSent={onSent} />}
+                      <Composer ref={composerRef} dialogId={dialogId} store={compose} pickerKeysRef={pickerKeysRef} mentionSession={mentionSession} mode={mode} onModeEnd={onModeEnd} onEditLast={onEditLast} onSent={onSent} attach={attach} extras={extras} voice={CAN_RECORD ? voice : null} />
+                    </>
                   )}
                 </BottomBar>
               }

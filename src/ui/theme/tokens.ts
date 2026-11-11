@@ -230,6 +230,8 @@ const size = {
   moreTile: 56,
   /** 输入栏上方快捷表情的贴纸 */
   quickSticker: 72,
+  /** 输入栏上方快捷消息胶囊的最大宽度（文字过长截断） */
+  quickMsgMax: 150,
   voiceTrack: 4,
   dot: 8,
   ...platformSize,

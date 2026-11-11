@@ -84,6 +84,14 @@ export function composerBlock(d: Dialog, isAdmin: boolean): 'muted' | 'disabled'
   return null;
 }
 
+/** B7 本客户端处理的快捷消息：`~` 开头是 AI 会话指令（随 N7），会议和位置签到暂不支持 */
+const UNSUPPORTED_QUICK = /^(~|meeting-|locat-)/;
+
+/** B7 输入栏上方要显示的快捷消息 */
+export function quickMsgs(d: Dialog): { key: string; label: string }[] {
+  return (d.quick_msgs ?? []).filter((item) => item.key && item.label && !UNSUPPORTED_QUICK.test(item.key));
+}
+
 export type DialogCategory = 'project' | 'task' | 'user' | 'group' | 'bot' | 'mention';
 
 /** R7 会话属于哪个分类（「全部」「标注」不在这里判断） */

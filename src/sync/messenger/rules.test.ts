@@ -20,6 +20,7 @@ import {
   mergeDialog,
   mergeMsg,
   newerCursor,
+  quickMsgs,
   toUnix,
   unreadTotals,
   upsertMsgs,
@@ -245,5 +246,19 @@ describe('D15 composerBlock', () => {
     for (const is_disable of [true, 1, '2026-11-01 10:00:00']) expect(composerBlock(dialog({ type: 'user', is_disable }), true)).toBe('disabled');
     expect(composerBlock(dialog({ type: 'user', is_disable: false }), false)).toBeNull();
     expect(composerBlock(dialog({ type: 'user', is_disable: 1, dialog_mute: 'close' }), false)).toBe('muted');
+  });
+});
+
+describe('B7 quickMsgs', () => {
+  it('去掉 AI 指令、会议、位置签到，保留其余按钮', () => {
+    const items = [
+      { key: '~ai-session-create', label: '开启新会话' },
+      { key: 'meeting-create', label: '新会议' },
+      { key: 'locat-checkin', label: '定位签到' },
+      { key: 'manual-checkin', label: '手动签到' },
+      { key: '/help', label: '帮助指令' },
+    ];
+    expect(quickMsgs(dialog({ quick_msgs: items })).map((i) => i.key)).toEqual(['manual-checkin', '/help']);
+    expect(quickMsgs(dialog({}))).toEqual([]);
   });
 });

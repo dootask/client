@@ -128,6 +128,11 @@ const ENTITIES: Record<string, string> = { '&nbsp;': ' ', '&quot;': '"', '&#39;'
 const escapeHtml = (text: string) => text.replace(/[&<>"]/g, (c) => ESCAPES[c]!);
 const unescapeHtml = (text: string) => text.replace(/&(nbsp|quot|#39|lt|gt|amp);/g, (m) => ENTITIES[m]!);
 
+/** B7 快捷消息发出去的内容：服务端按 data-quick-key 识别指令 */
+export function quickMsgHtml({ key, label }: { key: string; label: string }): string {
+  return `<p><span data-quick-key="${escapeHtml(key)}">${escapeHtml(label)}</span></p>`;
+}
+
 /** 与旧前端编辑器（quill-mention）输出一致的 mention 标签，服务端按这个结构解析 */
 function mentionHtml({ char, id, name }: Mention) {
   const value = escapeHtml(name);
