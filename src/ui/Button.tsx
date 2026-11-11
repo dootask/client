@@ -32,7 +32,7 @@ export function Button({ label, onPress, variant = 'primary', loading = false, d
     <Touchable
       accessibilityRole="button"
       accessibilityLabel={label}
-      accessibilityState={{ disabled, busy: loading }}
+      aria-disabled={disabled} aria-busy={loading}
       disabled={disabled || loading}
       onPress={onPress}
       style={({ pressed, hovered }) => styles.button(variant, pressed || hovered, disabled)}

@@ -8,7 +8,7 @@ export function Chip({ label, active, onPress }: { label: string; active: boolea
   return (
     <Touchable
       accessibilityRole="radio"
-      accessibilityState={{ checked: active }}
+      aria-checked={active}
       onPress={onPress}
       style={({ pressed, hovered }) => styles.chip(active, pressed, hovered)}
     >

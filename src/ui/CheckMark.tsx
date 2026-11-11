@@ -16,7 +16,7 @@ export function CheckOption({ label, checked, onChange }: { label: string; check
   return (
     <Touchable
       accessibilityRole="checkbox"
-      accessibilityState={{ checked }}
+      aria-checked={checked}
       onPress={() => onChange(!checked)}
       style={({ pressed }) => styles.option(pressed)}
     >

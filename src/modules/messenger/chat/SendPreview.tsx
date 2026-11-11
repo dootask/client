@@ -119,7 +119,7 @@ export function SendPreview({ files: initial, original: initialOriginal, onClose
             {CAN_COMPRESS && hasImage && (
               <Touchable
                 accessibilityRole="checkbox"
-                accessibilityState={{ checked: original }}
+                aria-checked={original}
                 onPress={() => setOriginal(!original)}
                 style={({ pressed }) => [styles.original, pressed && styles.pressed]}
               >

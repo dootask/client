@@ -161,7 +161,7 @@ function TargetRow({ row, picked, onToggle }: { row: SearchRow; picked: boolean;
   return (
     <Touchable
       accessibilityRole="checkbox"
-      accessibilityState={{ checked: picked }}
+      aria-checked={picked}
       onPress={() => onToggle(d)}
       style={({ pressed, hovered }) => styles.row(picked, pressed, hovered)}
     >

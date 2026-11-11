@@ -10,7 +10,7 @@ export function SwitchRow({ label, value, onChange }: { label: string; value: bo
   return (
     <Touchable
       accessibilityRole="switch"
-      accessibilityState={{ checked: value }}
+      aria-checked={value}
       accessibilityLabel={label}
       onPress={() => onChange(!value)}
       style={styles.row}

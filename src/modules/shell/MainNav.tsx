@@ -69,7 +69,7 @@ function NavItem({
       }}
       accessibilityRole="tab"
       accessibilityLabel={label}
-      accessibilityState={{ selected: isFocused }}
+      aria-selected={isFocused}
       style={({ pressed, hovered }) => styles.item(variant, isFocused, pressed, hovered)}
     >
       <View>

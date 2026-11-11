@@ -155,7 +155,7 @@ export function FullEditor({ value, append, title, edit, dialog, session, userId
               key={tool.key}
               accessibilityRole="button"
               accessibilityLabel={t(tool.label)}
-              accessibilityState={{ selected: active }}
+              aria-selected={active}
               onPress={() => pressTool(tool)}
               style={({ pressed, hovered }) => styles.tool(active, pressed, hovered)}
             >

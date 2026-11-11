@@ -84,7 +84,7 @@ const Categories = memo(function Categories({ active }: { active: ListCategory }
           <Touchable
             key={c || 'all'}
             accessibilityRole="tab"
-            accessibilityState={{ selected }}
+            aria-selected={selected}
             onPress={() => useDialogListState.setState({ category: c })}
             style={({ pressed, hovered }) => styles.chip(selected, pressed, hovered)}
           >

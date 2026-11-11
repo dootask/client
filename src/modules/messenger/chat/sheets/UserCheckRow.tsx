@@ -33,7 +33,7 @@ export const UserCheckRow = memo(function UserCheckRow({
     <View style={styles.row}>
       <Touchable
         accessibilityRole={checked === undefined ? 'button' : 'checkbox'}
-        accessibilityState={checked === undefined ? undefined : { checked }}
+        aria-checked={checked}
         accessibilityLabel={name}
         disabled={!onPress}
         onPress={() => onPress?.(userid)}

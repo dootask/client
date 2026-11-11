@@ -39,7 +39,7 @@ export function Menu({ items, trigger = 'press', onPress, accessibilityLabel, hi
           ref={ref}
           accessibilityRole={trigger === 'press' || button ? 'button' : undefined}
           accessibilityLabel={accessibilityLabel}
-          accessibilityState={trigger === 'press' ? { expanded: anchor !== null } : undefined}
+          aria-expanded={trigger === 'press' ? anchor !== null : undefined}
           onPress={trigger === 'press' ? open : onPress}
           hitSlop={hitSlop}
         style={style}
@@ -214,7 +214,7 @@ function MenuRow({ entry, active, ref, onHover, onPress }: { entry: MenuAction; 
       accessibilityRole="menuitem"
       // 不做 Tab 停靠点，行间移动用方向键
       tabIndex={-1}
-      accessibilityState={{ disabled: entry.disabled, checked: entry.checked }}
+      aria-disabled={entry.disabled} aria-checked={entry.checked}
       disabled={entry.disabled}
       onHoverIn={onHover}
       onPress={onPress}

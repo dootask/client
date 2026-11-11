@@ -21,7 +21,7 @@ export function ListRow({ title, icon, accessory = 'none', selected = false, onP
   return (
     <Touchable
       accessibilityRole="button"
-      accessibilityState={{ selected }}
+      aria-selected={selected}
       onPress={onPress}
       style={({ pressed, hovered }) => styles.row(selected, pressed, hovered)}
     >

@@ -17,7 +17,7 @@ export function Popover({ content, side, align, accessibilityLabel, style, child
         ref={ref}
         accessibilityRole="button"
         accessibilityLabel={accessibilityLabel}
-        accessibilityState={{ expanded: anchor !== null }}
+        aria-expanded={anchor !== null}
         onPress={async () => setAnchor(await measureAnchor(ref.current))}
         style={style}
       >

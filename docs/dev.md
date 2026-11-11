@@ -70,3 +70,4 @@
 - **对测试服联调接口**：`LIVE_SERVER=<地址> LIVE_EMAIL=<账号> LIVE_PASSWORD=<密码> npx vitest run live`，不带这些变量时 `npm run check` 自动跳过；账号只放命令行环境变量，不写进文件；消息数据层的联调还要第二个账号 `LIVE_EMAIL2` / `LIVE_PASSWORD2`（收发消息的另一方）
 - **长按弹出的浮层，状态不要放在大页面组件上**：安卓上按住期间持续有触摸事件，整页重渲染会被反复打断，浮层要等松手才出来（App 闲置几秒后最明显）。状态放进只渲染浮层的小组件，用 ref 打开。模拟器上测长按用 `adb shell input motionevent DOWN/MOVE/UP`，按住期间每 0.1 秒来回挪 1 像素（原地 `input swipe` 时模拟器空闲，JS 计时器会停摆，长按触发不了）；App 里的 `console.warn` 不进 Metro 日志，临时调试可以用 Toast 把时间点显示在屏幕上
 - **不要向服务端发送格式非法的 token 做测试**：会让后端 Swoole worker 崩溃（已知问题，属主程序，暂不修）；合法但过期的 token 会正常返回 `-1`
+- **无障碍状态用 `aria-*` 属性，不用 `accessibilityState`**：react-native-web 不认 `accessibilityState`，Web 上勾选、选中、禁用状态读屏读不到（DOM 上没有 `aria-checked`）。RN 0.88 两端都支持 `aria-checked`、`aria-selected`、`aria-disabled`、`aria-busy`、`aria-expanded`

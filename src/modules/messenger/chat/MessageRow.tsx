@@ -160,7 +160,7 @@ function Selectable({ msg, children }: { msg: Msg; children: ReactNode }) {
   return (
     <Touchable
       accessibilityRole="checkbox"
-      accessibilityState={{ checked, disabled: !can }}
+      aria-checked={checked} aria-disabled={!can}
       disabled={!can}
       onPress={(event) => ctx.onSelect(msg, shiftKey(event))}
       style={styles.selectRow}

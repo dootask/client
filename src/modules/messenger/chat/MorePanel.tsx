@@ -153,7 +153,7 @@ function PhotoStrip({ onSend, onPreview }: {
           return (
             <Touchable
               accessibilityRole="checkbox"
-              accessibilityState={{ checked: order > 0 }}
+              aria-checked={order > 0}
               accessibilityLabel={item.name}
               onPress={() => toggle(item)}
               style={({ pressed }) => pressed && styles.pressed}

@@ -18,7 +18,7 @@ export function Segmented<K extends string>({ items, value, onChange }: {
           <Touchable
             key={item.key}
             accessibilityRole="tab"
-            accessibilityState={{ selected: active }}
+            aria-selected={active}
             onPress={() => {
               if (active) return;
               haptics.selection();
