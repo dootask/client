@@ -314,5 +314,9 @@
     "ordered": "Ordered list",
     "bullet": "Unordered list",
     "check": "To-Do"
+  },
+  "reaction": {
+    "title": "Response Details",
+    "more": "+{{n}} more"
   }
 }

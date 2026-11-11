@@ -314,5 +314,9 @@
     "ordered": "Daftar berurutan",
     "bullet": "Daftar tidak berurutan",
     "check": "Tugas"
+  },
+  "reaction": {
+    "title": "Detail Respons",
+    "more": "+{{n}} lainnya"
   }
 }

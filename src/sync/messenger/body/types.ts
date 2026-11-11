@@ -84,7 +84,8 @@ export interface ReplyInfo {
 
 export interface Reaction {
   symbol: string;
-  count: number;
+  /** 回应的人，按回应先后 */
+  userids: number[];
   mine: boolean;
 }
 

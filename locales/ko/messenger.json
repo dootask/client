@@ -314,5 +314,9 @@
     "ordered": "순서 있는 목록",
     "bullet": "순서 없는 목록",
     "check": "할 일"
+  },
+  "reaction": {
+    "title": "응답 세부 정보",
+    "more": "+{{n}}명"
   }
 }

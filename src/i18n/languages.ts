@@ -13,6 +13,19 @@ export const LANGUAGES = [
 
 export type Language = (typeof LANGUAGES)[number]['code'];
 
+/** 界面语言对应的 BCP 47 标签（<html lang>、Intl 格式化用） */
+export const LANGUAGE_TAGS: Record<Language, string> = {
+  zh: 'zh-Hans',
+  'zh-CHT': 'zh-Hant',
+  en: 'en',
+  ko: 'ko',
+  ja: 'ja',
+  de: 'de',
+  fr: 'fr',
+  id: 'id',
+  ru: 'ru',
+};
+
 /** 源语言，也是缺译时的回退语言 */
 export const SOURCE_LANGUAGE: Language = 'zh';
 

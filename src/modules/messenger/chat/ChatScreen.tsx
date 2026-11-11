@@ -8,7 +8,7 @@ import { useStore } from 'zustand';
 import { dateFormats, useLanguage, useT } from '../../../i18n';
 import type { Msg } from '../../../sync/api/dialog';
 import { atLatest, composerBlock, hasEarlier, htmlToCompose, type Emoticon, type WithdrawnMsg } from '../../../sync/messenger';
-import type { MsgBody } from '../../../sync/messenger/body';
+import type { MsgBody, Reaction } from '../../../sync/messenger/body';
 import { ChatView, type ChatViewHandle, type MessageRenderInfo, type ScrollToBottomInfo } from '../../../ui/chat';
 import { Icon } from '../../../ui/Icon';
 import { showToast } from '../../../ui/Toast';
@@ -39,6 +39,7 @@ import { SendPreview } from './SendPreview';
 import { AnonSheet } from './sheets/AnonSheet';
 import { FavoriteRemarkSheet } from './sheets/FavoriteRemarkSheet';
 import { ForwardSheet } from './sheets/ForwardSheet';
+import { ReactionListSheet } from './sheets/ReactionListSheet';
 import { ReadListSheet } from './sheets/ReadListSheet';
 import { SelectTextSheet } from './sheets/SelectTextSheet';
 import { StickerSearchSheet } from './sheets/StickerSearchSheet';
@@ -68,6 +69,7 @@ type SheetContent =
   | { kind: 'todoSet' | 'todoDetail' | 'translate'; msg: Msg }
   | { kind: 'remark' | 'readList'; msgId: number }
   | { kind: 'selectText'; text: string }
+  | { kind: 'reactions'; reactions: readonly Reaction[]; symbol: string }
   | { kind: 'stickerSearch' }
   | ExtraSheet;
 /** seq：每次打开换一个，弹层重新挂载、状态从头开始；visible 置 false 时内容留着放完关闭动画 */
@@ -261,6 +263,7 @@ function ChatScreen({ dialogId, msgId }: { dialogId: number; msgId: number }) {
     },
     onTranslation: (msg: Msg) => openSheet({ kind: 'translate', msg }),
     onReadList: (msgId: number) => openSheet({ kind: 'readList', msgId }),
+    onReactionList: (reactions: readonly Reaction[], symbol: string) => openSheet({ kind: 'reactions', reactions, symbol }),
     selection: selection.store,
     onSelect: (msg: Msg, extend: boolean) => {
       const ok = extend ? selection.extend(msg.id, selectable.current) : selection.toggle(msg.id);
@@ -434,6 +437,8 @@ function ChatSheet({ dialogId, content, visible, onClose, onForwarded, onSent, o
       return <FavoriteRemarkSheet {...common} msgId={content.msgId} />;
     case 'readList':
       return <ReadListSheet {...common} msgId={content.msgId} />;
+    case 'reactions':
+      return <ReactionListSheet {...common} reactions={content.reactions} symbol={content.symbol} />;
     case 'selectText':
       return <SelectTextSheet {...common} text={content.text} />;
     case 'stickerSearch':

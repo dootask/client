@@ -123,5 +123,5 @@ describe('msgContent', () => {
 });
 
 it('表情回应带上自己有没有点', () => {
-  expect(reactions(msg({ msg: {}, emoji: [{ symbol: '👌', userids: [3, 4] }, { symbol: 'x', userids: [] }] } as never), 3)).toEqual([{ symbol: '👌', count: 2, mine: true }]);
+  expect(reactions(msg({ msg: {}, emoji: [{ symbol: '👌', userids: [3, '4'] }, { symbol: 'x', userids: [] }] } as never), 3)).toEqual([{ symbol: '👌', userids: [3, 4], mine: true }]);
 });

@@ -314,5 +314,9 @@
     "ordered": "Geordnete Liste",
     "bullet": "Ungeordnete Liste",
     "check": "Aufgabe"
+  },
+  "reaction": {
+    "title": "Antwortdetails",
+    "more": "+{{n}} mehr"
   }
 }

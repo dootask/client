@@ -48,7 +48,8 @@ export function reactions(m: Msg, userId: number): Reaction[] {
   return list.flatMap((item) => {
     const { symbol, userids } = obj(item);
     if (typeof symbol !== 'string' || !symbol || !Array.isArray(userids) || userids.length === 0) return [];
-    return [{ symbol, count: userids.length, mine: userids.includes(userId) }];
+    const ids = userids.map(Number).filter((id) => id > 0);
+    return ids.length ? [{ symbol, userids: ids, mine: ids.includes(userId) }] : [];
   });
 }
 

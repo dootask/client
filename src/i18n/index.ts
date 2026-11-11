@@ -7,6 +7,7 @@ import { NAMESPACES, sourceResources } from './resources';
 
 export { dateFormats, type DateFormats } from './dates';
 export { LANGUAGES, type Language } from './languages';
+export { joinNames } from './lists';
 export type { Namespace } from './resources';
 
 // 源语言打进主包，其他语言按需加载（Web 上每个 JSON 单独成块）

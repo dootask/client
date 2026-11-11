@@ -314,5 +314,9 @@
     "ordered": "有序列表",
     "bullet": "无序列表",
     "check": "待办"
+  },
+  "reaction": {
+    "title": "回应详情",
+    "more": "+{{n}}位"
   }
 }

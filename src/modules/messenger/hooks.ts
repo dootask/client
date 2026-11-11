@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useStore } from 'zustand';
+import { useShallow } from 'zustand/react/shallow';
 import { createStore } from 'zustand/vanilla';
 
 import { createMessengerStore, type MessengerState, type StoredDialog } from '../../sync/messenger';
@@ -34,6 +35,17 @@ export function useUser(userid: number): CachedUser | undefined {
     if (userid > 0) users?.want([userid]);
   }, [users, userid]);
   return user;
+}
+
+/** 几个人的昵称（悬停提示）；只订阅这几个人，没有的向用户目录要，还没取回的是空串 */
+export function useNicknames(userids: readonly number[]): string[] {
+  const users = useMessengerInstance((s) => s.users);
+  const names = useStore(users?.store ?? emptyUsers, useShallow((s) => userids.map((id) => s.users[id]?.nickname ?? '')));
+  const key = userids.join(',');
+  useEffect(() => {
+    if (key) users?.want(key.split(',').map(Number));
+  }, [users, key]);
+  return names;
 }
 
 /** 一组用户（成员列表、已读名单）；整张表订阅，没有的向用户目录要 */

@@ -314,5 +314,9 @@
     "ordered": "Liste ordonnée",
     "bullet": "Liste non ordonnée",
     "check": "À faire"
+  },
+  "reaction": {
+    "title": "Détails de la réponse",
+    "more": "+{{n}} de plus"
   }
 }

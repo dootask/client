@@ -10,7 +10,7 @@ import { useStore } from 'zustand';
 import { useT } from '../../../i18n';
 import type { Msg } from '../../../sync/api/dialog';
 import { toUnix, type OutboxItem, type UploadItem, type WithdrawnMsg } from '../../../sync/messenger';
-import { msgContent, reactions, textBlocks, type BodyContext, type MsgBody, type ReplyInfo, type SystemLabel } from '../../../sync/messenger/body';
+import { msgContent, reactions, textBlocks, type BodyContext, type MsgBody, type Reaction, type ReplyInfo, type SystemLabel } from '../../../sync/messenger/body';
 import { UserAvatar } from '../../../ui/Avatar';
 import { CheckMark } from '../../../ui/CheckMark';
 import { RowHighlight, type MessageRenderInfo } from '../../../ui/chat';
@@ -23,6 +23,7 @@ import { BubbleTouch } from './BubbleTouch';
 import type { BubbleTouchProps, RowRef } from './bubbleTouchTypes';
 import { chained, isSystemRow, type ChatRow, type RowData } from './chatModel';
 import { LIKE } from './emoji';
+import { ReactionTip } from './ReactionTip';
 import { forwardable } from './messageMenu';
 import { FileCard, isMediaBody, isStickerBody, LocalMedia, MediaBody, MessageBody, RecordBody, StickerBody } from './MessageBody';
 import { msgExtra } from './msgExtra';
@@ -54,6 +55,8 @@ export interface RowContext {
   onOpen: (msg: Msg, body: MsgBody) => void;
   /** 点回应胶囊、双击、表情条（自己回应过的再点即取消） */
   onReact: (msg: Msg, symbol: string) => void;
+  /** 长按回应胶囊：回应详情（谁回应了） */
+  onReactionList: (reactions: readonly Reaction[], symbol: string) => void;
   /** 点回复引用：跳到原消息 */
   onQuote: (id: number) => void;
   /** 点译文：换语言、重新翻译 */
@@ -302,19 +305,21 @@ function MsgRow({ info, msg }: { info: MessageRenderInfo<RowData>; msg: Msg }) {
       {list.length > 0 && (
         <View style={styles.reactions}>
           {list.map((reaction) => (
-            <Touchable
-              key={reaction.symbol}
-              onPress={() => ctx.onReact(msg, reaction.symbol)}
-              accessibilityRole="button"
-              style={({ pressed, hovered }) => [
-                styles.reaction,
-                { backgroundColor: reaction.mine ? tone.accent : tone.overlay },
-                (pressed || hovered) && styles.reactionActive(pressed),
-              ]}
-            >
-              <Text style={styles.reactionSymbol} allowFontScaling={false}>{reaction.symbol}</Text>
-              <Text style={[styles.reactionCount, reaction.mine ? styles.reactionCountMine : { color: tone.text }]}>{reaction.count}</Text>
-            </Touchable>
+            <ReactionTip key={reaction.symbol} userids={reaction.userids}>
+              <Touchable
+                onPress={() => ctx.onReact(msg, reaction.symbol)}
+                onLongPress={() => ctx.onReactionList(list, reaction.symbol)}
+                accessibilityRole="button"
+                style={({ pressed, hovered }) => [
+                  styles.reaction,
+                  { backgroundColor: reaction.mine ? tone.accent : tone.overlay },
+                  (pressed || hovered) && styles.reactionActive(pressed),
+                ]}
+              >
+                <Text style={styles.reactionSymbol} allowFontScaling={false}>{reaction.symbol}</Text>
+                <Text style={[styles.reactionCount, reaction.mine ? styles.reactionCountMine : { color: tone.text }]}>{reaction.userids.length}</Text>
+              </Touchable>
+            </ReactionTip>
           ))}
         </View>
       )}
