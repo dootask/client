@@ -52,10 +52,7 @@
     "unread": "Marquer comme non lu",
     "silence": "Ne pas déranger",
     "unsilence": "Autoriser les notifications de messages",
-    "hide": "Masquer la conversation",
-    "hideAction": "Masquer",
-    "hideTip": "La conversation sera masquée de la liste et réapparaîtra à la réception d’un nouveau message",
-    "color": "Couleur"
+    "hide": "Masquer la conversation"
   },
   "color": {
     "default": "Par défaut",
@@ -68,7 +65,6 @@
   "empty": "Aucune conversation",
   "noResult": "Aucun résultat lié à « {{key}} »",
   "pick": "Sélectionnez une conversation pour commencer à discuter",
-  "loading": "Chargement...",
   "chat": {
     "today": "Aujourd'hui",
     "online": "En ligne",
@@ -318,5 +314,9 @@
   "reaction": {
     "title": "Détails de la réponse",
     "more": "+{{n}} de plus"
-  }
+  },
+  "updating": "Mise à jour...",
+  "categories": "Catégories",
+  "tabMessages": "Message",
+  "tabContacts": "Contacts"
 }

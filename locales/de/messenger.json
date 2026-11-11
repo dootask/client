@@ -52,10 +52,7 @@
     "unread": "Als ungelesen markieren",
     "silence": "Nicht stören",
     "unsilence": "Nachrichtenbenachrichtigungen zulassen",
-    "hide": "Konversation ausblenden",
-    "hideAction": "Ausblenden",
-    "hideTip": "Der Chat wird aus der Liste ausgeblendet und erscheint wieder, sobald eine neue Nachricht eingeht",
-    "color": "Farbe"
+    "hide": "Konversation ausblenden"
   },
   "color": {
     "default": "Standard",
@@ -68,7 +65,6 @@
   "empty": "Keine Gespräche",
   "noResult": "Keine Ergebnisse im Zusammenhang mit „{{key}}“",
   "pick": "Wählen Sie ein Gespräch aus, um den Chat zu beginnen",
-  "loading": "Wird geladen...",
   "chat": {
     "today": "Heute",
     "online": "Online",
@@ -318,5 +314,9 @@
   "reaction": {
     "title": "Antwortdetails",
     "more": "+{{n}} mehr"
-  }
+  },
+  "updating": "Aktualisierung...",
+  "categories": "Kategorien",
+  "tabMessages": "Nachricht",
+  "tabContacts": "Kontakte"
 }

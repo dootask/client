@@ -52,10 +52,7 @@
     "unread": "标记未读",
     "silence": "消息免打扰",
     "unsilence": "允许消息通知",
-    "hide": "不显示该会话",
-    "hideAction": "不显示",
-    "hideTip": "会话将从消息列表中隐藏，收到新消息时会重新出现",
-    "color": "颜色"
+    "hide": "不显示该会话"
   },
   "color": {
     "default": "默认",
@@ -68,7 +65,6 @@
   "empty": "没有任何会话",
   "noResult": "没有任何与\"{{key}}\"相关的结果",
   "pick": "选择一个会话开始聊天",
-  "loading": "加载中...",
   "chat": {
     "today": "今天",
     "online": "在线",
@@ -318,5 +314,9 @@
   "reaction": {
     "title": "回应详情",
     "more": "+{{n}}位"
-  }
+  },
+  "updating": "更新中...",
+  "categories": "分类",
+  "tabMessages": "消息",
+  "tabContacts": "联系人"
 }

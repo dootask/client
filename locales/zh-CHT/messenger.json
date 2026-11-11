@@ -52,10 +52,7 @@
     "unread": "標記未讀",
     "silence": "消息免打擾",
     "unsilence": "允許消息通知",
-    "hide": "不顯示該會話",
-    "hideAction": "不顯示",
-    "hideTip": "會話將從消息列表中隱藏，收到新消息時會重新出現",
-    "color": "顏色"
+    "hide": "不顯示該會話"
   },
   "color": {
     "default": "默認",
@@ -68,7 +65,6 @@
   "empty": "沒有任何會話",
   "noResult": "沒有任何與「{{key}}」相關的結果",
   "pick": "選擇一個會話開始聊天",
-  "loading": "加載中...",
   "chat": {
     "today": "今天",
     "online": "在線",
@@ -318,5 +314,9 @@
   "reaction": {
     "title": "回應詳情",
     "more": "+{{n}}位"
-  }
+  },
+  "updating": "更新中...",
+  "categories": "分類",
+  "tabMessages": "消息",
+  "tabContacts": "聯繫人"
 }

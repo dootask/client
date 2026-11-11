@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { StoredDialog } from '../../sync/messenger';
-import { extraResults, listedIds, listTime, nextUnreadId } from './listModel';
+import { extraResults, listedIds, listTimeText, shakeTargetId } from './listModel';
 
 const d = (id: number, patch: Partial<StoredDialog> = {}): StoredDialog => ({ id, type: 'group', name: `g${id}`, last_at: `2026-11-0${id % 9 || 1} 10:00:00`, ...patch });
 const map = (...list: StoredDialog[]) => Object.fromEntries(list.map((x) => [x.id, x]));
@@ -41,20 +41,18 @@ describe('会话列表', () => {
 
   it('时间：今天、昨天、今年、更早', () => {
     const now = new Date(2026, 10, 8, 12).getTime();
-    expect(listTime('2026-11-08 00:05:00', now)?.kind).toBe('today');
-    expect(listTime('2026-11-07 23:59:00', now)?.kind).toBe('yesterday');
-    expect(listTime('2026-01-01 08:00:00', now)?.kind).toBe('thisYear');
-    expect(listTime('2025-12-31 08:00:00', now)?.kind).toBe('older');
-    expect(listTime(null, now)).toBeNull();
+    expect(listTimeText('2026-11-08 00:05:00', now, '昨天')).toBe('00:05');
+    expect(listTimeText('2026-11-07 23:59:00', now, '昨天')).toBe('昨天 23:59');
+    expect(listTimeText('2026-01-01 08:00:00', now, '昨天')).toBe('01-01');
+    expect(listTimeText('2025-12-31 08:00:00', now, '昨天')).toBe('2025-12-31');
+    expect(listTimeText(null, now, '昨天')).toBe('');
   });
 
-  it('未读跳转：从当前之后找，先未读、再待办、再免打扰未读，到尾回头', () => {
-    const dialogs = map(d(1, { unread: 2 }), d(2, { todo_num: 1 }), d(3, { unread: 1, silence: 1 }), d(4, { mention: 1 }));
-    expect(nextUnreadId([1, 2, 3, 4], dialogs, 0)).toBe(1);
-    expect(nextUnreadId([1, 2, 3, 4], dialogs, 1)).toBe(4);
-    expect(nextUnreadId([1, 2, 3, 4], dialogs, 4)).toBe(1);
-    expect(nextUnreadId([2, 3], dialogs, 0)).toBe(2);
-    expect(nextUnreadId([3], dialogs, 0)).toBe(3);
-    expect(nextUnreadId([], dialogs, 0)).toBe(0);
+  it('晃动目标：从上往下先未读、再待办、再免打扰未读', () => {
+    const dialogs = map(d(1, { todo_num: 1 }), d(2, { unread: 1, silence: 1 }), d(3, { unread: 2 }), d(4, { mention: 1 }));
+    expect(shakeTargetId([1, 2, 3, 4], dialogs)).toBe(3);
+    expect(shakeTargetId([1, 2], dialogs)).toBe(1);
+    expect(shakeTargetId([2], dialogs)).toBe(2);
+    expect(shakeTargetId([], dialogs)).toBe(0);
   });
 });

@@ -14,11 +14,26 @@ export type AvatarSize = AppTheme['size']['avatar'][keyof AppTheme['size']['avat
  * - 成员：有图显示图；没图或加载失败时按 userid 取色板底加首字，机器人用 Bot 图标
  * - 会话：有图显示图；没图按群类型显示彩色底图标，单聊没有对方资料时显示单人图标
  */
-export const UserAvatar = memo(function UserAvatar({ uri, userid, name, bot, size }: { uri?: string | null; userid: number; name: string; bot?: boolean; size: AvatarSize }) {
+export const UserAvatar = memo(function UserAvatar({
+  uri,
+  userid,
+  name,
+  bot,
+  size,
+  online,
+}: {
+  uri?: string | null;
+  userid: number;
+  name: string;
+  bot?: boolean;
+  size: AvatarSize;
+  /** 传了才画右下角的在线点（同旧版）：在线品牌色、离线橙色 */
+  online?: boolean;
+}) {
   const { theme } = useUnistyles();
   const colors = theme.palette.avatarUser;
   const color = bot ? theme.palette.avatarGroup.default : colors[Math.abs(userid) % colors.length]!;
-  return (
+  const avatar = (
     <ImageOr uri={uri} size={size} color={color}>
       {bot ? (
         <Icon icon={Bot} color={theme.palette.onAvatar} size={Math.round(size * 0.55)} />
@@ -28,6 +43,13 @@ export const UserAvatar = memo(function UserAvatar({ uri, userid, name, bot, siz
         </Text>
       )}
     </ImageOr>
+  );
+  if (online === undefined) return avatar;
+  return (
+    <View>
+      {avatar}
+      <View style={styles.dot(online)} />
+    </View>
   );
 });
 
@@ -72,5 +94,16 @@ function ImageOr({ uri, size, color, children }: { uri?: string | null; size: nu
 const styles = StyleSheet.create((theme) => ({
   shape: (size: number) => ({ width: size, height: size, borderRadius: size / 2 }),
   fallback: (color: string) => ({ alignItems: 'center', justifyContent: 'center', backgroundColor: color }),
+  dot: (online: boolean) => ({
+    position: 'absolute',
+    right: 0,
+    bottom: 0,
+    width: theme.size.dot,
+    height: theme.size.dot,
+    borderRadius: theme.radius.pill,
+    borderWidth: 1,
+    borderColor: theme.colors.surface,
+    backgroundColor: online ? theme.colors.primary : theme.colors.offline,
+  }),
   initial: (size: number) => ({ color: theme.palette.onAvatar, fontSize: Math.round(size * 0.42), fontWeight: '500' }),
 }));

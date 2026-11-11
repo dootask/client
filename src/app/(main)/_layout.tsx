@@ -3,7 +3,7 @@ import { TabSlot, useTabsWithTriggers } from 'expo-router/ui';
 import { useCallback } from 'react';
 import { StyleSheet } from 'react-native';
 
-import { jumpToNextUnread, useTabBadge } from '../../modules/messenger';
+import { shakeUnread, useTabBadge } from '../../modules/messenger';
 import { MAIN_TABS, MainNav, SETTINGS_TAB } from '../../modules/shell';
 import { AppFrame } from '../../ui/layout';
 
@@ -16,7 +16,7 @@ export default function MainLayout() {
   const nested = useSegments().length > 2;
   const messengerBadge = useTabBadge();
   const onReselect = useCallback((name: string) => {
-    if (name === 'messenger') jumpToNextUnread();
+    if (name === 'messenger') shakeUnread();
   }, []);
   return (
     <NavigationContent>

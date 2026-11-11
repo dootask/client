@@ -16,6 +16,10 @@ export interface MenuAction {
   destructive?: boolean;
   /** 对应的快捷键（写法同 useShortcut），只在自绘菜单里靠右显示；快捷键本身由页面用 useShortcut 注册 */
   shortcut?: string;
+  /** 颜色项：自绘菜单在图标位置画这个颜色的方块，checked 时方块上打勾 */
+  swatch?: string;
+  /** 未读数，自绘菜单靠右显示角标 */
+  badge?: number;
   children?: readonly MenuEntry[];
 }
 

@@ -52,10 +52,7 @@
     "unread": "Tandai belum dibaca",
     "silence": "Jangan ganggu",
     "unsilence": "Izinkan Notifikasi Pesan",
-    "hide": "Sembunyikan percakapan",
-    "hideAction": "Sembunyikan",
-    "hideTip": "Percakapan akan disembunyikan dari daftar dan muncul kembali saat ada pesan baru",
-    "color": "Warna"
+    "hide": "Sembunyikan percakapan"
   },
   "color": {
     "default": "Default",
@@ -68,7 +65,6 @@
   "empty": "Tidak ada percakapan",
   "noResult": "Tidak ada hasil yang terkait dengan \"{{key}}\"",
   "pick": "Pilih percakapan untuk mulai mengobrol",
-  "loading": "Memuat...",
   "chat": {
     "today": "Hari Ini",
     "online": "Daring",
@@ -318,5 +314,9 @@
   "reaction": {
     "title": "Detail Respons",
     "more": "+{{n}} lainnya"
-  }
+  },
+  "updating": "Memperbarui...",
+  "categories": "Kategori",
+  "tabMessages": "Pesan",
+  "tabContacts": "Kontak"
 }

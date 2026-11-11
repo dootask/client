@@ -21,6 +21,22 @@ export interface MenuProps {
   /** 触发元素比触摸区小时（输入栏里的图标按钮）放大触摸区 */
   hitSlop?: Insets;
   style?: StyleProp<ViewStyle> | ((state: TouchState) => StyleProp<ViewStyle>);
+  /**
+   * 自绘菜单（Web）的样式，同旧版两种下拉菜单：iview（默认）行高 32；
+   * element 行高 36、描边，选中项加粗而不是打勾（消息分类下拉）
+   */
+  look?: 'iview' | 'element';
+  /** 自绘菜单的最小宽，默认 menuMinWidth（旧版消息分类下拉更宽） */
+  minWidth?: number;
+  /** 自绘菜单的图标放在文字右侧（旧版会话右键菜单） */
+  iconEnd?: boolean;
+  /**
+   * 自绘菜单相对触发元素的位置；默认点击弹出在下方左对齐，右键弹出在鼠标位置。
+   * 右键菜单给了这个就改为贴着触发元素弹出（旧版会话右键菜单）
+   */
+  placement?: { side: Side; align: Align };
+  /** 自绘菜单打开、关闭时通知（旧版打开菜单时给那一行描边） */
+  onOpenChange?: (open: boolean) => void;
   /** 触发元素，只负责外观，点击由 Menu 处理 */
   children: ReactNode | ((state: TouchState) => ReactNode);
 }

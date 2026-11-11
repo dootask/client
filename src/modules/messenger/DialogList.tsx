@@ -1,43 +1,39 @@
 import { FlashList, type FlashListRef } from '@shopify/flash-list';
 import { router, usePathname } from 'expo-router';
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ScrollView, Text, View } from 'react-native';
-import { StyleSheet } from 'react-native-unistyles';
+import { type ReactElement, type RefObject, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Text, View } from 'react-native';
+import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { useT } from '../../i18n';
 import { dialogApi } from '../../sync/api';
 import type { SearchItem } from '../../sync/api/dialog';
-import { categoryUnread } from '../../sync/messenger';
-import { PageHeader } from '../../ui/PageHeader';
-import { SearchField } from '../../ui/SearchField';
+import { useSplitView } from '../../ui/layout';
+import { CompactBar, LargeTitle, ScrollOffsetProvider, TrackedScrollView } from '../../ui/LargeHeader';
 import { showToast } from '../../ui/Toast';
-import { Touchable } from '../../ui/Touchable';
 import { api, useErrorText } from '../session';
 import { useNow } from './clock';
 import { DialogRow, ResultRow } from './DialogRow';
+import { DialogBar, DialogNav, DialogSearch } from './DialogListChrome';
 import { useMessenger, useMessengerState } from './hooks';
-import { CATEGORIES, type ListCategory, listedIds, nextUnreadId } from './listModel';
+import { type ListCategory, listedIds, shakeTargetId } from './listModel';
+import { setShakeHandler, useDialogListState } from './listState';
 import { AI_HIDDEN, searchRowKey, type SearchRow, useSearchRows } from './search';
-import { setUnreadJumpHandler, useDialogListState } from './listState';
 
-const CATEGORY_LABELS = {
-  '': 'messenger:category.all',
-  project: 'messenger:category.project',
-  task: 'messenger:category.task',
-  user: 'messenger:category.user',
-  group: 'messenger:category.group',
-  bot: 'messenger:category.bot',
-  mark: 'messenger:category.mark',
-  mention: 'messenger:category.mention',
-} as const satisfies Record<ListCategory, string>;
+/** 列表的一行：本地会话、服务端的搜索结果或标注消息、没有内容时的提示 */
+type Row = SearchRow | { kind: 'hint'; text: string };
 
-/** 跳到下一个未读后高亮多久 */
-const HIGHLIGHT_MS = 1500;
-
+const rowKey = (r: Row) => (r.kind === 'hint' ? 'hint' : searchRowKey(r));
 
 // 新消息把会话顶到最上面时：停在顶部附近就跟着显示新的第一行，翻到下面时保持当前位置不跳
 const TOP_ANCHOR = { autoscrollToTopThreshold: 48 };
 
+// 分类条吸顶时盖在行上面。FlashList 自己包的那层不经过 unistyles，给普通样式对象
+const HEADER_ABOVE_ROWS = { zIndex: 1 };
+
+/** 晃动动画放完后清掉（动画 200 延迟 + 600 时长） */
+const SHAKE_CLEAR_MS = 900;
 
 /** 当前打开的会话 id（路由 /messenger/<id>），没有为 0 */
 function useOpenRouteId(): number {
@@ -50,113 +46,99 @@ export function openDialogRoute(id: number, msgId?: number) {
   router.navigate({ pathname: '/messenger/[dialogId]', params: msgId ? { dialogId: String(id), msg: String(msgId) } : { dialogId: String(id) } });
 }
 
-/** 消息首页：导航栏、搜索、分类、会话列表。窄屏是消息 Tab 的首页，并排视图里是左边的列表栏 */
+/**
+ * 会话列表（同旧版 messenger-select）。
+ * 宽屏是消息页左边的列表栏：搜索、分类条、列表、底部「消息 / 联系人」；
+ * 窄屏是「消息」Tab 首页：大标题和搜索随列表滚走，分类条吸顶在小标题条下面
+ */
 export function DialogList() {
-  const t = useT();
-  const { category, key } = useDialogListState();
-  const trimmed = key.trim();
+  return useSplitView() ? <WideDialogList /> : <NarrowDialogList />;
+}
+
+function WideDialogList() {
+  const listRef = useRef<FlashListRef<Row>>(null);
+  const { rows, loading, searching } = useRows();
   return (
-    <View style={styles.root}>
-      <PageHeader title={t('shell:tab.messenger')} />
-      <View style={styles.search}>
-        <SearchField value={key} onChangeText={(v) => useDialogListState.setState({ key: v })} placeholder={t('messenger:search')} clearLabel={t('clear')} />
-      </View>
-      {!trimmed && <Categories active={category} />}
-      {trimmed ? <SearchResults keyword={trimmed} /> : category === 'mark' ? <MarkList /> : <Dialogs category={category} />}
+    <View testID="dialog-list" style={styles.wide}>
+      <DialogSearch narrow={false} loading={loading} />
+      {!searching && <DialogNav narrow={false} />}
+      <RowList listRef={listRef} rows={rows} searching={searching} narrow={false} />
+      <DialogBar />
     </View>
   );
 }
 
-const Categories = memo(function Categories({ active }: { active: ListCategory }) {
+function NarrowDialogList() {
   const t = useT();
-  const dialogs = useMessengerState((s) => s.dialogs);
-  const counts = useMemo(() => {
-    const list = Object.values(dialogs);
-    const n = (c: Exclude<ListCategory, '' | 'mark' | 'mention'>) => categoryUnread(list, c);
-    return { project: n('project'), task: n('task'), user: n('user'), group: n('group'), bot: n('bot') } as Partial<Record<ListCategory, number>>;
-  }, [dialogs]);
-  return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipsBar} contentContainerStyle={styles.chips}>
-      {CATEGORIES.map((c) => {
-        const count = counts[c] ?? 0;
-        const selected = c === active;
-        return (
-          <Touchable
-            key={c || 'all'}
-            accessibilityRole="tab"
-            aria-selected={selected}
-            onPress={() => useDialogListState.setState({ category: c })}
-            style={({ pressed, hovered }) => styles.chip(selected, pressed, hovered)}
-          >
-            <Text style={styles.chipText(selected)} numberOfLines={1}>
-              {t(CATEGORY_LABELS[c])}
-              {count > 0 ? ` ${count > 999 ? '999+' : count}` : ''}
-            </Text>
-          </Touchable>
-        );
-      })}
-    </ScrollView>
-  );
-});
+  const { theme } = useUnistyles();
+  const insets = useSafeAreaInsets();
+  const listRef = useRef<FlashListRef<Row>>(null);
+  const offset = useSharedValue(0);
+  const { rows, loading, searching } = useRows();
+  const { largeTitleRow, dialogSearchRow, compactBar, dialogChrome } = theme.size;
+  // 小标题条在搜索框被它盖住时出现；分类条滚到小标题条下沿（压住 1 像素防缝）后吸顶
+  const compactLine = largeTitleRow + dialogSearchRow - dialogChrome.searchPadBottom - compactBar;
+  const stickAt = largeTitleRow + dialogSearchRow - compactBar + 1;
+  const navStyle = useAnimatedStyle(() => ({ transform: [{ translateY: Math.max(0, offset.get() - stickAt) }] }));
 
-/** 本地会话列表 */
-function Dialogs({ category }: { category: ListCategory }) {
-  const t = useT();
-  const ids = useListedIds(category, '');
-  const ready = useMessengerState((s) => s.ready);
-  const openId = useOpenRouteId();
-  const listRef = useRef<FlashListRef<number>>(null);
-  const [highlight, setHighlight] = useState(0);
-  const dialogs = useMessengerState((s) => s.dialogs);
-
-  // 再点一次「消息」Tab：滚到下一个有未读的会话并高亮一下
-  const state = useRef({ ids, dialogs, last: 0 });
-  useEffect(() => {
-    state.current.ids = ids;
-    state.current.dialogs = dialogs;
-  }, [ids, dialogs]);
-  useEffect(() => {
-    let timer: ReturnType<typeof setTimeout> | undefined;
-    setUnreadJumpHandler(() => {
-      const s = state.current;
-      const next = nextUnreadId(s.ids, s.dialogs, s.last);
-      if (!next) {
-        s.last = 0;
-        listRef.current?.scrollToOffset({ offset: 0, animated: true });
-        return;
-      }
-      s.last = next;
-      listRef.current?.scrollToIndex({ index: s.ids.indexOf(next), animated: true, viewPosition: 0.3 });
-      setHighlight(next);
-      clearTimeout(timer);
-      timer = setTimeout(() => setHighlight(0), HIGHLIGHT_MS);
-    });
-    return () => {
-      setUnreadJumpHandler(null);
-      clearTimeout(timer);
-    };
-  }, []);
-
-  const renderItem = useCallback(
-    ({ item }: { item: number }) => <DialogRow id={item} selected={item === openId} highlighted={item === highlight} onOpen={openDialogRoute} />,
-    [openId, highlight],
+  const header = (
+    <View>
+      <View style={styles.narrowHead}>
+        <LargeTitle title={t('shell:tab.messenger')} />
+      </View>
+      <DialogSearch narrow loading={loading} />
+      {!searching && (
+        <Animated.View style={navStyle}>
+          <DialogNav narrow />
+        </Animated.View>
+      )}
+    </View>
   );
 
-  if (!ready) return <Hint text={t('messenger:loading')} />;
   return (
-    <FlashList
-      ref={listRef}
-      data={ids}
-      renderItem={renderItem}
-      keyExtractor={String}
-      extraData={`${openId}|${highlight}`}
-      maintainVisibleContentPosition={TOP_ANCHOR}
-      ListEmptyComponent={<Hint text={t('messenger:empty')} />}
-      keyboardShouldPersistTaps="handled"
-      style={styles.list}
-    />
+    <View style={[styles.narrow, { paddingTop: insets.top }]}>
+      <ScrollOffsetProvider value={offset}>
+        <RowList listRef={listRef} rows={rows} searching={searching} narrow header={header} />
+      </ScrollOffsetProvider>
+      <View style={[styles.compactWrap, { top: insets.top }]} pointerEvents="box-none">
+        <CompactBar
+          title={t('shell:tab.messenger')}
+          offset={offset}
+          line={compactLine}
+          showLine={searching}
+          onPress={() => listRef.current?.scrollToOffset({ offset: 0, animated: true })}
+        />
+      </View>
+    </View>
   );
 }
+
+/** 当前分类、搜索词下的行；loading：搜索框里转圈 */
+function useRows(): { rows: Row[]; loading: boolean; searching: boolean } {
+  const t = useT();
+  const category = useDialogListState((s) => s.category);
+  const key = useDialogListState((s) => s.key);
+  const ready = useMessengerState((s) => s.ready);
+  const keyword = key.trim();
+  const ids = useListedIds(keyword ? '' : category, keyword);
+  const search = useSearchRows(keyword ? ids : NO_IDS, keyword);
+  const marks = useMarks(!keyword && category === 'mark');
+  return useMemo(() => {
+    const hint = (text: string): Row[] => [{ kind: 'hint', text }];
+    if (keyword) {
+      const rows = search.rows.length || search.searching ? search.rows : hint(t('messenger:noResult', { key: keyword }));
+      return { rows, loading: search.searching, searching: true };
+    }
+    if (category === 'mark') {
+      if (!marks) return { rows: [], loading: true, searching: false };
+      return { rows: marks.length ? marks.map((item) => ({ kind: 'result', item })) : hint(t('messenger:empty')), loading: false, searching: false };
+    }
+    if (!ready) return { rows: [], loading: true, searching: false };
+    return { rows: ids.length ? ids.map((id) => ({ kind: 'dialog', id })) : hint(t('messenger:empty')), loading: false, searching: false };
+  }, [t, keyword, category, ready, ids, search, marks]);
+}
+
+const NO_IDS: readonly number[] = [];
 
 function useListedIds(category: ListCategory, key: string): number[] {
   const dialogs = useMessengerState((s) => s.dialogs);
@@ -166,44 +148,12 @@ function useListedIds(category: ListCategory, key: string): number[] {
   return useMemo(() => listedIds({ dialogs, drafts, openId, aiHidden: AI_HIDDEN, now: now / 1000 }, category, key), [dialogs, drafts, openId, now, category, key]);
 }
 
-/** 搜索：先列本地匹配的会话，停顿后补上服务端搜到的联系人和消息 */
-function SearchResults({ keyword }: { keyword: string }) {
-  const t = useT();
-  const ids = useListedIds('', keyword);
-  const openId = useOpenRouteId();
-  const { rows, searching } = useSearchRows(ids, keyword);
-
-  const openResult = useOpenResult();
-  const renderItem = useCallback(
-    ({ item }: { item: SearchRow }) =>
-      item.kind === 'dialog' ? (
-        <DialogRow id={item.id} selected={item.id === openId} highlighted={false} onOpen={openDialogRoute} />
-      ) : (
-        <ResultRow item={item.item} onOpen={openResult} />
-      ),
-    [openId, openResult],
-  );
-
-  return (
-    <FlashList
-      data={rows}
-      renderItem={renderItem}
-      keyExtractor={searchRowKey}
-      getItemType={(r) => r.kind}
-      extraData={openId}
-      ListEmptyComponent={<Hint text={searching ? t('messenger:loading') : t('messenger:noResult', { key: keyword })} />}
-      keyboardShouldPersistTaps="handled"
-      style={styles.list}
-    />
-  );
-}
-
-/** 标注：服务端最近被标注的消息，每条一行，点开定位到那条 */
-function MarkList() {
-  const t = useT();
+/** 标注：服务端最近被标注的消息，每条一行，点开定位到那条；切到标注时重新取 */
+function useMarks(active: boolean): SearchItem[] | null {
   const errorText = useErrorText();
   const [items, setItems] = useState<SearchItem[] | null>(null);
   useEffect(() => {
+    if (!active) return;
     let cancelled = false;
     dialogApi
       .searchTag(api)
@@ -215,20 +165,87 @@ function MarkList() {
       });
     return () => {
       cancelled = true;
+      // 离开标注时清掉，下次切回来先显示加载中、再取最新的
+      setItems(null);
     };
-  }, [errorText]);
+  }, [active, errorText]);
+  return items;
+}
+
+function RowList({
+  listRef,
+  rows,
+  searching,
+  narrow,
+  header,
+}: {
+  listRef: RefObject<FlashListRef<Row> | null>;
+  rows: Row[];
+  searching: boolean;
+  narrow: boolean;
+  header?: ReactElement;
+}) {
+  const openId = useOpenRouteId();
   const openResult = useOpenResult();
-  const renderItem = useCallback(({ item }: { item: SearchItem }) => <ResultRow item={item} onOpen={openResult} />, [openResult]);
-  if (!items) return <Hint text={t('messenger:loading')} />;
+  const shake = useShake(listRef, rows);
+  const last = rows.length - 1;
+
+  const renderItem = useCallback(
+    ({ item, index }: { item: Row; index: number }) => {
+      const line = narrow && index < last;
+      if (item.kind === 'dialog') {
+        return <DialogRow id={item.id} active={item.id === openId} shake={item.id === shake.id ? shake.nonce : 0} line={line} searching={searching} onOpen={openDialogRoute} />;
+      }
+      if (item.kind === 'result') return <ResultRow item={item.item} line={line} onOpen={openResult} />;
+      return <Hint text={item.text} />;
+    },
+    [openId, shake, narrow, last, searching, openResult],
+  );
+
   return (
     <FlashList
-      data={items}
+      ref={listRef}
+      data={rows}
       renderItem={renderItem}
-      keyExtractor={(item) => `${item.id}:${item.search_msg_id ?? ''}`}
-      ListEmptyComponent={<Hint text={t('messenger:empty')} />}
+      keyExtractor={rowKey}
+      getItemType={(r) => r.kind}
+      extraData={renderItem}
+      maintainVisibleContentPosition={TOP_ANCHOR}
+      ListHeaderComponent={header}
+      ListHeaderComponentStyle={HEADER_ABOVE_ROWS}
+      renderScrollComponent={header ? TrackedScrollView : undefined}
+      keyboardShouldPersistTaps="handled"
       style={styles.list}
     />
   );
+}
+
+/** 再点当前分类、再点「消息」：滚到第一个有未读的会话并晃动它（同旧版 shakeUnread） */
+function useShake(listRef: RefObject<FlashListRef<Row> | null>, rows: Row[]): { id: number; nonce: number } {
+  const [shake, setShake] = useState({ id: 0, nonce: 0 });
+  const dialogs = useMessengerState((s) => s.dialogs);
+  const latest = useRef({ rows, dialogs });
+  useEffect(() => {
+    latest.current = { rows, dialogs };
+  }, [rows, dialogs]);
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    setShakeHandler(() => {
+      const { rows: current, dialogs: all } = latest.current;
+      const ids = current.flatMap((r) => (r.kind === 'dialog' ? [r.id] : []));
+      const id = shakeTargetId(ids, all);
+      if (!id) return;
+      listRef.current?.scrollToIndex({ index: current.findIndex((r) => r.kind === 'dialog' && r.id === id), animated: true, viewPosition: 0.5 });
+      setShake((s) => ({ id, nonce: s.nonce + 1 }));
+      clearTimeout(timer);
+      timer = setTimeout(() => setShake((s) => ({ id: 0, nonce: s.nonce })), SHAKE_CLEAR_MS);
+    });
+    return () => {
+      setShakeHandler(null);
+      clearTimeout(timer);
+    };
+  }, [listRef]);
+  return shake;
 }
 
 /** 打开搜索结果：联系人先建（或取）单聊；按消息内容搜到的定位到那条 */
@@ -252,56 +269,43 @@ function useOpenResult() {
   );
 }
 
-
 function Hint({ text }: { text: string }) {
   return (
-    <View style={styles.hint}>
+    <View testID="dialog-hint" style={styles.hint}>
       <Text style={styles.hintText}>{text}</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create((theme) => ({
-  root: {
+  wide: {
     flex: 1,
     backgroundColor: theme.colors.surface,
   },
-  search: {
-    paddingHorizontal: theme.spacing.page,
-    paddingTop: theme.spacing.sm,
-    paddingBottom: theme.spacing.xs,
+  narrow: {
+    flex: 1,
+    backgroundColor: theme.colors.headerBg,
   },
-  chipsBar: {
-    flexGrow: 0,
-    flexShrink: 0,
+  narrowHead: {
+    backgroundColor: theme.colors.headerBg,
   },
-  chips: {
-    gap: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.page,
-    paddingVertical: theme.spacing.sm,
+  compactWrap: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    height: theme.size.compactBar,
+    zIndex: 2,
   },
-  chip: (selected: boolean, pressed: boolean, hovered: boolean) => ({
-    height: theme.size.chip,
-    paddingHorizontal: theme.spacing.md,
-    borderRadius: theme.radius.pill,
-    justifyContent: 'center',
-    backgroundColor: selected ? theme.colors.primarySoft : pressed ? theme.colors.fillPressed : hovered ? theme.colors.fillButton : theme.colors.fill,
-  }),
-  chipText: (selected: boolean) => ({
-    ...theme.typography.subhead,
-    color: selected ? theme.colors.primaryText : theme.colors.text2,
-    fontWeight: selected ? '600' : '400',
-  }),
   list: {
     flex: 1,
+    backgroundColor: theme.colors.surface,
   },
   hint: {
-    alignItems: 'center',
     padding: theme.spacing.xxl,
   },
   hintText: {
-    ...theme.typography.subhead,
-    color: theme.colors.text3,
+    ...theme.typography.listHint,
+    color: theme.colors.regularText,
     textAlign: 'center',
   },
 }));

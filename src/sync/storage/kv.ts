@@ -19,6 +19,8 @@ export const KV_KEYS = {
   /** 消息翻译的目标语言，没设过用界面语言 */
   translateLanguage: 'pref.translateLanguage',
   listPaneWidth: (id: string) => `pref.listPaneWidth.${id}`,
+  /** 会话列表分类条各分类最近一次选中的时间（JSON），决定下次打开时分类条的顺序 */
+  dialogNavHistory: 'pref.dialogNavHistory',
   /** 结构化缓存里数据所属的账号（服务器地址 + 用户 id），和当前登录对不上就清空缓存 */
   cacheOwner: 'cache.owner',
   /** 消息数据层按账号存的小数据：sync 同步时间、beyond 上次取列表外会话的时间、drafts 草稿、outbox 发送队列 */

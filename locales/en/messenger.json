@@ -52,10 +52,7 @@
     "unread": "Mark as unread",
     "silence": "Do not disturb",
     "unsilence": "Allow Message Notifications",
-    "hide": "Hide conversation",
-    "hideAction": "Hide",
-    "hideTip": "This chat will be hidden from the list and will reappear when a new message arrives",
-    "color": "Color"
+    "hide": "Hide conversation"
   },
   "color": {
     "default": "Default",
@@ -68,7 +65,6 @@
   "empty": "No conversations",
   "noResult": "No results related to \"{{key}}\"",
   "pick": "Select a conversation to start chatting",
-  "loading": "Loading...",
   "chat": {
     "today": "Today",
     "online": "Online",
@@ -318,5 +314,9 @@
   "reaction": {
     "title": "Response Details",
     "more": "+{{n}} more"
-  }
+  },
+  "updating": "Updating...",
+  "categories": "Categories",
+  "tabMessages": "Message",
+  "tabContacts": "Contacts"
 }

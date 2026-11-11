@@ -76,31 +76,30 @@ export function extraResults(local: readonly StoredDialog[], remote: readonly Se
   return out;
 }
 
-/** 列表里的时间分级（docs/ui-spec.md 第 7 节）：今天只显示时分，昨天，今年显示月日，跨年显示年月日；具体格式由界面按语言排 */
-export type ListTime = { kind: 'today' | 'yesterday' | 'thisYear' | 'older'; date: Date } | null;
-
-export function listTime(lastAt: string | null | undefined, nowMs: number): ListTime {
+/** 列表里的时间（同旧版 $A.timeFormat）：今天 HH:mm、昨天「昨天 HH:mm」、今年 MM-DD、跨年 YYYY-MM-DD；没有时间返回空串 */
+export function listTimeText(lastAt: string | null | undefined, nowMs: number, yesterday: string): string {
   const sec = toUnix(lastAt);
-  if (!sec) return null;
+  if (!sec) return '';
   const date = new Date(sec * 1000);
   const now = new Date(nowMs);
-  const sameDay = (a: Date, b: Date) => a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
-  if (sameDay(date, now)) return { kind: 'today', date };
-  if (sameDay(date, new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1))) return { kind: 'yesterday', date };
-  return { kind: date.getFullYear() === now.getFullYear() ? 'thisYear' : 'older', date };
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const ymd = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const hm = `${pad(date.getHours())}:${pad(date.getMinutes())}`;
+  if (ymd(date) === ymd(now)) return hm;
+  if (ymd(date) === ymd(new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1))) return `${yesterday} ${hm}`;
+  if (date.getFullYear() === now.getFullYear()) return ymd(date).slice(5);
+  return ymd(date);
 }
 
-/** 再点一次「消息」Tab 时跳到的会话：从当前之后找第一个有未读（含 @、标记未读）的，没有就找待办，再没有就找免打扰里的未读；找到末尾从头再来 */
-export function nextUnreadId(ids: readonly number[], dialogs: Record<number, StoredDialog>, afterId: number): number {
-  const start = ids.indexOf(afterId) + 1;
-  const ordered = [...ids.slice(start), ...ids.slice(0, start)];
+/** 再点一次「消息」或当前分类时晃动的会话（同旧版）：从上往下找第一个有未读（含 @、标记未读）的，没有就找待办，再没有就找免打扰里的未读 */
+export function shakeTargetId(ids: readonly number[], dialogs: Record<number, StoredDialog>): number {
   const tests: ((d: StoredDialog) => boolean)[] = [
     (d) => dialogNum(d) > 0,
     (d) => (d.todo_num ?? 0) > 0,
     (d) => dialogUnread(d, true) > 0,
   ];
   for (const test of tests) {
-    const hit = ordered.find((id) => dialogs[id] && test(dialogs[id]));
+    const hit = ids.find((id) => dialogs[id] && test(dialogs[id]));
     if (hit !== undefined) return hit;
   }
   return 0;

@@ -52,10 +52,7 @@
     "unread": "未読にする",
     "silence": "お知らせしない",
     "unsilence": "メッセージ通知を許可",
-    "hide": "この会話を非表示",
-    "hideAction": "非表示",
-    "hideTip": "この会話はリストから非表示になり、新しいメッセージを受信すると再び表示されます",
-    "color": "色"
+    "hide": "この会話を非表示"
   },
   "color": {
     "default": "デフォルト",
@@ -68,7 +65,6 @@
   "empty": "会話がありません",
   "noResult": "「{{key}}」に関連する結果はありません",
   "pick": "チャットを開始する会話を選択してください",
-  "loading": "読み込み中...",
   "chat": {
     "today": "今日",
     "online": "オンライン",
@@ -318,5 +314,9 @@
   "reaction": {
     "title": "応答の詳細",
     "more": "+{{n}}人"
-  }
+  },
+  "updating": "更新中...",
+  "categories": "分類",
+  "tabMessages": "メッセージ",
+  "tabContacts": "連絡先"
 }

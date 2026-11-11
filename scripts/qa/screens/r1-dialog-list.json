@@ -1,0 +1,578 @@
+{
+  "screens": [
+    {
+      "name": "wide-list",
+      "viewport": [
+        1280,
+        860
+      ],
+      "old": {
+        "path": "/manage/messenger",
+        "state": "state-old-admin.json",
+        "steps": [
+          {
+            "waitFor": "li[data-type=dialog]"
+          }
+        ]
+      },
+      "new": {
+        "path": "/messenger",
+        "state": "state-admin.json",
+        "steps": [
+          {
+            "waitFor": "[data-testid=dialog-row]"
+          }
+        ]
+      },
+      "clip": {
+        "old": ".messenger-select",
+        "new": "[data-testid=dialog-list]"
+      },
+      "elements": [
+        {
+          "name": "列表栏",
+          "old": ".messenger-select",
+          "new": "[data-testid=dialog-list]",
+          "props": [
+            "background-color"
+          ]
+        },
+        {
+          "name": "搜索框",
+          "old": ".messenger-search .search-wrapper",
+          "new": "[data-testid=dialog-search]",
+          "props": [
+            "border-radius",
+            "background-color"
+          ]
+        },
+        {
+          "name": "搜索输入",
+          "old": ".messenger-search input",
+          "new": "[data-testid=dialog-search] input",
+          "props": [
+            "font-size",
+            "color",
+            "padding-left"
+          ]
+        },
+        {
+          "name": "分类条",
+          "old": ".messenger-nav",
+          "new": "[data-testid=dialog-nav]",
+          "props": [
+            "padding-left",
+            "padding-bottom"
+          ]
+        },
+        {
+          "name": "分类·全部",
+          "old": ".messenger-nav .nav-list .nav-item:has-text(\"全部\") .nav-title",
+          "new": "[data-testid=dialog-nav] :text-is(\"全部\")",
+          "props": [
+            "font-size",
+            "font-weight",
+            "color"
+          ],
+          "text": true
+        },
+        {
+          "name": "分类·单聊",
+          "old": ".messenger-nav .nav-list .nav-item:has-text(\"单聊\") .nav-title",
+          "new": "[data-testid=dialog-nav] :text-is(\"单聊\")",
+          "props": [
+            "font-size",
+            "font-weight",
+            "color"
+          ],
+          "text": true,
+          "ignore": [
+            "left"
+          ]
+        },
+        {
+          "name": "首行会话",
+          "old": "li[data-type=dialog] >> nth=0",
+          "new": "[data-testid=dialog-row] >> nth=0",
+          "props": [
+            "background-color"
+          ]
+        },
+        {
+          "name": "底栏",
+          "old": ".messenger-menu",
+          "new": "[data-testid=dialog-bar]",
+          "props": [
+            "border-top-width",
+            "border-top-color"
+          ]
+        },
+        {
+          "name": "放大镜",
+          "old": ".messenger-search .search-pre svg",
+          "new": "[data-testid=dialog-search] svg >> nth=0",
+          "props": [
+            "color|stroke"
+          ]
+        },
+        {
+          "name": "☰",
+          "old": ".messenger-nav .nav-menu .nav-icon",
+          "new": "[data-testid=dialog-nav] [aria-label=\"分类\"] svg",
+          "props": [
+            "color|stroke"
+          ],
+          "ignore": [
+            "width",
+            "left"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "wide-nav-menu",
+      "viewport": [
+        1280,
+        860
+      ],
+      "old": {
+        "path": "/manage/messenger",
+        "state": "state-old-admin.json",
+        "steps": [
+          {
+            "waitFor": "li[data-type=dialog]"
+          },
+          {
+            "click": ".messenger-nav .nav-menu"
+          }
+        ]
+      },
+      "new": {
+        "path": "/messenger",
+        "state": "state-admin.json",
+        "steps": [
+          {
+            "waitFor": "[data-testid=dialog-row]"
+          },
+          {
+            "click": "[data-testid=dialog-nav] [aria-label=\"分类\"]"
+          }
+        ]
+      },
+      "elements": [
+        {
+          "name": "下拉",
+          "old": ".messenger-nav-menu",
+          "new": "[role=menu] >> xpath=..",
+          "props": [
+            "border-radius",
+            "border-top-width",
+            "border-top-color",
+            "box-shadow"
+          ]
+        },
+        {
+          "name": "下拉·第一项",
+          "old": ".messenger-nav-menu li >> nth=0",
+          "new": "[role=menuitem] >> nth=0",
+          "props": [
+            "padding-left"
+          ],
+          "text": true
+        },
+        {
+          "name": "下拉·第一项·文字",
+          "old": ".messenger-nav-menu li >> nth=0 >> .nav-title",
+          "new": "[role=menuitem] >> nth=0 >> div[dir=auto] >> nth=0",
+          "props": [
+            "font-size",
+            "font-weight",
+            "color"
+          ],
+          "ignore": [
+            "width",
+            "height",
+            "left",
+            "top"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "wide-row-menu",
+      "viewport": [
+        1280,
+        860
+      ],
+      "old": {
+        "path": "/manage/messenger",
+        "state": "state-old-admin.json",
+        "steps": [
+          {
+            "waitFor": "li[data-type=dialog]"
+          },
+          {
+            "rightClick": "li[data-type=dialog] >> nth=3"
+          }
+        ]
+      },
+      "new": {
+        "path": "/messenger",
+        "state": "state-admin.json",
+        "steps": [
+          {
+            "waitFor": "[data-testid=dialog-row]"
+          },
+          {
+            "rightClick": "[data-testid=dialog-row] >> nth=3"
+          }
+        ]
+      },
+      "elements": [
+        {
+          "name": "右键菜单",
+          "old": ".ivu-select-dropdown:has(.messenger-dialog-operation)",
+          "new": "[role=menu] > div",
+          "props": [
+            "padding-top",
+            "padding-bottom"
+          ]
+        },
+        {
+          "name": "菜单·第一项",
+          "old": ".messenger-dialog-operation .ivu-dropdown-item >> nth=0",
+          "new": "[role=menuitem] >> nth=0",
+          "props": [
+            "padding-left"
+          ],
+          "text": true
+        },
+        {
+          "name": "菜单·第一项·文字",
+          "old": ".messenger-dialog-operation .ivu-dropdown-item >> nth=0",
+          "new": "[role=menuitem] >> nth=0 >> div[dir=auto] >> nth=0",
+          "props": [
+            "font-size",
+            "color"
+          ],
+          "ignore": [
+            "width",
+            "height",
+            "left",
+            "top"
+          ]
+        },
+        {
+          "name": "菜单·末项",
+          "old": ".messenger-dialog-operation .ivu-dropdown-item >> nth=-1",
+          "new": "[role=menuitem] >> nth=-1",
+          "props": [],
+          "text": true
+        },
+        {
+          "name": "菜单·末项·文字",
+          "old": ".messenger-dialog-operation .ivu-dropdown-item >> nth=-1",
+          "new": "[role=menuitem] >> nth=-1 >> div[dir=auto] >> nth=0",
+          "props": [
+            "font-size",
+            "color"
+          ],
+          "ignore": [
+            "width",
+            "height",
+            "left",
+            "top"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "wide-search-hover",
+      "viewport": [
+        1280,
+        860
+      ],
+      "old": {
+        "path": "/manage/messenger",
+        "state": "state-old-admin.json",
+        "steps": [
+          {
+            "waitFor": "li[data-type=dialog]"
+          },
+          {
+            "fill": [
+              ".messenger-search input",
+              "a"
+            ],
+            "wait": 2500
+          },
+          {
+            "hover": ".messenger-search .search-wrapper"
+          }
+        ]
+      },
+      "new": {
+        "path": "/messenger",
+        "state": "state-admin.json",
+        "steps": [
+          {
+            "waitFor": "[data-testid=dialog-row]"
+          },
+          {
+            "fill": [
+              "[data-testid=dialog-search] input",
+              "a"
+            ],
+            "wait": 2500
+          },
+          {
+            "hover": "[data-testid=dialog-search]"
+          }
+        ]
+      },
+      "elements": [
+        {
+          "name": "清除按钮",
+          "old": ".messenger-search .ivu-input-icon-clear",
+          "new": "[data-testid=dialog-search] [aria-label=\"清除\"]",
+          "props": []
+        },
+        {
+          "name": "清除·圆点",
+          "old": ".messenger-search .ivu-input-icon-clear",
+          "new": "[data-testid=dialog-search] [aria-label=\"清除\"] > div",
+          "props": [
+            "color|background-color"
+          ],
+          "ignore": [
+            "width",
+            "height",
+            "left",
+            "top"
+          ]
+        },
+        {
+          "name": "搜索输入",
+          "old": ".messenger-search input",
+          "new": "[data-testid=dialog-search] input",
+          "props": [
+            "padding-left"
+          ]
+        }
+      ],
+      "clip": {
+        "old": ".messenger-select",
+        "new": "[data-testid=dialog-list]"
+      }
+    },
+    {
+      "name": "wide-search-empty",
+      "viewport": [
+        1280,
+        860
+      ],
+      "old": {
+        "path": "/manage/messenger",
+        "state": "state-old-admin.json",
+        "steps": [
+          {
+            "waitFor": "li[data-type=dialog]"
+          },
+          {
+            "fill": [
+              ".messenger-search input",
+              "zzqq无结果"
+            ],
+            "wait": 3000
+          }
+        ]
+      },
+      "new": {
+        "path": "/messenger",
+        "state": "state-admin.json",
+        "steps": [
+          {
+            "waitFor": "[data-testid=dialog-row]"
+          },
+          {
+            "fill": [
+              "[data-testid=dialog-search] input",
+              "zzqq无结果"
+            ],
+            "wait": 3000
+          }
+        ]
+      },
+      "clip": {
+        "old": ".messenger-select",
+        "new": "[data-testid=dialog-list]"
+      },
+      "elements": [
+        {
+          "name": "无结果提示",
+          "old": ".messenger-list .nothing",
+          "new": "[data-testid=dialog-hint]",
+          "props": [
+            "padding-top",
+            "padding-left"
+          ],
+          "text": true,
+          "ignore": [
+            "width",
+            "left"
+          ]
+        },
+        {
+          "name": "无结果文字",
+          "old": ".messenger-list .nothing",
+          "new": "[data-testid=dialog-hint] div[dir=auto]",
+          "props": [
+            "font-size",
+            "line-height",
+            "color"
+          ],
+          "ignore": [
+            "width",
+            "height",
+            "left",
+            "top"
+          ],
+          "text": true
+        }
+      ]
+    },
+    {
+      "name": "wide-empty-detail",
+      "viewport": [
+        1280,
+        860
+      ],
+      "old": {
+        "path": "/manage/messenger",
+        "state": "state-old-admin.json",
+        "steps": [
+          {
+            "waitFor": ".msg-dialog-bg-text"
+          }
+        ]
+      },
+      "new": {
+        "path": "/messenger",
+        "state": "state-admin.json",
+        "steps": [
+          {
+            "waitFor": "text=选择一个会话开始聊天"
+          }
+        ]
+      },
+      "elements": [
+        {
+          "name": "提示胶囊",
+          "old": ".msg-dialog-bg-text",
+          "new": "text=选择一个会话开始聊天",
+          "props": [
+            "font-size",
+            "color",
+            "background-color",
+            "border-radius",
+            "padding"
+          ],
+          "ignore": [
+            "left"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "narrow-top",
+      "viewport": [
+        390,
+        844
+      ],
+      "mobile": true,
+      "old": {
+        "path": "/manage/messenger",
+        "state": "state-old-admin.json",
+        "steps": [
+          {
+            "waitFor": "li[data-type=dialog]"
+          }
+        ]
+      },
+      "new": {
+        "path": "/messenger",
+        "state": "state-admin.json",
+        "steps": [
+          {
+            "waitFor": "[data-testid=dialog-row]"
+          }
+        ]
+      },
+      "elements": [
+        {
+          "name": "大标题",
+          "old": ".messenger-select .large-header-title",
+          "new": "role=heading >> nth=0",
+          "props": [
+            "font-size",
+            "font-weight",
+            "color"
+          ],
+          "text": true,
+          "ignore": [
+            "width"
+          ]
+        },
+        {
+          "name": "搜索框",
+          "old": ".messenger-search .search-wrapper",
+          "new": "[data-testid=dialog-search]",
+          "props": [
+            "border-radius",
+            "background-color"
+          ]
+        },
+        {
+          "name": "分类条",
+          "old": ".messenger-nav",
+          "new": "[data-testid=dialog-nav]",
+          "props": [
+            "background-color",
+            "border-bottom-color"
+          ]
+        },
+        {
+          "name": "分类·全部",
+          "old": ".messenger-nav .nav-list .nav-item:has-text(\"全部\") .nav-title",
+          "new": "[data-testid=dialog-nav] :text-is(\"全部\")",
+          "props": [
+            "font-size",
+            "color"
+          ],
+          "text": true
+        },
+        {
+          "name": "首行会话",
+          "old": "li[data-type=dialog] >> nth=0",
+          "new": "[data-testid=dialog-row] >> nth=0",
+          "props": [
+            "background-color"
+          ]
+        },
+        {
+          "name": "行分隔线",
+          "old": "li[data-type=dialog] >> nth=0 >> .dialog-line",
+          "new": "[data-testid=dialog-row-line] >> nth=0",
+          "props": [
+            "height",
+            "transform",
+            "background-color"
+          ],
+          "ignore": [
+            "top"
+          ]
+        }
+      ]
+    }
+  ]
+}

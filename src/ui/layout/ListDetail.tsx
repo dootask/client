@@ -21,17 +21,34 @@ export function useSplitView(): boolean {
  * children 的位置固定，切换断点时路由栈不会重新挂载
  *
  * width / onResize：宽屏下拖出来的宽度，由调用方负责存取；拖完松手时回调一次
+ * dialog：消息页同旧版，列表栏占 30% 宽（限制在 240–320）、不能拖，和右边之间一条浅色竖线，右边白底
  */
-export function ListDetail({ list, children, width, onResize }: { list: ReactNode; children: ReactNode; width?: number; onResize?: (width: number) => void }) {
+export function ListDetail({
+  list,
+  children,
+  width,
+  onResize,
+  dialog = false,
+}: {
+  list: ReactNode;
+  children: ReactNode;
+  width?: number;
+  onResize?: (width: number) => void;
+  dialog?: boolean;
+}) {
   const breakpoint = useBreakpoint();
+  const split = breakpoint !== 'xs';
   return (
     <View style={styles.root}>
-      {breakpoint !== 'xs' && (
-        <ListPane resizable={breakpoint === 'lg'} initialWidth={width} onResize={onResize}>
-          {list}
-        </ListPane>
-      )}
-      <View style={styles.detail}>{children}</View>
+      {split &&
+        (dialog ? (
+          <View style={styles.dialogPane}>{list}</View>
+        ) : (
+          <ListPane resizable={breakpoint === 'lg'} initialWidth={width} onResize={onResize}>
+            {list}
+          </ListPane>
+        ))}
+      <View style={styles.detail(dialog)}>{children}</View>
     </View>
   );
 }
@@ -101,9 +118,17 @@ const styles = StyleSheet.create((theme) => ({
     width: theme.spacing.sm,
     zIndex: 1,
   },
-  detail: {
+  dialogPane: {
+    width: `${theme.size.dialogPaneRatio * 100}%`,
+    minWidth: theme.size.dialogPaneMin,
+    maxWidth: theme.size.dialogPaneMax,
+    backgroundColor: theme.colors.surface,
+    borderRightWidth: 1,
+    borderRightColor: theme.colors.paneLine,
+  },
+  detail: (dialog: boolean) => ({
     flex: 1,
     minWidth: 0,
-    backgroundColor: theme.colors.bg,
-  },
+    backgroundColor: dialog ? theme.colors.surface : theme.colors.bg,
+  }),
 }));
