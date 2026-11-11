@@ -56,7 +56,7 @@ export function EmojiPanel({ origin, onInsert, onDelete, onSend, onSearch }: {
             numColumns={EMOJI_COLUMNS}
             keyExtractor={(emoji, index) => `${index}${emoji}`}
             initialNumToRender={EMOJI_COLUMNS * 6}
-            getItemLayout={(_, index) => ({ length: theme.size.emojiCell, offset: theme.size.emojiCell * Math.floor(index / EMOJI_COLUMNS), index })}
+            getItemLayout={(_, index) => ({ length: theme.size.emojiRow, offset: theme.size.emojiRow * Math.floor(index / EMOJI_COLUMNS), index })}
             keyboardShouldPersistTaps="always"
             contentContainerStyle={styles.emojiList}
             renderItem={({ item }) => (
@@ -134,10 +134,10 @@ const styles = StyleSheet.create((theme) => ({
     backgroundColor: active ? theme.colors.fill : hovered ? theme.colors.hover : undefined,
   }),
   // 底部留出删除键的高度，最后一行不被盖住
-  emojiList: { paddingHorizontal: theme.spacing.sm, paddingBottom: theme.size.emojiCell + theme.spacing.md },
+  emojiList: { paddingHorizontal: theme.spacing.sm, paddingBottom: theme.size.emojiRow + theme.spacing.md },
   emojiCell: (pressed: boolean, hovered: boolean) => ({
     flex: 1 / EMOJI_COLUMNS,
-    height: theme.size.emojiCell,
+    height: theme.size.emojiRow,
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: theme.radius.block,

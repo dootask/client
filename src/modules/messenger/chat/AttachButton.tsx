@@ -21,7 +21,7 @@ export function AttachButton({ hitSlop, style }: AttachButtonProps) {
       onPress={() => controller.togglePanel('more')}
       style={style}
     >
-      <Icon icon={open ? Keyboard : Plus} color={theme.colors.text2} size={theme.size.icon} />
+      <Icon icon={open ? Keyboard : Plus} color={theme.colors.text2} size={theme.size.composer.icon} />
     </Touchable>
   );
 }

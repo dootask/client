@@ -12,7 +12,11 @@
   },
   "tag": {
     "deleted": "Dihapus",
-    "archived": "Diarsipkan"
+    "archived": "Diarsipkan",
+    "all": "Semua Anggota",
+    "department": "Departemen",
+    "bot": "Bot",
+    "completed": "Selesai"
   },
   "self": "Anda",
   "yesterday": "Kemarin",
@@ -318,5 +322,6 @@
   "updating": "Memperbarui...",
   "categories": "Kategori",
   "tabMessages": "Pesan",
-  "tabContacts": "Kontak"
+  "tabContacts": "Kontak",
+  "notifyOff": "Izin notifikasi belum diaktifkan"
 }

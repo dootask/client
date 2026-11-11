@@ -12,7 +12,11 @@
   },
   "tag": {
     "deleted": "Gelöscht",
-    "archived": "Archiviert"
+    "archived": "Archiviert",
+    "all": "Alle Mitglieder",
+    "department": "Abteilung",
+    "bot": "Bot",
+    "completed": "Abgeschlossen"
   },
   "self": "Du",
   "yesterday": "Gestern",
@@ -318,5 +322,6 @@
   "updating": "Aktualisierung...",
   "categories": "Kategorien",
   "tabMessages": "Nachricht",
-  "tabContacts": "Kontakte"
+  "tabContacts": "Kontakte",
+  "notifyOff": "Benachrichtigungsberechtigung ist nicht aktiviert"
 }

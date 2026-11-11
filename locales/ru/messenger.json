@@ -12,7 +12,11 @@
   },
   "tag": {
     "deleted": "Удалено",
-    "archived": "В архиве"
+    "archived": "В архиве",
+    "all": "Все участники",
+    "department": "Отдел",
+    "bot": "Бот",
+    "completed": "Завершено"
   },
   "self": "Вы",
   "yesterday": "Вчера",
@@ -318,5 +322,6 @@
   "updating": "Обновление...",
   "categories": "Категории",
   "tabMessages": "Сообщение",
-  "tabContacts": "Контакты"
+  "tabContacts": "Контакты",
+  "notifyOff": "Разрешение на уведомления не включено"
 }

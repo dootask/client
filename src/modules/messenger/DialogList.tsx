@@ -19,6 +19,7 @@ import { DialogBar, DialogNav, DialogSearch } from './DialogListChrome';
 import { useMessenger, useMessengerState } from './hooks';
 import { type ListCategory, listedIds, shakeTargetId } from './listModel';
 import { setShakeHandler, useDialogListState } from './listState';
+import { NotifyPermissionBar } from './NotifyPermissionBar';
 import { AI_HIDDEN, searchRowKey, type SearchRow, useSearchRows } from './search';
 
 /** 列表的一行：本地会话、服务端的搜索结果或标注消息、没有内容时的提示 */
@@ -62,6 +63,7 @@ function WideDialogList() {
     <View testID="dialog-list" style={styles.wide}>
       <DialogSearch narrow={false} loading={loading} />
       {!searching && <DialogNav narrow={false} />}
+      <NotifyPermissionBar narrow={false} />
       <RowList listRef={listRef} rows={rows} searching={searching} narrow={false} />
       <DialogBar />
     </View>
@@ -88,10 +90,11 @@ function NarrowDialogList() {
       </View>
       <DialogSearch narrow loading={loading} />
       {!searching && (
-        <Animated.View style={navStyle}>
+        <Animated.View style={[styles.navAbove, navStyle]}>
           <DialogNav narrow />
         </Animated.View>
       )}
+      <NotifyPermissionBar narrow />
     </View>
   );
 
@@ -288,6 +291,10 @@ const styles = StyleSheet.create((theme) => ({
   },
   narrowHead: {
     backgroundColor: theme.colors.headerBg,
+  },
+  // 吸顶的分类条盖住随列表滚走的通知权限条
+  navAbove: {
+    zIndex: 1,
   },
   compactWrap: {
     position: 'absolute',

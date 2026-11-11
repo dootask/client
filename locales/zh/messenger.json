@@ -12,7 +12,11 @@
   },
   "tag": {
     "deleted": "已删除",
-    "archived": "已归档"
+    "archived": "已归档",
+    "all": "全员",
+    "department": "部门",
+    "bot": "机器人",
+    "completed": "已完成"
   },
   "self": "你",
   "yesterday": "昨天",
@@ -318,5 +322,6 @@
   "updating": "更新中...",
   "categories": "分类",
   "tabMessages": "消息",
-  "tabContacts": "联系人"
+  "tabContacts": "联系人",
+  "notifyOff": "未开启通知权限"
 }

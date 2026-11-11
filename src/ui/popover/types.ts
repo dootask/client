@@ -35,6 +35,11 @@ export interface MenuProps {
    * 右键菜单给了这个就改为贴着触发元素弹出（旧版会话右键菜单）
    */
   placement?: { side: Side; align: Align };
+  /**
+   * App 上也自绘（样式同 Web），不交给系统菜单：旧 App 里这一处是 WebView 里的网页菜单（会话行菜单），照旧版还原。
+   * Web 上本来就是自绘，不受影响
+   */
+  drawn?: boolean;
   /** 自绘菜单打开、关闭时通知（旧版打开菜单时给那一行描边） */
   onOpenChange?: (open: boolean) => void;
   /** 触发元素，只负责外观，点击由 Menu 处理 */

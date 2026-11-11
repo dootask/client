@@ -120,6 +120,14 @@ const light = {
   tagRedText: '#F5222D',
   tagRedFill: '#FFF1F0',
   tagRedLine: '#FFA39E',
+  /** 旧版网页正文的默认字色（iView @text-color） */
+  pageText: '#515A6E',
+  /** App 会话列表顶部「未开启通知权限」条的底色和边线 */
+  noticeFill: '#FEF7EE',
+  noticeLine: '#FAE0B5',
+  /** App 会话标题旁「已完成」「已删除」标签的底色（主色、危险色 15%，同旧 App） */
+  tagSuccessFill: '#84C56A26',
+  tagDangerFill: '#F04A4A26',
 };
 
 export type Colors = typeof light;
@@ -205,6 +213,11 @@ const dark: Colors = {
   tagRedText: '#FF7875',
   tagRedFill: 'rgba(245,34,45,0.15)',
   tagRedLine: 'rgba(255,163,158,0.4)',
+  pageText: '#C9CDD4',
+  noticeFill: 'rgba(245,165,36,0.12)',
+  noticeLine: 'rgba(245,165,36,0.3)',
+  tagSuccessFill: '#84C56A26',
+  tagDangerFill: '#FF696126',
 };
 
 const font = (fontSize: number, lineHeight: number, fontWeight: TextStyle['fontWeight']) => ({ fontSize, lineHeight, fontWeight });
@@ -235,6 +248,10 @@ const typography = {
   listHint: font(14, 22, '400'),
   /** 旧版网页正文行高 1.5（消息页空白区的提示胶囊） */
   emptyPill: font(14, 21, '400'),
+  /** 会话列表顶部的提示条（旧版正文 14、行高 1.5） */
+  notice: font(14, 21, '400'),
+  /** App 聊天页置顶发送人、待办横条的加粗小字（旧版 App） */
+  footnoteStrong: font(13, 18, '600'),
 } satisfies Record<string, TextStyle>;
 
 /** 按下态：图标按钮降透明度，主按钮略降（docs/ui-spec.md 第 4 节）；不可用的按钮 */
@@ -253,10 +270,14 @@ const radius = {
   menu: 4,
   swatch: 2,
   tag: 3,
+  /** App 聊天页标题旁的标签（旧版 App） */
+  headerTag: 4,
   /** 会话列表搜索框（宽屏 / 窄屏）、右侧空白页的提示胶囊 */
   dialogSearch: 12,
   dialogSearchNarrow: 10,
   emptyPill: 14,
+  /** 宽屏会话列表顶部的提示条 */
+  notice: 6,
   ...platformRadius,
 };
 
@@ -317,6 +338,9 @@ const size = {
   /** 右侧空白页的图标、提示胶囊的左右内边距 */
   emptyIcon: 46,
   emptyPillPadX: 15,
+  /** 会话列表顶部提示条：宽屏上下内边距（窄屏通栏用 spacing.sm）、右侧箭头 */
+  noticePadY: 6,
+  noticeIcon: 16,
   /**
    * 窄屏 Tab 根页的大标题（同旧版 MobileLargeHeader）：大标题行高、收起后的顶部条高；
    * 顶部条底色在分界线前多少像素开始渐显、越过后标题再滚多少像素完全显示
@@ -398,9 +422,21 @@ const size = {
   /** 回复引用右侧的缩略图 */
   quoteThumb: 36,
   voicePlay: 32,
+  /** App 聊天页导航栏右侧的会话头像（旧版 App） */
+  headerAvatar: 36,
+  /** App 聊天页标题旁标签的内边距（旧版 App） */
+  headerTagPadX: 5,
+  headerTagPadY: 1,
+  /** App 聊天页置顶 / 待办横条（旧版 App）：行高、左侧色条宽、关闭图标 */
+  banner: 40,
+  bannerAccent: 3,
+  bannerClose: 16,
   /** 加号面板：最近照片的缩略图、功能入口的方块 */
   photoThumb: 96,
   moreTile: 56,
+  /** App 加号面板的入口图块和里面的图标（旧版 App） */
+  moreEntry: 60,
+  moreEntryIcon: 26,
   /** 输入栏上方快捷表情的贴纸 */
   quickSticker: 72,
   /** 输入栏上方快捷消息胶囊的最大宽度（文字过长截断） */

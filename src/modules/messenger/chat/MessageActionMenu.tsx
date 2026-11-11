@@ -11,7 +11,7 @@ import { toSections } from '../../../ui/popover/menuModel';
 import type { Rect } from '../../../ui/popover/position';
 import { useMessengerState, useMsgActions } from '../hooks';
 import type { RowData } from './chatModel';
-import { EMOJIS, REACTIONS } from './emoji';
+import { EMOJIS, quickReactions, rememberReaction } from './emoji';
 import { MessagePreview } from './MessageRow';
 
 export interface LongPressTarget {
@@ -61,7 +61,15 @@ export function MessageActionMenu({ target, group, userId, menu, onReact, onClos
         inset,
         sections,
         preview: <MessagePreview info={info} msg={msg} />,
-        reactions: { emojis: REACTIONS, all: EMOJIS, mine, onPick: (symbol) => onReact(msg, symbol) },
+        reactions: {
+          emojis: quickReactions(),
+          all: EMOJIS,
+          mine,
+          onPick: (symbol) => {
+            rememberReaction(symbol);
+            onReact(msg, symbol);
+          },
+        },
       }}
       onClose={onClose}
     />

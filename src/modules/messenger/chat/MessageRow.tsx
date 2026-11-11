@@ -620,7 +620,8 @@ function SystemRow({ msg }: { msg: Msg }) {
           const space = index > 0 ? ' ' : '';
           if ('userid' in part) return <SystemUser key={index} userid={part.userid} prefix={space} />;
           if ('label' in part) return space + t(SYSTEM_LABELS[part.label]);
-          if ('preview' in part) return <Text key={index}>{space}「<PreviewText preview={part.preview} />」</Text>;
+          // 引号同旧版：英文双引号
+          if ('preview' in part) return <Text key={index}>{space}{'"'}<PreviewText preview={part.preview} />{'"'}</Text>;
           return space + part.text;
         })}
       </Text>

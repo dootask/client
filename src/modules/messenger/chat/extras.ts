@@ -26,8 +26,7 @@ export interface Extra {
  */
 export function useExtras({ dialog, userId, openSheet }: { dialog: StoredDialog | undefined; userId: number; openSheet: (sheet: ExtraSheet) => void }): Extra[] {
   const t = useT();
-  const actions = useMsgActions();
-  const errorText = useErrorText();
+  const callPeer = useCallPeer(dialog, userId);
   return useMemo(() => {
     if (!dialog) return [];
     if (dialog.type === 'group') {
@@ -38,21 +37,31 @@ export function useExtras({ dialog, userId, openSheet }: { dialog: StoredDialog 
     }
     const peer = dialog.dialog_user?.userid ?? 0;
     if (dialog.type !== 'user' || dialog.bot || !peer) return [];
-    const list: Extra[] = [{ key: 'anon', icon: VenetianMask, label: t('messenger:anon.entry'), onPress: () => openSheet({ kind: 'anon', userid: peer }) }];
-    if (CAN_DIAL && peer !== userId && actions) {
-      const call = () => {
-        actions
-          .tel(dialog.id)
-          .then((tel) => Linking.openURL(`tel:${tel}`))
-          .catch((err) => showToast(errorText(err)));
-      };
-      list.push({
-        key: 'call',
-        icon: Phone,
-        label: t('messenger:call.entry'),
-        onPress: () => confirmOnApp({ title: t('messenger:call.confirm', { name: dialog.name }), confirmLabel: t('messenger:call.action'), cancelLabel: t('cancel'), onConfirm: call }),
-      });
-    }
-    return list;
-  }, [dialog, userId, actions, openSheet, errorText, t]);
+    // 顺序同旧版：打电话在匿名消息前面
+    const anon: Extra = { key: 'anon', icon: VenetianMask, label: t('messenger:anon.entry'), onPress: () => openSheet({ kind: 'anon', userid: peer }) };
+    return callPeer ? [{ key: 'call', icon: Phone, label: t('messenger:call.entry'), onPress: callPeer }, anon] : [anon];
+  }, [dialog, callPeer, openSheet, t]);
+}
+
+/**
+ * 给单聊真人打电话（手机上才有）：先确认，取到号码后交给系统拨号，服务端会在会话里留一条通知。
+ * 不能打时返回 null。加号面板和 App 导航栏的电话按钮共用
+ */
+export function useCallPeer(dialog: StoredDialog | undefined, userId: number): (() => void) | null {
+  const t = useT();
+  const actions = useMsgActions();
+  const errorText = useErrorText();
+  const peer = dialog?.type === 'user' && !dialog.bot ? (dialog.dialog_user?.userid ?? 0) : 0;
+  const dialogId = dialog?.id ?? 0;
+  const name = dialog?.name;
+  return useMemo(() => {
+    if (!CAN_DIAL || !peer || peer === userId || !actions) return null;
+    const call = () => {
+      actions
+        .tel(dialogId)
+        .then((tel) => Linking.openURL(`tel:${tel}`))
+        .catch((err) => showToast(errorText(err)));
+    };
+    return () => confirmOnApp({ title: t('messenger:call.confirm', { name }), confirmLabel: t('messenger:call.action'), cancelLabel: t('cancel'), onConfirm: call });
+  }, [peer, userId, actions, dialogId, name, errorText, t]);
 }

@@ -2,12 +2,17 @@ import { useMemo, useRef } from 'react';
 import { useUnistyles } from 'react-native-unistyles';
 
 import { Touchable } from '../Touchable';
+import { DrawnMenu } from './DrawnMenu';
 import { resolveItems, toNativeMenu } from './menuModel';
 import { type NativeMenuHandle, NativeMenuView } from './nativeMenu';
 import type { MenuProps } from './types';
 
-/** Android：系统弹出菜单，点击或长按时以触发元素为锚点弹出 */
-export function Menu({ items, trigger = 'press', onPress, accessibilityLabel, hitSlop, style, children }: MenuProps) {
+/** Android：系统弹出菜单，点击或长按时以触发元素为锚点弹出；drawn 时自绘 */
+export function Menu(props: MenuProps) {
+  return props.drawn ? <DrawnMenu {...props} /> : <SystemMenu {...props} />;
+}
+
+function SystemMenu({ items, trigger = 'press', onPress, accessibilityLabel, hitSlop, style, children }: MenuProps) {
   const { theme, rt } = useUnistyles();
   const menu = useRef<NativeMenuHandle>(null);
   const { sections, handlers } = useMemo(() => toNativeMenu(resolveItems(items)), [items]);

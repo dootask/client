@@ -6,27 +6,24 @@ import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { dateFormats, useLanguage, useT } from '../../../i18n';
 import { dialogUnread, type StoredDialog } from '../../../sync/messenger';
-import { DialogAvatar, UserAvatar } from '../../../ui/Avatar';
 import { Icon } from '../../../ui/Icon';
 import { useSplitView } from '../../../ui/layout';
 import { Touchable } from '../../../ui/Touchable';
 import { socket } from '../../session';
 import { useNow } from '../clock';
 import { useMessengerState, useUser } from '../hooks';
+import { HeaderRight, HeaderTags } from './ChatHeaderSide';
 import { countText, onlineText } from './format';
 
 /** 断线超过这么久才显示「连接中」，短暂重连不闪 */
 const CONNECTING_DELAY = 1500;
 
 /**
- * 聊天页导航栏：返回（窄屏，旁边是其他会话的未读）、标题和标签、副标题（群人数 / 对方在线状态 / 连接中）、会话头像。
+ * 聊天页导航栏：返回（窄屏，旁边是其他会话的未读）、标题和标签、副标题（群人数 / 对方在线状态 / 连接中）、右侧（会话头像；App 另有电话按钮）。
  * 两侧同宽，标题始终居中；会话数据还没到（深链打开）时只有返回
  */
 export function ChatHeader({ dialogId, dialog }: { dialogId: number; dialog: StoredDialog | undefined }) {
-  const t = useT();
-  const { theme } = useUnistyles();
   const split = useSplitView();
-  const info = dialog?.group_info;
   return (
     <View style={styles.root}>
       <View style={styles.bar}>
@@ -37,15 +34,13 @@ export function ChatHeader({ dialogId, dialog }: { dialogId: number; dialog: Sto
           <View style={styles.center}>
             <View style={styles.titleRow}>
               <Text style={styles.title} numberOfLines={1}>{dialog.name}</Text>
-              {info?.deleted_at ? <Tag text={t('messenger:tag.deleted')} danger /> : info?.archived_at ? <Tag text={t('messenger:tag.archived')} /> : null}
+              <HeaderTags dialog={dialog} />
             </View>
             <Subtitle dialog={dialog} />
           </View>
         )}
         <View style={[styles.side, styles.sideRight]}>
-          {dialog && (dialog.type === 'user'
-            ? <UserAvatar uri={dialog.userimg} userid={dialog.dialog_user?.userid ?? 0} name={dialog.name ?? ''} bot={!!dialog.bot} size={theme.size.avatar.md} />
-            : <DialogAvatar uri={dialog.avatar} groupType={dialog.group_type} size={theme.size.avatar.md} />)}
+          {dialog && <HeaderRight dialog={dialog} />}
         </View>
       </View>
     </View>
@@ -138,14 +133,6 @@ function useConnecting(): boolean {
   return connecting;
 }
 
-function Tag({ text, danger = false }: { text: string; danger?: boolean }) {
-  return (
-    <View style={styles.tag(danger)}>
-      <Text style={styles.tagText(danger)} numberOfLines={1}>{text}</Text>
-    </View>
-  );
-}
-
 const styles = StyleSheet.create((theme, rt) => ({
   root: {
     paddingTop: rt.insets.top,
@@ -184,13 +171,4 @@ const styles = StyleSheet.create((theme, rt) => ({
     alignItems: 'center',
   },
   backBadgeText: { ...theme.typography.footnote, color: theme.colors.text2, fontVariant: ['tabular-nums'] },
-  tag: (danger: boolean) => ({
-    paddingHorizontal: theme.spacing.xs,
-    borderRadius: theme.radius.bubbleTight,
-    backgroundColor: danger ? theme.colors.danger : theme.colors.fill,
-  }),
-  tagText: (danger: boolean) => ({
-    ...theme.typography.caption2,
-    color: danger ? theme.colors.onPrimary : theme.colors.text2,
-  }),
 }));

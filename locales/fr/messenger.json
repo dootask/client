@@ -12,7 +12,11 @@
   },
   "tag": {
     "deleted": "Supprimé",
-    "archived": "Archivé"
+    "archived": "Archivé",
+    "all": "Tous les membres",
+    "department": "Département",
+    "bot": "Bot",
+    "completed": "Terminé"
   },
   "self": "Vous",
   "yesterday": "Hier",
@@ -318,5 +322,6 @@
   "updating": "Mise à jour...",
   "categories": "Catégories",
   "tabMessages": "Message",
-  "tabContacts": "Contacts"
+  "tabContacts": "Contacts",
+  "notifyOff": "L’autorisation des notifications n’est pas activée"
 }

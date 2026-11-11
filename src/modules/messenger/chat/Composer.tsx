@@ -1,4 +1,4 @@
-import { BellOff, Code, Keyboard, Maximize2, Mic, Pencil, Reply, Send, Smile, Type, X } from 'lucide-react-native';
+import { BellOff, Check, Code, Keyboard, Maximize2, Mic, Pencil, Reply, Send, Smile, Type, X } from 'lucide-react-native';
 import { useEffect, useEffectEvent, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState, type ReactNode, type Ref } from 'react';
 import { Text, View, type TextInputSelectionChangeEvent } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
@@ -302,7 +302,8 @@ export function Composer({ dialogId, store, pickerKeysRef, mentionSession, mode,
   const blocks = useMemo(() => (value.html ? textBlocks(value.html, false, { userId, origin: `${server}/` }) : null), [value.html, userId, server]);
   const modeTitle = editing ? t('messenger:chat.editing') : replyTo ? t('messenger:chat.replyTo', { name: replyName ?? '' }) : '';
 
-  const sendIcon = <Icon icon={Send} color={canSend ? theme.colors.primaryText : theme.colors.text4} size={theme.size.icon} />;
+  // 编辑态是对勾（同旧版）
+  const sendIcon = <Icon icon={editing ? Check : Send} color={canSend ? theme.colors.primaryText : theme.colors.text4} size={theme.size.composer.icon} />;
   const emojiOpen = controller.activePanel === 'emoji';
   /** 按住说话的平台切换语音模式（收起键盘和面板 / 切回键盘）；其余平台点了直接开始录 */
   const onVoice = () => {
@@ -329,11 +330,11 @@ export function Composer({ dialogId, store, pickerKeysRef, mentionSession, mode,
             onPress={onVoice}
             style={({ pressed }) => [styles.button, pressed && styles.pressed]}
           >
-            <Icon icon={voiceMode ? Keyboard : Mic} color={theme.colors.text2} size={theme.size.icon} />
+            <Icon icon={voiceMode ? Keyboard : Mic} color={theme.colors.text2} size={theme.size.composer.icon} />
           </Touchable>,
         )}
         {voiceMode && <View style={styles.voice}>{voice?.bar}</View>}
-        <View style={[styles.frame, voiceMode && styles.hidden]}>
+        <View style={[styles.frame(!!voice && !editing), voiceMode && styles.hidden]}>
           {blocks ? (
             // 预览里的链接、图片不单独响应，点哪里都是回到全屏编辑；超出最大高度的部分裁掉
             <Touchable accessibilityRole="button" accessibilityLabel={t('messenger:editor.expand')} onPress={() => openEditor()} style={styles.preview}>
@@ -366,9 +367,9 @@ export function Composer({ dialogId, store, pickerKeysRef, mentionSession, mode,
               leaveVoice();
               controller.togglePanel('emoji');
             }}
-            style={({ pressed }) => [styles.button, pressed && styles.pressed]}
+            style={({ pressed }) => [styles.button, styles.emoji, pressed && styles.pressed]}
           >
-            <Icon icon={emojiOpen ? Keyboard : Smile} color={theme.colors.text2} size={theme.size.icon} />
+            <Icon icon={emojiOpen ? Keyboard : Smile} color={theme.colors.text2} size={theme.size.composer.icon} />
           </Touchable>,
         )}
         {(side === 'send' ? withExpand : (node: ReactNode) => node)(
@@ -462,7 +463,7 @@ const styles = StyleSheet.create((theme) => ({
   row: {
     flexDirection: 'row',
     alignItems: 'flex-end',
-    paddingHorizontal: theme.spacing.xs,
+    paddingHorizontal: theme.size.composer.padX,
     paddingVertical: theme.spacing.xs,
   },
   // 按钮比触控尺寸窄，图标与输入框的间距才匀称；点按范围用 hitSlop 补回
@@ -472,6 +473,7 @@ const styles = StyleSheet.create((theme) => ({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  emoji: { marginRight: theme.size.composer.emojiGap },
   pressed: { opacity: theme.opacity.pressedIcon },
   // 左右两列：按钮贴底，全屏编辑按钮浮在上方空处，与输入框顶端对齐
   side: { alignSelf: 'stretch', justifyContent: 'flex-end' },
@@ -486,18 +488,22 @@ const styles = StyleSheet.create((theme) => ({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  frame: {
+  // leading：左边有语音按钮
+  frame: (leading: boolean) => ({
     flex: 1,
-    marginHorizontal: theme.spacing.xs,
+    marginLeft: leading ? theme.size.composer.inputStart : theme.size.composer.inputStartBare,
+    marginRight: theme.size.composer.inputEnd,
     marginVertical: (theme.size.touch - theme.size.chatInput) / 2,
     minHeight: theme.size.chatInput,
     justifyContent: 'center',
     borderRadius: theme.radius.block,
     backgroundColor: theme.colors.fill,
-  },
+  }),
+  // 语音条占输入框的位置，左边总有语音按钮
   voice: {
     flex: 1,
-    marginHorizontal: theme.spacing.xs,
+    marginLeft: theme.size.composer.inputStart,
+    marginRight: theme.size.composer.inputEnd,
     marginVertical: (theme.size.touch - theme.size.chatInput) / 2,
   },
   hidden: { display: 'none' },

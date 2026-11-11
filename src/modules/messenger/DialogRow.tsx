@@ -223,7 +223,7 @@ export interface DialogRowProps {
   onOpen: (id: number) => void;
 }
 
-/** 列表里的一行：只订阅自己这一条会话，App 上长按、Web 上右键弹出会话菜单（宽屏在行下方、窄屏在行上方，同旧版） */
+/** 列表里的一行：只订阅自己这一条会话，App 上长按、Web 上右键弹出会话菜单（宽屏在行下方、窄屏在行上方；App 上也自绘，同旧版） */
 export const DialogRow = memo(function DialogRow({ id, active, shake, line, searching, onOpen }: DialogRowProps) {
   const d = useDialog(id);
   const draft = useMessengerState((s) => (s.openId === id ? undefined : s.drafts[id]));
@@ -237,6 +237,7 @@ export const DialogRow = memo(function DialogRow({ id, active, shake, line, sear
       <Menu
         items={items}
         trigger="context"
+        drawn
         onPress={open}
         accessibilityLabel={d.name}
         iconEnd

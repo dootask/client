@@ -51,6 +51,7 @@
 
 - **测试机的 Chromium 打不开开发地址**（`ERR_ADDRESS_UNREACHABLE`，`curl` 却正常）：域名同时有 IPv6 记录，测试机连不通，Chromium 优先走 IPv6 就失败。不是 macOS 本地网络权限的问题。测试机上用 `~/qa/browser.mjs` 的 `launch([地址…])` 启动浏览器，它先查出 IPv4 再用 `--host-resolver-rules` 指定
 
+- **Metro 跑着时新建平台分文件不会立即生效**：已有 `X.tsx` 时再新建 `X.web.tsx`（或 `.native.tsx`），Metro 仍按缓存解析到 `X.tsx`。要 touch 一下引用它的文件，或者重启 Metro。验收前用 bundle 里的模块路径确认解析对了
 - **全屏编辑器的 WebView 页面是生成的**：`scripts/editor-page.mjs` 把 Quill、mention 插件和 `src/embed/editor/core.ts` 打成一段 HTML，写到 `src/embed/editor/page.generated.ts`（不进 git）。`npm install`（postinstall）、`npm start`、`npm run typecheck` 都会先生成；改了 `core.ts` 后 Metro 已经在跑时，要手动 `node scripts/editor-page.mjs` 或重启 Metro，App 里才看得到。Web 不走这个页面，直接动态加载 `quill.web.ts`
 - **`npx expo install` 会装 SDK 里最新的补丁版本**（例如 RN 0.88.1、safe-area 5.11），和 `resources/app` 不一致，补丁文件也对不上版本。装完对照 `resources/app` 的 `package-lock.json` 改回同一版本（`npm install --save-prefix='~' 包@版本`；RN、React 写死版本号）
 - **间接依赖也要和 `resources/app` 对齐**：`expo` 写的是 `~` 范围，新装依赖时 npm 会把 `expo-modules-core` 等间接依赖升到最新补丁。58.0.30 引用了 RN 0.88.1 才有的 `RCTStatusBarAppearance`，编译能过，iOS 一启动就因找不到符号闪退（安卓不受影响）。`package-lock.json` 以 `resources/app` 的为底重新生成：复制它的 lock 到临时目录，放上本项目的 `package.json`，`npm install --package-lock-only --ignore-scripts`，再拷回来 `npm install`。之后对照两边 lock，只允许本项目自己声明的依赖版本不同

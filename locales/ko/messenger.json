@@ -12,7 +12,11 @@
   },
   "tag": {
     "deleted": "삭제됨",
-    "archived": "보관됨"
+    "archived": "보관됨",
+    "all": "전체 구성원",
+    "department": "부서",
+    "bot": "봇",
+    "completed": "완료됨"
   },
   "self": "나",
   "yesterday": "어제",
@@ -318,5 +322,6 @@
   "updating": "업데이트 중...",
   "categories": "분류",
   "tabMessages": "메시지",
-  "tabContacts": "연락처"
+  "tabContacts": "연락처",
+  "notifyOff": "알림 권한이 활성화되지 않았습니다"
 }

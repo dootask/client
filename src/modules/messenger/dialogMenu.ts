@@ -20,7 +20,7 @@ const COLOR_LABELS = {
 
 /**
  * 会话行的右键 / 长按菜单（L5–L10），项目和顺序同旧版：置顶、标记已读 / 未读、免打扰、不显示该会话，
- * 分隔线下是 6 个颜色（默认 + 5 色），当前颜色打勾。同一份数据在 App 交给系统菜单、在 Web 上自绘
+ * 分隔线下是 6 个颜色（默认 + 5 色），当前颜色打勾。各端都自绘（旧 App 这里也是网页菜单）
  */
 export function useDialogMenu(d: StoredDialog | undefined): readonly MenuEntry[] {
   const t = useT();

@@ -1,10 +1,8 @@
 import { ChevronRight, ListTodo, Pin, X } from 'lucide-react-native';
-import { useEffect, useState } from 'react';
 import { Text, View } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { useT } from '../../../i18n';
-import type { Msg } from '../../../sync/api/dialog';
 import type { StoredDialog } from '../../../sync/messenger';
 import { msgPreview } from '../../../sync/messenger/preview';
 import { Icon } from '../../../ui/Icon';
@@ -12,8 +10,9 @@ import { Confirm } from '../../../ui/popover';
 import { showToast } from '../../../ui/Toast';
 import { Touchable } from '../../../ui/Touchable';
 import { useErrorText } from '../../session';
-import { useMessengerState, useMsgActions, useUser } from '../hooks';
+import { useMsgActions, useUser } from '../hooks';
 import { PreviewText } from '../PreviewText';
+import { useTopMsg } from './topMsg';
 
 /**
  * 聊天页顶部的横条：置顶消息（点了跳过去，× 取消置顶）、我在这个会话里还没完成的待办（点了跳到最早的一条）
@@ -37,21 +36,7 @@ function TopBanner({ dialogId, msgId, userid, onJump }: { dialogId: number; msgI
   const actions = useMsgActions();
   const errorText = useErrorText();
   const user = useUser(userid);
-  // 窗口里有就跟着窗口变（编辑、回应），没有时向服务端要一次
-  const local = useMessengerState((s) => s.windows[dialogId]?.list.find((m) => m.id === msgId));
-  const [fetched, setFetched] = useState<Msg | null>(null);
-  useEffect(() => {
-    if (local || !actions) return;
-    let alive = true;
-    actions
-      .topMsg(dialogId, msgId)
-      .then((msg) => alive && setFetched(msg))
-      .catch(() => {});
-    return () => {
-      alive = false;
-    };
-  }, [local, actions, dialogId, msgId]);
-  const msg = local ?? fetched;
+  const msg = useTopMsg(dialogId, msgId);
   const preview = msgPreview(msg);
 
   return (

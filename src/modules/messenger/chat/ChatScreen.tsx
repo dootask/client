@@ -33,7 +33,7 @@ import { MessageActionMenu, type LongPressTarget } from './MessageActionMenu';
 import { MentionAccessory, type PickerKeys } from './MentionPicker';
 import { forwardable, type MenuHandlers, useMessageMenus } from './messageMenu';
 import { bubbleTones, MessageRow, RowContextValue, type RowContext } from './MessageRow';
-import { MorePanel } from './MorePanel';
+import { MorePanel, morePanelHeight } from './MorePanel';
 import { RichHandlersContext, type RichHandlers } from './RichText';
 import { useSelectDrag } from './selectDrag';
 import { createSelection, SELECTION_MAX, type Selection } from './selection';
@@ -316,6 +316,8 @@ function ChatScreen({ dialogId, msgId }: { dialogId: number; msgId: number }) {
   const onConverted = useCallback((text: string) => composerRef.current?.dictate(text), []);
   const voice = useVoiceInput({ dialogId, mode, onModeEnd, onSent, onConverted });
   const extras = useExtras({ dialog, userId, openSheet });
+  // 加号面板按入口排数定高（同旧版 App）；Web 不打开加号面板
+  const panelHeights = useMemo(() => ({ more: morePanelHeight(theme, extras.length) }), [theme, extras.length]);
 
   const nextMention = mentions.length ? Math.min(...mentions) : 0;
   // 面板一直挂着：元素要稳定，否则页面每次重渲染（如开始、结束录音）都连带重渲染整个表情面板
@@ -385,6 +387,7 @@ function ChatScreen({ dialogId, msgId }: { dialogId: number; msgId: number }) {
                 emoji: emojiPanel,
                 more: <MorePanel attach={attach} extras={extras} />,
               }}
+              panelHeights={panelHeights}
               keyboardDragOffset={theme.size.touch + theme.spacing.xs * 2}
               renderScrollToBottom={renderScrollToBottom}
               floating={nextMention > 0 && <MentionJump count={mentions.length} onPress={() => void jumpTo(nextMention)} />}

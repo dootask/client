@@ -12,7 +12,11 @@
   },
   "tag": {
     "deleted": "削除済み",
-    "archived": "アーカイブ済み"
+    "archived": "アーカイブ済み",
+    "all": "全員",
+    "department": "部署",
+    "bot": "ボット",
+    "completed": "完了"
   },
   "self": "あなた",
   "yesterday": "昨日",
@@ -318,5 +322,6 @@
   "updating": "更新中...",
   "categories": "分類",
   "tabMessages": "メッセージ",
-  "tabContacts": "連絡先"
+  "tabContacts": "連絡先",
+  "notifyOff": "通知権限が有効になっていません"
 }

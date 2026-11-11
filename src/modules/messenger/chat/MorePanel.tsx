@@ -10,6 +10,7 @@ import { HAS_RECENT_PHOTOS, loadRecentPhotos, openPhotoSettings, photoAccess, ty
 import { useChat } from '../../../ui/chat';
 import { CheckOption } from '../../../ui/CheckMark';
 import { Icon } from '../../../ui/Icon';
+import type { AppTheme } from '../../../ui/theme';
 import { Touchable } from '../../../ui/Touchable';
 import type { Attach, PickSource } from './attach';
 import type { Extra } from './extras';
@@ -18,10 +19,21 @@ import type { Extra } from './extras';
 const SELECT_LIMIT = 9;
 /** 读到照片前先占位的格数（铺满一屏宽即可） */
 const PLACEHOLDERS = 6;
+const COLUMNS = 4;
+/** 相册、文件，能拍照时还有拍摄 */
+const BASE_COUNT = CAN_CAPTURE ? 3 : 2;
+
+/** 面板高度（同旧版 App）：一排最近照片 + 两排入口（只有一排时按一排），更多入口往下滚 */
+export function morePanelHeight(theme: AppTheme, extraCount: number): number {
+  const rows = Math.min(2, Math.ceil((BASE_COUNT + extraCount) / COLUMNS));
+  const strip = HAS_RECENT_PHOTOS ? theme.spacing.md + theme.size.photoThumb : 0;
+  const cell = theme.size.moreEntry + theme.spacing.sm + theme.typography.caption.lineHeight + theme.spacing.xl;
+  return strip + theme.spacing.xl + rows * cell;
+}
 
 /**
  * 加号面板（App）：上方最近照片（点选带序号，选了之后出现原图、预览、发送），下方相册、拍摄、文件入口。
- * 后面接投票、接龙等按会话类型给的入口。点入口先收起面板再打开系统选择器或弹层
+ * 后面接投票、接龙等按会话类型给的入口。点入口先收起面板再打开系统选择器或弹层；整块上下滚
  */
 export function MorePanel({ attach, extras }: { attach: Attach; extras: Extra[] }) {
   const t = useT();
@@ -35,7 +47,7 @@ export function MorePanel({ attach, extras }: { attach: Attach; extras: Extra[] 
     ...extras,
   ];
   return (
-    <View style={styles.root}>
+    <ScrollView style={styles.root} keyboardShouldPersistTaps="handled">
       {HAS_RECENT_PHOTOS && (
         <PhotoStrip
           onSend={(files, original) => {
@@ -48,8 +60,7 @@ export function MorePanel({ attach, extras }: { attach: Attach; extras: Extra[] 
           }}
         />
       )}
-      {/* 面板高度跟键盘一样，入口多到放不下时上下滚 */}
-      <ScrollView contentContainerStyle={styles.entries}>
+      <View style={styles.entries}>
         {entries.map(({ key, icon, label, onPress }) => (
           <Touchable
             key={key}
@@ -59,16 +70,20 @@ export function MorePanel({ attach, extras }: { attach: Attach; extras: Extra[] 
               controller.closePanel();
               onPress();
             }}
-            style={({ pressed }) => [styles.entry, pressed && styles.pressed]}
+            style={styles.entry}
           >
-            <View style={styles.tile}>
-              <Icon icon={icon} color={theme.colors.text2} size={theme.size.icon} />
-            </View>
-            <Text style={styles.label} numberOfLines={1}>{label}</Text>
+            {({ pressed }) => (
+              <>
+                <View style={styles.tile(pressed)}>
+                  <Icon icon={icon} color={theme.colors.text} size={theme.size.moreEntryIcon} />
+                </View>
+                <Text style={styles.label} numberOfLines={1}>{label}</Text>
+              </>
+            )}
           </Touchable>
         ))}
-      </ScrollView>
-    </View>
+      </View>
+    </ScrollView>
   );
 }
 
@@ -107,26 +122,22 @@ function PhotoStrip({ onSend, onPreview }: {
 
   if (access === 'ask' || access === 'denied') {
     return (
-      <View style={styles.strip}>
-        <Touchable
-          accessibilityRole="button"
-          onPress={() => (access === 'ask' ? void photoAccess(true).then(setAccess).catch(() => {}) : openPhotoSettings())}
-          style={({ pressed }) => [styles.ask, pressed && styles.askPressed]}
-        >
-          <Icon icon={Images} color={theme.colors.text2} size={theme.size.icon} />
-          <Text style={styles.askText}>{t('messenger:chat.photoAccess')}</Text>
-          {access === 'denied' && <Text style={styles.askAction}>{t('messenger:chat.openSettings')}</Text>}
-        </Touchable>
-      </View>
+      <Touchable
+        accessibilityRole="button"
+        onPress={() => (access === 'ask' ? void photoAccess(true).then(setAccess).catch(() => {}) : openPhotoSettings())}
+        style={({ pressed }) => [styles.ask, pressed && styles.askPressed]}
+      >
+        <Icon icon={Images} color={theme.colors.text2} size={theme.size.icon} />
+        <Text style={styles.askText}>{t('messenger:chat.photoAccess')}</Text>
+        {access === 'denied' && <Text style={styles.askAction}>{t('messenger:chat.openSettings')}</Text>}
+      </Touchable>
     );
   }
 
   if (photos === null) {
     return (
-      <View style={styles.strip}>
-        <View style={[styles.list, styles.placeholders]}>
-          {Array.from({ length: PLACEHOLDERS }, (_, index) => <View key={index} style={styles.thumb} />)}
-        </View>
+      <View style={[styles.list, styles.placeholders]}>
+        {Array.from({ length: PLACEHOLDERS }, (_, index) => <View key={index} style={styles.thumb} />)}
       </View>
     );
   }
@@ -140,7 +151,7 @@ function PhotoStrip({ onSend, onPreview }: {
   };
 
   return (
-    <View style={styles.strip}>
+    <View>
       <FlatList
         horizontal
         data={photos}
@@ -166,36 +177,34 @@ function PhotoStrip({ onSend, onPreview }: {
           );
         }}
       />
-      {/* 操作条的位置一直留着，选了照片才出现，面板不跳；高度取触控高度，原图勾选项（顶对齐）才和按钮居中对齐 */}
-      <View style={styles.bar}>
-        {selected.length > 0 && (
-          <>
-            <CheckOption label={t('messenger:chat.original')} checked={original} onChange={setOriginal} />
-            <View style={styles.spacer} />
-            <Touchable
-              accessibilityRole="button"
-              onPress={() => {
-                // 选中的交给预览，面板这边清掉，发完回来不留旧勾选
-                onPreview(selected, original);
-                setSelected([]);
-              }}
-              style={({ pressed }) => [styles.barButton, pressed && styles.pressed]}
-            >
-              <Text style={styles.barText}>{t('messenger:chat.preview')}</Text>
-            </Touchable>
-            <Touchable
-              accessibilityRole="button"
-              onPress={() => {
-                onSend(selected, original);
-                setSelected([]);
-              }}
-              style={({ pressed }) => [styles.barButton, styles.send, pressed && styles.pressed]}
-            >
-              <Text style={styles.sendText}>{t('messenger:chat.sendCount', { n: selected.length })}</Text>
-            </Touchable>
-          </>
-        )}
-      </View>
+      {/* 选了照片才出现操作条，面板往下滚出位置（同旧版 App） */}
+      {selected.length > 0 && (
+        <View style={styles.bar}>
+          <CheckOption label={t('messenger:chat.original')} checked={original} onChange={setOriginal} />
+          <View style={styles.spacer} />
+          <Touchable
+            accessibilityRole="button"
+            onPress={() => {
+              // 选中的交给预览，面板这边清掉，发完回来不留旧勾选
+              onPreview(selected, original);
+              setSelected([]);
+            }}
+            style={({ pressed }) => [styles.barButton, pressed && styles.pressed]}
+          >
+            <Text style={styles.barText}>{t('messenger:chat.preview')}</Text>
+          </Touchable>
+          <Touchable
+            accessibilityRole="button"
+            onPress={() => {
+              onSend(selected, original);
+              setSelected([]);
+            }}
+            style={({ pressed }) => [styles.barButton, styles.send, pressed && styles.pressed]}
+          >
+            <Text style={styles.sendText}>{t('messenger:chat.sendCount', { n: selected.length })}</Text>
+          </Touchable>
+        </View>
+      )}
     </View>
   );
 }
@@ -203,7 +212,6 @@ function PhotoStrip({ onSend, onPreview }: {
 const styles = StyleSheet.create((theme) => ({
   root: { flex: 1 },
   pressed: { opacity: theme.opacity.pressedIcon },
-  strip: { height: theme.spacing.md + theme.size.photoThumb + theme.spacing.xs + theme.size.touch },
   list: { gap: theme.spacing.xs, paddingHorizontal: theme.spacing.page, paddingTop: theme.spacing.md },
   placeholders: { flexDirection: 'row', overflow: 'hidden' },
   thumb: { width: theme.size.photoThumb, height: theme.size.photoThumb, borderRadius: theme.radius.bubbleTight, backgroundColor: theme.colors.fill },
@@ -220,7 +228,7 @@ const styles = StyleSheet.create((theme) => ({
   badgeOn: { backgroundColor: theme.colors.primary },
   badgeOff: { borderWidth: 1.5, borderColor: theme.colors.onMedia, backgroundColor: theme.colors.mediaScrim },
   badgeText: { ...theme.typography.caption, fontWeight: '600', color: theme.colors.onPrimary },
-  bar: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.md, height: theme.size.touch, marginTop: theme.spacing.xs, paddingHorizontal: theme.spacing.page },
+  bar: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.md, paddingHorizontal: theme.spacing.page, paddingTop: theme.spacing.sm },
   spacer: { flex: 1 },
   barButton: { height: theme.size.segment, justifyContent: 'center', paddingHorizontal: theme.spacing.sm },
   barText: { ...theme.typography.subhead, color: theme.colors.text },
@@ -240,15 +248,15 @@ const styles = StyleSheet.create((theme) => ({
   askText: { ...theme.typography.subhead, flex: 1, color: theme.colors.text2 },
   askAction: { ...theme.typography.subhead, color: theme.colors.primaryText },
   // 每行四个，多了换行
-  entries: { flexDirection: 'row', flexWrap: 'wrap', rowGap: theme.spacing.lg, paddingHorizontal: theme.spacing.page, paddingVertical: theme.spacing.lg },
-  entry: { alignItems: 'center', gap: theme.spacing.xs, width: '25%' },
-  tile: {
-    width: theme.size.moreTile,
-    height: theme.size.moreTile,
+  entries: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: theme.spacing.sm, paddingTop: theme.spacing.xl },
+  entry: { width: `${100 / COLUMNS}%`, alignItems: 'center', gap: theme.spacing.sm, marginBottom: theme.spacing.xl },
+  tile: (pressed: boolean) => ({
+    width: theme.size.moreEntry,
+    height: theme.size.moreEntry,
     borderRadius: theme.radius.card,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: theme.colors.fill,
-  },
+    backgroundColor: pressed ? theme.colors.fillPressed : theme.colors.fill,
+  }),
   label: { ...theme.typography.caption, color: theme.colors.text2 },
 }));
