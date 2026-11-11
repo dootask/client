@@ -15,6 +15,7 @@ import { RowAvatar, type RowData } from '../../DialogRow';
 import { useMessengerState, useMsgActions } from '../../hooks';
 import { listedIds } from '../../listModel';
 import { AI_HIDDEN, searchRowKey, type SearchRow, useSearchRows } from '../../search';
+import type { ForwardSheetProps } from './forwardSheetTypes';
 
 /** 服务端一次最多发往的会话数 */
 const MAX_TARGETS = 50;
@@ -28,7 +29,7 @@ const pickKey = (d: RowData) => String(d.id);
  * 转发（C4）：搜索并勾选会话和联系人（最多 50 个），可选不显示原发送者、合并转发（多条时）、留言。
  * 不搜索时列出消息列表里的会话，搜索时补上服务端搜到的联系人
  */
-export function ForwardSheet({ msgIds, visible, onClose, onSent }: { msgIds: readonly number[]; visible: boolean; onClose: () => void; onSent?: () => void }) {
+export function ForwardSheet({ msgIds, defaultMerge = true, visible, onClose, onSent }: ForwardSheetProps) {
   const t = useT();
   const { theme } = useUnistyles();
   const actions = useMsgActions();
@@ -36,7 +37,7 @@ export function ForwardSheet({ msgIds, visible, onClose, onSent }: { msgIds: rea
   const [key, setKey] = useState('');
   const [picked, setPicked] = useState<Picked>(() => new Map());
   const [hideSource, setHideSource] = useState(false);
-  const [merge, setMerge] = useState(true);
+  const [merge, setMerge] = useState(defaultMerge);
   const [message, setMessage] = useState('');
   const [sending, setSending] = useState(false);
 

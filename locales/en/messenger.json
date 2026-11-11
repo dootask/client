@@ -172,7 +172,8 @@
     "hideSource": "Do not display original sender information",
     "merge": "Forward as a combined message",
     "max": "Select up to {{n}} conversations",
-    "done": "Forward successful"
+    "done": "Forward successful",
+    "confirmTitle": "Confirm forwarding"
   },
   "todos": {
     "setTitle": "Set To-Do",
@@ -212,7 +213,8 @@
   },
   "selection": {
     "max": "Select up to {{n}} messages",
-    "count": "{{n}} selected"
+    "count": "{{n}} selected",
+    "title": "Selected: ({{n}})"
   },
   "mention": {
     "everyone": "Everyone",
@@ -323,5 +325,33 @@
   "categories": "Categories",
   "tabMessages": "Message",
   "tabContacts": "Contacts",
-  "notifyOff": "Notification permission is not enabled"
+  "notifyOff": "Notification permission is not enabled",
+  "filter": {
+    "msg": "Message",
+    "todo": "To-Do",
+    "tag": "Mark",
+    "image": "Image",
+    "file": "File",
+    "link": "Link",
+    "fullChat": "Full conversation"
+  },
+  "picker": {
+    "searchDialogs": "Search members, groups, departments or projects",
+    "all": "All members",
+    "byDepartment": "By department",
+    "byProject": "By project",
+    "department": "Department",
+    "project": "Project",
+    "recentDialogs": "Recent chats",
+    "members": "Members",
+    "groups": "Groups",
+    "sources": "Departments and projects",
+    "people": "{{n}} people",
+    "selected": "Selected",
+    "maxItems": "Up to {{n}} items",
+    "clear": "Clear",
+    "notFound": "No results for \"{{key}}\"",
+    "overMax": "Maximum selection limit exceeded",
+    "noDepartment": "Default Department"
+  }
 }

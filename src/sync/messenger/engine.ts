@@ -13,7 +13,9 @@ import {
   earlierCursor,
   hasEarlier,
   lastMsgPatch,
+  matchesFilter,
   mergeDialog,
+  type MsgFilterType,
   newerCursor,
   removeMsgs,
   upsertMsgs,
@@ -404,6 +406,10 @@ export function createMessenger(deps: MessengerDeps) {
   function setWindow(dialogId: number, patch: Partial<MsgWindow>) {
     const prev = get().windows[dialogId] ?? { list: [], synced: false, loading: null };
     set({ windows: { ...get().windows, [dialogId]: { ...prev, ...patch } } });
+    if (patch.list && get().filter?.dialogId === dialogId) {
+      const before = new Set(prev.list);
+      syncFilter(dialogId, patch.list.filter((m) => !before.has(m)));
+    }
     if (patch.list && !windowTimers.has(dialogId)) {
       windowTimers.set(
         dialogId,
@@ -550,11 +556,85 @@ export function createMessenger(deps: MessengerDeps) {
     await loadLatest(dialogId);
   }
 
+  // ---------------------------------------------------------------------------
+  // 分类筛选（聊天页分类条）
+  // ---------------------------------------------------------------------------
+
+  /** 每次换筛选加一，旧请求回来时丢掉 */
+  let filterSeq = 0;
+
+  /** 换分类（null 为看全部）：取该分类最新一页 */
+  function setFilter(dialogId: number, type: MsgFilterType | null) {
+    const seq = ++filterSeq;
+    if (!type) {
+      if (get().filter) set({ filter: null });
+      return Promise.resolve();
+    }
+    set({ filter: { dialogId, type, list: [], earlier: 0, ready: false, loading: true } });
+    return loadFilter(seq, 0);
+  }
+
+  function loadFilterEarlier() {
+    const f = get().filter;
+    if (!f?.ready || f.loading || !f.earlier) return Promise.resolve();
+    set({ filter: { ...f, loading: true } });
+    return loadFilter(filterSeq, f.earlier);
+  }
+
+  async function loadFilter(seq: number, prevId: number) {
+    const { dialogId, type } = get().filter!;
+    try {
+      const res = await api.msgList({ dialog_id: dialogId, msg_type: type, take: MSG_PAGE_SIZE, ...(prevId ? { prev_id: prevId } : {}) });
+      const f = get().filter;
+      if (stopped || seq !== filterSeq || !f) return;
+      // 这页最旧一条的 prev_id 只表示更早还有；从它的前一个 id 往前取，中间新标注、新设待办的也能取到
+      const oldest = res.list[res.list.length - 1];
+      const earlier = oldest && (oldest.prev_id ?? 0) > 0 ? oldest.id - 1 : 0;
+      set({ filter: { ...f, list: upsertMsgs(f.list, res.list), earlier, ready: true, loading: false } });
+    } catch (err) {
+      const f = get().filter;
+      if (seq === filterSeq && f) set({ filter: { ...f, loading: false } });
+      throw err;
+    }
+  }
+
+  /**
+   * 窗口里变化的消息同步到筛选：已在筛选里的更新，不再属于这个分类的去掉（取消标注、取消待办）；
+   * 新属于这个分类的，落在筛选已取到的范围内才加（更早的等往前翻时由服务端给）
+   */
+  function syncFilter(dialogId: number, changed: readonly Msg[]) {
+    const f = get().filter;
+    if (!f?.ready || f.dialogId !== dialogId || changed.length === 0) return;
+    const ids = new Set(f.list.map((m) => m.id));
+    const add: Msg[] = [];
+    const drop: number[] = [];
+    for (const m of changed) {
+      if (matchesFilter(m, f.type)) {
+        if (ids.has(m.id) || m.id > f.earlier) add.push(m);
+      } else if (ids.has(m.id)) {
+        drop.push(m.id);
+      }
+    }
+    if (add.length || drop.length) set({ filter: { ...f, list: upsertMsgs(removeMsgs(f.list, drop), add) } });
+  }
+
+  /** 消息被删除或撤回：从窗口和筛选里去掉 */
+  function dropMsgs(dialogId: number, ids: readonly number[]) {
+    const win = get().windows[dialogId];
+    if (win) setWindow(dialogId, { list: removeMsgs(win.list, ids) });
+    const f = get().filter;
+    if (f?.dialogId === dialogId) set({ filter: { ...f, list: removeMsgs(f.list, ids) } });
+  }
+
   /** 打开期间收到过别人新消息的会话（R20 没加未读） */
   const arrivedWhileOpen = new Set<number>();
 
   function closeDialog(dialogId: number) {
     if (get().openId === dialogId) set({ openId: 0 });
+    if (get().filter?.dialogId === dialogId) {
+      filterSeq++;
+      set({ filter: null });
+    }
     cancel(windowTimers.get(dialogId));
     windowTimers.delete(dialogId);
     background(persistWindow(dialogId), 'persist window');
@@ -674,8 +754,7 @@ export function createMessenger(deps: MessengerDeps) {
   function onPushDelete(data: Record<string, unknown>) {
     const dialogId = Number(data.dialog_id) || 0;
     const ids = (Array.isArray(data.id) ? data.id : [data.id]).map(Number).filter(Boolean);
-    const win = get().windows[dialogId];
-    if (win) setWindow(dialogId, { list: removeMsgs(win.list, ids) });
+    dropMsgs(dialogId, ids);
     for (const id of ids) background(cache.delete('messages', id), 'delete message');
     if (!get().dialogs[dialogId]) return;
     const last = (data.last_msg ?? null) as Dialog['last_msg'];
@@ -698,10 +777,12 @@ export function createMessenger(deps: MessengerDeps) {
   const readQueue = new Map<number, number>();
   let readTimer: ReturnType<typeof setTimeout> | undefined;
 
+  /** 改窗口里的消息（已读、回应）；筛选里有不在窗口的同一条也改 */
   function setMsgs(dialogId: number, pick: (m: Msg) => boolean, patch: Partial<Msg>) {
     const win = get().windows[dialogId];
-    if (!win || !win.list.some(pick)) return;
-    setWindow(dialogId, { list: win.list.map((m) => (pick(m) ? { ...m, ...patch } : m)) });
+    if (win?.list.some(pick)) setWindow(dialogId, { list: win.list.map((m) => (pick(m) ? { ...m, ...patch } : m)) });
+    const f = get().filter;
+    if (f?.dialogId === dialogId && f.list.some(pick)) set({ filter: { ...f, list: f.list.map((m) => (pick(m) ? { ...m, ...patch } : m)) } });
   }
 
   /** 消息出现在可见区域时调用 */
@@ -1025,8 +1106,7 @@ export function createMessenger(deps: MessengerDeps) {
       throw err;
     }
     // 会话的最后一条由服务端的 delete 推送更新
-    const win = get().windows[msg.dialog_id];
-    if (win) setWindow(msg.dialog_id, { list: removeMsgs(win.list, [msg.id]) });
+    dropMsgs(msg.dialog_id, [msg.id]);
     background(cache.delete('messages', msg.id), 'delete message');
   }
 
@@ -1134,6 +1214,8 @@ export function createMessenger(deps: MessengerDeps) {
     loadEarlier,
     loadNewer,
     loadAround,
+    setFilter,
+    loadFilterEarlier,
     markRead,
     markDialog,
     clearDot,

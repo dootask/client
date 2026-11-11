@@ -17,6 +17,7 @@ import {
   hasEarlier,
   isListed,
   lastMsgPatch,
+  matchesFilter,
   mergeDialog,
   mergeMsg,
   newerCursor,
@@ -261,4 +262,14 @@ describe('B7 quickMsgs', () => {
     expect(quickMsgs(dialog({ quick_msgs: items })).map((i) => i.key)).toEqual(['manual-checkin', '/help']);
     expect(quickMsgs(dialog({}))).toEqual([]);
   });
+});
+
+it('分类筛选的判断和服务端 msg_type 一致', () => {
+  const m = (over: Partial<Msg>): Msg => ({ id: 1, dialog_id: 1, userid: 1, type: 'text', msg: {}, created_at: '', ...over });
+  expect(matchesFilter(m({ tag: 3 }), 'tag')).toBe(true);
+  expect(matchesFilter(m({ tag: 0 }), 'tag')).toBe(false);
+  expect(matchesFilter(m({ todo: 3 }), 'todo')).toBe(true);
+  expect(matchesFilter(m({ link: 1 }), 'link')).toBe(true);
+  expect(matchesFilter(m({ mtype: 'image' }), 'image')).toBe(true);
+  expect(matchesFilter(m({ mtype: 'image' }), 'file')).toBe(false);
 });

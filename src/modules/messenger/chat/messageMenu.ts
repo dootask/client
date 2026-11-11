@@ -1,6 +1,6 @@
 import * as Clipboard from 'expo-clipboard';
 import {
-  Captions, Copy, Flag, FlagOff, Forward, Languages, ListChecks, ListTodo, ListX, Pencil, Pin, PinOff, Reply, RotateCw, SmilePlus, Star, StarOff,
+  Captions, Copy, Flag, FlagOff, Forward, Languages, ListChecks, ListTodo, ListX, MessagesSquare, Pencil, Pin, PinOff, Reply, RotateCw, SmilePlus, Star, StarOff,
   TextSelect, Trash2, Undo2, X,
 } from 'lucide-react-native';
 import { useLayoutEffect, useMemo, useRef } from 'react';
@@ -42,6 +42,8 @@ export interface MenuHandlers {
   onSetTodo: (msg: Msg) => void;
   onTodoDetail: (msg: Msg) => void;
   onFavoriteRemark: (msgId: number) => void;
+  /** 筛选分类时才有：回到完整对话看这条的上下文 */
+  onFullChat?: (msg: Msg) => void;
 }
 
 /**
@@ -75,8 +77,9 @@ export function useMessageMenus(handlers: MenuHandlers) {
       const text = plainText(msg, body);
       const { tag, todo } = msgExtra(msg);
 
-      const { onReply, onEdit } = latest.current;
+      const { onReply, onEdit, onFullChat } = latest.current;
       const main: MenuAction[] = [];
+      if (onFullChat) main.push({ label: t('messenger:filter.fullChat'), icon: MessagesSquare, onSelect: () => onFullChat(msg) });
       if (onReply) main.push({ label: t('messenger:chat.reply'), icon: Reply, onSelect: () => onReply(msg) });
       if (menuTraits.reactSubmenu) {
         main.push({

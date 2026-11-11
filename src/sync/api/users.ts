@@ -24,6 +24,10 @@ export const userBasicSchema = z.looseObject({
   online: z.boolean().nullish(),
   disable_at: str.nullish(),
   delete_at: str.nullish(),
+  /** 拼音首字母（大写），成员列表分组用 */
+  az: str.nullish(),
+  /** 所在部门：搜索、成员列表带 with_department 时才有 */
+  department_info: z.array(z.looseObject({ name: str })).nullish(),
 });
 export type UserBasic = z.output<typeof userBasicSchema>;
 
@@ -53,8 +57,22 @@ export async function favoriteRemark(client: ApiClient, msgId: number, remark: s
   return msg;
 }
 
-/** 按昵称、拼音、职位、邮箱搜索在职的成员（默认不含机器人），带在线状态 */
-export async function search(client: ApiClient, key: string, { bots = false, take = 30 }: { bots?: boolean; take?: number } = {}) {
-  const { data } = await requestParsed(client, 'users/search', phpList(userBasicSchema), { data: { keys: { key, bot: bots ? 2 : 0 }, state: 1, take } });
+/** 按昵称、拼音、职位、邮箱搜索在职的成员（默认不含机器人），带在线状态；withDepartment 时带所在部门 */
+export async function search(client: ApiClient, key: string, { bots = false, take = 30, withDepartment = false }: { bots?: boolean; take?: number; withDepartment?: boolean } = {}) {
+  const { data } = await requestParsed(client, 'users/search', phpList(userBasicSchema), {
+    data: { keys: { key, bot: bots ? 2 : 0 }, state: 1, take, ...(withDepartment ? { with_department: 1 } : {}) },
+  });
+  return data;
+}
+
+/** 成员列表每页人数（同旧前端） */
+export const MEMBER_PAGE = 100;
+
+/** 成员列表的一页：按拼音排序，不含机器人，带所在部门。departments 为部门 id（含下级），project_id 为项目，都不给是全部成员 */
+export async function memberPage(client: ApiClient, { departments, project_id, page }: { departments?: readonly number[]; project_id?: number; page: number }) {
+  const keys = departments ? { departments: departments.join(',') } : project_id ? { project_id } : {};
+  const { data } = await requestParsed(client, 'users/search', z.looseObject({ data: phpList(userBasicSchema), current_page: num, last_page: num, total: num }), {
+    data: { keys, sorts: { az: 'asc' }, page, pagesize: MEMBER_PAGE, with_department: 1 },
+  });
   return data;
 }

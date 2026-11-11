@@ -172,7 +172,8 @@
     "hideSource": "元の送信者情報を表示しない",
     "merge": "まとめて転送",
     "max": "最大{{n}}件の会話を選択できます",
-    "done": "転送成功"
+    "done": "転送成功",
+    "confirmTitle": "転送を確認する"
   },
   "todos": {
     "setTitle": "タスク設定",
@@ -212,7 +213,8 @@
   },
   "selection": {
     "max": "最大{{n}}件のメッセージを選択できます",
-    "count": "{{n}}件選択中"
+    "count": "{{n}}件選択中",
+    "title": "({{n}})件選択済み"
   },
   "mention": {
     "everyone": "全員",
@@ -323,5 +325,33 @@
   "categories": "分類",
   "tabMessages": "メッセージ",
   "tabContacts": "連絡先",
-  "notifyOff": "通知権限が有効になっていません"
+  "notifyOff": "通知権限が有効になっていません",
+  "filter": {
+    "msg": "メッセージ",
+    "todo": "タスク",
+    "tag": "マーク",
+    "image": "画像",
+    "file": "ファイル",
+    "link": "リンク",
+    "fullChat": "完全な会話"
+  },
+  "picker": {
+    "searchDialogs": "メンバー、グループ、部署、プロジェクトを検索",
+    "all": "全メンバー",
+    "byDepartment": "部署別",
+    "byProject": "プロジェクト別",
+    "department": "部署",
+    "project": "プロジェクト",
+    "recentDialogs": "最近のチャット",
+    "members": "メンバー",
+    "groups": "グループ",
+    "sources": "部署とプロジェクト",
+    "people": "{{n}}人",
+    "selected": "選択済み",
+    "maxItems": "最大{{n}}件まで選択可",
+    "clear": "クリア",
+    "notFound": "「{{key}}」は見つかりません",
+    "overMax": "最大選択数を超えました",
+    "noDepartment": "デフォルト部署"
+  }
 }

@@ -172,7 +172,8 @@
     "hideSource": "不顯示原發送者信息",
     "merge": "合併轉發",
     "max": "最多選擇{{n}}個會話",
-    "done": "轉發成功"
+    "done": "轉發成功",
+    "confirmTitle": "確認轉發"
   },
   "todos": {
     "setTitle": "設置待辦",
@@ -212,7 +213,8 @@
   },
   "selection": {
     "max": "最多選擇{{n}}則訊息",
-    "count": "已選{{n}}項"
+    "count": "已選{{n}}項",
+    "title": "已選{{n}}條"
   },
   "mention": {
     "everyone": "所有人",
@@ -323,5 +325,33 @@
   "categories": "分類",
   "tabMessages": "消息",
   "tabContacts": "聯繫人",
-  "notifyOff": "未開啟通知權限"
+  "notifyOff": "未開啟通知權限",
+  "filter": {
+    "msg": "消息",
+    "todo": "待辦",
+    "tag": "標註",
+    "image": "圖片",
+    "file": "文件",
+    "link": "鏈接",
+    "fullChat": "完整對話"
+  },
+  "picker": {
+    "searchDialogs": "搜索成員、群組、部門或項目",
+    "all": "全部成員",
+    "byDepartment": "按部門",
+    "byProject": "按項目",
+    "department": "部門",
+    "project": "項目",
+    "recentDialogs": "最近會話",
+    "members": "成員",
+    "groups": "群組",
+    "sources": "部門和項目",
+    "people": "{{n}} 人",
+    "selected": "已選",
+    "maxItems": "最多可選{{n}}項",
+    "clear": "清空",
+    "notFound": "沒有找到「{{key}}」",
+    "overMax": "已超過最大選擇數量",
+    "noDepartment": "默認部門"
+  }
 }

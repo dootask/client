@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { ChevronLeft } from 'lucide-react-native';
-import { useEffect, useMemo, useState } from 'react';
+import { type ReactNode, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Text, View } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
@@ -20,9 +20,9 @@ const CONNECTING_DELAY = 1500;
 
 /**
  * 聊天页导航栏：返回（窄屏，旁边是其他会话的未读）、标题和标签、副标题（群人数 / 对方在线状态 / 连接中）、右侧（会话头像；App 另有电话按钮）。
- * 两侧同宽，标题始终居中；会话数据还没到（深链打开）时只有返回
+ * 两侧同宽，标题始终居中；会话数据还没到（深链打开）时只有返回。children 排在导航栏下面、同一块底色里（App 的分类条和横条）
  */
-export function ChatHeader({ dialogId, dialog }: { dialogId: number; dialog: StoredDialog | undefined }) {
+export function ChatHeader({ dialogId, dialog, children }: { dialogId: number; dialog: StoredDialog | undefined; children?: ReactNode }) {
   const split = useSplitView();
   return (
     <View style={styles.root}>
@@ -43,6 +43,7 @@ export function ChatHeader({ dialogId, dialog }: { dialogId: number; dialog: Sto
           {dialog && <HeaderRight dialog={dialog} />}
         </View>
       </View>
+      {children}
     </View>
   );
 }

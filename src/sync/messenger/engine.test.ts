@@ -495,6 +495,87 @@ describe('编辑、撤回、表情回应', () => {
   });
 });
 
+describe('分类筛选', () => {
+  /** 窗口：1–6，其中 2、5 是标注；按 tag 筛选时服务端返回 5，更早还有 2 */
+  function api() {
+    const msgList = vi.fn(async ({ msg_type, prev_id }: { msg_type?: string; prev_id?: number }) => {
+      if (!msg_type) return { list: [6, 5, 4, 3, 2, 1].map((id) => msg(id, { tag: id === 2 || id === 5 ? ME : 0 })), time: 1 };
+      if (prev_id) return { list: [msg(2, { tag: ME, prev_id: 0 })], time: 1 };
+      return { list: [msg(5, { tag: ME, next_id: 0, prev_id: 2 })], time: 1 };
+    });
+    return { msgList, api: fakeApi({ msgList }) };
+  }
+
+  async function filtered() {
+    const { msgList, api: a } = api();
+    const ctx = setup(a);
+    await ctx.m.start();
+    await ctx.m.openDialog(10);
+    await ctx.m.setFilter(10, 'tag');
+    return { ...ctx, msgList };
+  }
+
+  const ids = (list: Msg[]) => list.map((x) => x.id);
+
+  it('按分类取一页，往前翻用最旧一条的 prev_id', async () => {
+    const { m, s, msgList } = await filtered();
+    expect(msgList.mock.lastCall![0]).toMatchObject({ dialog_id: 10, msg_type: 'tag' });
+    expect(ids(s().filter!.list)).toEqual([5]);
+    await m.loadFilterEarlier();
+    expect(msgList.mock.lastCall![0]).toMatchObject({ msg_type: 'tag', prev_id: 4 });
+    expect(ids(s().filter!.list)).toEqual([5, 2]);
+    await m.loadFilterEarlier();
+    expect(msgList).toHaveBeenCalledTimes(3);
+    m.stop();
+  });
+
+  it('新来的同类消息加进来，别的不加', async () => {
+    const { m, socket, s } = await filtered();
+    socket.push('add', msg(7));
+    socket.push('add', msg(8, { tag: OTHER }));
+    expect(ids(s().filter!.list)).toEqual([8, 5]);
+    m.stop();
+  });
+
+  it('取消标注的去掉；已取到范围外的新标注等往前翻时再来', async () => {
+    const { m, socket, s, msgList } = await filtered();
+    socket.push('update', { id: 5, tag: 0 });
+    socket.push('update', { id: 3, tag: ME });
+    expect(ids(s().filter!.list)).toEqual([]);
+    await m.loadFilterEarlier();
+    expect(msgList.mock.lastCall![0]).toMatchObject({ prev_id: 4 });
+    m.stop();
+  });
+
+  it('撤回、删除同步去掉；已读同步过来；关闭会话清掉筛选', async () => {
+    const { m, socket, s } = await filtered();
+    m.markRead(s().filter!.list[0]!);
+    expect(s().filter!.list[0]!.read_at).toBeTruthy();
+    socket.push('delete', { dialog_id: 10, id: 5 });
+    expect(s().filter!.list).toEqual([]);
+    m.closeDialog(10);
+    expect(s().filter).toBeNull();
+    m.stop();
+  });
+
+  it('换分类时旧请求晚回来不覆盖', async () => {
+    let release: () => void = () => {};
+    const msgList = vi.fn(async ({ msg_type }: { msg_type?: string }) => {
+      if (msg_type === 'tag') await new Promise<void>((r) => (release = r));
+      return { list: msg_type ? [msg(msg_type === 'tag' ? 5 : 3, { prev_id: 0 })] : [], time: 1 };
+    });
+    const { m, s } = setup(fakeApi({ msgList }));
+    await m.start();
+    await m.openDialog(10);
+    const slow = m.setFilter(10, 'tag');
+    await m.setFilter(10, 'image');
+    release();
+    await slow;
+    expect(s().filter).toMatchObject({ type: 'image', list: [{ id: 3 }] });
+    m.stop();
+  });
+});
+
 it('表情切换规则与服务端一致', () => {
   expect(toggledEmoji([], 'a', 1)).toEqual([{ symbol: 'a', userids: [1] }]);
   expect(toggledEmoji([{ symbol: 'a', userids: [2] }], 'a', 1)).toEqual([{ symbol: 'a', userids: [1, 2] }]);

@@ -7,6 +7,7 @@ import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { useT } from '../../i18n';
 import { IconButton } from '../IconButton';
+import { ToastHost } from '../Toast';
 import { Touchable } from '../Touchable';
 import { bottomInset, useBreakpoint } from '../theme';
 
@@ -42,6 +43,8 @@ export interface SheetProps {
   /** 中屏、宽屏上的形态：居中弹窗（默认）或右侧抽屉；窄屏一律是底部弹层 */
   wide?: 'center' | 'right';
   confirm?: SheetConfirm;
+  /** 顶栏左上自定义（如分级页的「‹ 上一级」）：给了它没有 confirm 时右上留空 */
+  left?: ReactNode;
   /** 占满可用高度：内容是会变长的列表时，加载、搜索后不跳高；内容区可用 flex: 1 */
   fill?: boolean;
   /** 弹层展开后：要弹键盘的聚焦放在这里（安卓上弹层窗口拿到焦点前聚焦，输入框有焦点但不弹键盘） */
@@ -56,7 +59,7 @@ export interface SheetProps {
  * 点遮罩、系统返回键、Web 上按 Esc 都会调 onClose。不打开不渲染，关闭动画放完才卸载。
  * 键盘弹出时整体抬到键盘上方
  */
-export function Sheet({ visible, onClose, title, wide = 'center', confirm, fill = false, onShow, onHidden, children }: SheetProps) {
+export function Sheet({ visible, onClose, title, wide = 'center', confirm, left, fill = false, onShow, onHidden, children }: SheetProps) {
   const t = useT();
   const { theme } = useUnistyles();
   const form: Form = useBreakpoint() === 'xs' ? 'bottom' : wide;
@@ -65,8 +68,10 @@ export function Sheet({ visible, onClose, title, wide = 'center', confirm, fill 
   const drag = useSharedValue(0);
   const showTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const hidden = useRef(onHidden);
+  const open = useRef(visible);
   useLayoutEffect(() => {
     hidden.current = onHidden;
+    open.current = visible;
   });
   // 卸载之后再回调：Web 上弹窗卸载时把焦点还给打开前的元素，早了会被它覆盖
   const wasMounted = useRef(false);
@@ -102,6 +107,14 @@ export function Sheet({ visible, onClose, title, wide = 'center', confirm, fill 
     showTimer.current = setTimeout(onShow, DURATION);
   });
 
+  // onClose 是关闭请求，调用方可能不关（如先退回上一级）：下一帧还开着就回弹
+  const dragClose = () => {
+    onClose();
+    requestAnimationFrame(() => {
+      if (open.current) drag.set(withSpring(0, SPRING));
+    });
+  };
+
   // 只有顶部（拖拽条和标题栏）响应下拉，内容区留给滚动和输入
   const pan = usePanGesture({
     enabled: form === 'bottom',
@@ -115,7 +128,7 @@ export function Sheet({ visible, onClose, title, wide = 'center', confirm, fill 
     onDeactivate: (event) => {
       'worklet';
       if (!event.canceled && (event.translationY > DISMISS_DISTANCE || event.velocityY > DISMISS_VELOCITY)) {
-        runOnJS(onClose)();
+        runOnJS(dragClose)();
         return;
       }
       drag.set(withSpring(0, SPRING));
@@ -142,7 +155,8 @@ export function Sheet({ visible, onClose, title, wide = 'center', confirm, fill 
                   {title !== undefined && (
                     <View style={styles.bar}>
                       <View style={styles.barSide}>
-                        {confirm && (
+                        {left}
+                        {!left && confirm && (
                           <Touchable accessibilityRole="button" onPress={onClose} style={({ pressed, hovered }) => styles.textButton(pressed, hovered)}>
                             <Text style={styles.cancel}>{t('cancel')}</Text>
                           </Touchable>
@@ -166,7 +180,7 @@ export function Sheet({ visible, onClose, title, wide = 'center', confirm, fill 
                             )}
                           </Touchable>
                         ) : (
-                          <IconButton icon={X} label={t('close')} onPress={onClose} />
+                          !left && <IconButton icon={X} label={t('close')} onPress={onClose} />
                         )}
                       </View>
                     </View>
@@ -176,6 +190,7 @@ export function Sheet({ visible, onClose, title, wide = 'center', confirm, fill 
               <View style={[styles.content, fill && styles.contentFill]}>{children}</View>
             </Animated.View>
           </Animated.View>
+          <ToastHost />
         </View>
       </GestureHandlerRootView>
     </Modal>

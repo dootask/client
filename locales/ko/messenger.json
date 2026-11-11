@@ -172,7 +172,8 @@
     "hideSource": "원래 발신자 정보를 표시하지 않음",
     "merge": "묶어서 전달",
     "max": "최대 {{n}}개의 대화를 선택할 수 있습니다",
-    "done": "전달 성공"
+    "done": "전달 성공",
+    "confirmTitle": "전달 확인"
   },
   "todos": {
     "setTitle": "할 일 설정",
@@ -212,7 +213,8 @@
   },
   "selection": {
     "max": "최대 {{n}}개의 메시지를 선택할 수 있습니다",
-    "count": "{{n}}개 선택됨"
+    "count": "{{n}}개 선택됨",
+    "title": "({{n}})개 선택됨"
   },
   "mention": {
     "everyone": "모든 사람",
@@ -323,5 +325,33 @@
   "categories": "분류",
   "tabMessages": "메시지",
   "tabContacts": "연락처",
-  "notifyOff": "알림 권한이 활성화되지 않았습니다"
+  "notifyOff": "알림 권한이 활성화되지 않았습니다",
+  "filter": {
+    "msg": "메시지",
+    "todo": "할 일",
+    "tag": "표시",
+    "image": "이미지",
+    "file": "파일",
+    "link": "링크",
+    "fullChat": "전체 대화"
+  },
+  "picker": {
+    "searchDialogs": "구성원, 그룹, 부서 또는 프로젝트 검색",
+    "all": "전체 구성원",
+    "byDepartment": "부서별",
+    "byProject": "프로젝트별",
+    "department": "부서",
+    "project": "프로젝트",
+    "recentDialogs": "최근 대화",
+    "members": "구성원",
+    "groups": "그룹",
+    "sources": "부서 및 프로젝트",
+    "people": "{{n}}명",
+    "selected": "선택됨",
+    "maxItems": "최대 {{n}}개 선택 가능",
+    "clear": "지우기",
+    "notFound": "\"{{key}}\"에 대한 결과 없음",
+    "overMax": "최대 선택 수를 초과했습니다",
+    "noDepartment": "기본 부서"
+  }
 }

@@ -29,6 +29,7 @@ import { FileCard, isMediaBody, isStickerBody, LocalMedia, MediaBody, MessageBod
 import { msgExtra } from './msgExtra';
 import { type BubbleTone, RichBlocks } from './RichText';
 import type { SelectDrag } from './selectDrag';
+import { selectCell, selectRowHighlight } from './selectTraits';
 import { SelectHandle } from './SelectHandle';
 import type { Selection } from './selection';
 
@@ -78,6 +79,15 @@ export interface RowContext {
 export const RowContextValue = createContext<RowContext | null>(null);
 
 const useRowContext = () => useContext(RowContextValue)!;
+
+/** 筛选待办时我还没完成的消息 id（同旧版 App 标成警示色）。单独走 context：换筛选时只重画待办图标 */
+export const MyTodosContext = createContext<ReadonlySet<number> | undefined>(undefined);
+
+function TodoMark({ id, color }: { id: number; color: string }) {
+  const { theme } = useUnistyles();
+  const mine = useContext(MyTodosContext)?.has(id);
+  return <Icon icon={ListTodo} color={mine ? theme.colors.warning : color} size={12} />;
+}
 
 /** 点了有反应的消息体 */
 const OPENABLE = new Set<MsgBody['kind']>(['image', 'video', 'file', 'record']);
@@ -157,6 +167,7 @@ const shiftKey = (event: GestureResponderEvent) => !!(event.nativeEvent as { shi
 /** 多选模式：左侧勾选圈，点整行选中；消息本身不再响应点按、长按。不能转发的消息不能选 */
 function Selectable({ msg, children }: { msg: Msg; children: ReactNode }) {
   const ctx = useRowContext();
+  const { theme } = useUnistyles();
   const active = useStore(ctx.selection, (s) => s.active);
   const checked = useStore(ctx.selection, (s) => s.ids.has(msg.id));
   if (!active) return children;
@@ -172,14 +183,14 @@ function Selectable({ msg, children }: { msg: Msg; children: ReactNode }) {
         ctx.selectDrag.register(msg.id, view);
         return () => ctx.selectDrag.register(msg.id, null);
       }}
-      style={styles.selectRow}
+      style={[styles.selectRow, checked && selectRowHighlight && styles.selectRowChecked]}
     >
       {can ? (
-        <SelectHandle msgId={msg.id} drag={ctx.selectDrag} style={styles.selectCheck}>
+        <SelectHandle msgId={msg.id} drag={ctx.selectDrag} style={selectCell(theme)}>
           <CheckMark checked={checked} />
         </SelectHandle>
       ) : (
-        <View style={styles.selectCheck} />
+        <View style={selectCell(theme)} />
       )}
       <View style={styles.selectBody}>{children}</View>
     </Touchable>
@@ -428,7 +439,7 @@ function Meta({ msg, own, tone, onMedia }: { msg: Msg; own: boolean; tone: Bubbl
   return (
     <View style={[styles.meta, onMedia && styles.metaOnMedia]}>
       {!!tag && <Icon icon={Bookmark} color={color} size={12} />}
-      {!!todo && <Icon icon={ListTodo} color={color} size={12} />}
+      {!!todo && <TodoMark id={msg.id} color={color} />}
       {!!modify && <Icon icon={Pencil} color={color} size={12} />}
       <View style={styles.metaTime}>
         <Text style={[styles.time, { color }]} allowFontScaling={false}>{formatTime(toUnix(msg.created_at) * 1000)}</Text>
@@ -657,7 +668,7 @@ const styles = StyleSheet.create((theme) => ({
   caption: { ...theme.typography.caption },
   pressed: { opacity: theme.opacity.pressedIcon },
   selectRow: { flexDirection: 'row', alignItems: 'center' },
-  selectCheck: { width: theme.size.checkMark + theme.spacing.page, paddingLeft: theme.spacing.page },
+  selectRowChecked: { backgroundColor: theme.colors.rowHighlight },
   // 选择模式下消息本身不接收点按，整行交给外层
   selectBody: { flex: 1, pointerEvents: 'none' },
   row: { paddingHorizontal: theme.spacing.page, flexDirection: 'row', alignItems: 'flex-end' },

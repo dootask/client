@@ -4,7 +4,7 @@ import type { ApiClient } from './client';
 import { phpList, requestParsed } from './schema';
 
 /**
- * 项目、任务接口（主仓库 ProjectController）。目前只有输入栏 # 候选用到任务列表
+ * 项目、任务接口（主仓库 ProjectController）：输入栏 # 候选的任务列表、选人时的项目成员
  */
 
 const num = z.number();
@@ -43,4 +43,15 @@ export async function taskList(client: ApiClient, { name, status, ...params }: T
     data: { ...params, keys: { name, status } },
   });
   return data.data;
+}
+
+/** 我参与的团队项目和成员 id（选人时按项目列成员），一页 100 个 */
+export async function teamProjects(client: ApiClient, page: number) {
+  const { data } = await requestParsed(
+    client,
+    'project/lists',
+    z.looseObject({ data: phpList(z.looseObject({ id: num, name: str.nullish(), userid_list: z.array(num).nullish() })), current_page: num, last_page: num }),
+    { data: { type: 'team', getuserid: 'yes', getstatistics: 'no', page, pagesize: 100 } },
+  );
+  return data;
 }

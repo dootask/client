@@ -172,7 +172,8 @@
     "hideSource": "Informationen des ursprünglichen Absenders nicht anzeigen",
     "merge": "Zusammengefasst weiterleiten",
     "max": "Maximal {{n}} Unterhaltungen auswählen",
-    "done": "Weiterleitung erfolgreich"
+    "done": "Weiterleitung erfolgreich",
+    "confirmTitle": "Weiterleitung bestätigen"
   },
   "todos": {
     "setTitle": "Aufgabe festlegen",
@@ -212,7 +213,8 @@
   },
   "selection": {
     "max": "Wählen Sie bis zu {{n}} Nachrichten aus",
-    "count": "{{n}} ausgewählt"
+    "count": "{{n}} ausgewählt",
+    "title": "({{n}}) ausgewählt"
   },
   "mention": {
     "everyone": "Alle",
@@ -323,5 +325,33 @@
   "categories": "Kategorien",
   "tabMessages": "Nachricht",
   "tabContacts": "Kontakte",
-  "notifyOff": "Benachrichtigungsberechtigung ist nicht aktiviert"
+  "notifyOff": "Benachrichtigungsberechtigung ist nicht aktiviert",
+  "filter": {
+    "msg": "Nachricht",
+    "todo": "Aufgabe",
+    "tag": "Markieren",
+    "image": "Bild",
+    "file": "Datei",
+    "link": "Link",
+    "fullChat": "Vollständige Unterhaltung"
+  },
+  "picker": {
+    "searchDialogs": "Mitglieder, Gruppen, Abteilungen oder Projekte suchen",
+    "all": "Alle Mitglieder",
+    "byDepartment": "Nach Abteilung",
+    "byProject": "Nach Projekt",
+    "department": "Abteilung",
+    "project": "Projekt",
+    "recentDialogs": "Letzte Chats",
+    "members": "Mitglieder",
+    "groups": "Gruppen",
+    "sources": "Abteilungen und Projekte",
+    "people": "{{n}} Personen",
+    "selected": "Ausgewählt",
+    "maxItems": "Bis zu {{n}} Einträge",
+    "clear": "Löschen",
+    "notFound": "Keine Ergebnisse für „{{key}}“",
+    "overMax": "Maximale Auswahlgrenze überschritten",
+    "noDepartment": "Standardabteilung"
+  }
 }

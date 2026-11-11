@@ -232,6 +232,23 @@ export function removeMsgs(list: readonly Msg[], ids: readonly number[]): Msg[] 
   return list.filter((m) => !set.has(m.id));
 }
 
+/** 聊天页按分类筛选（同旧版分类条），值即服务端 msg_type 参数 */
+export type MsgFilterType = 'todo' | 'tag' | 'image' | 'file' | 'link';
+
+/** 消息是否属于这个分类，和服务端 msg_type 的条件一致 */
+export function matchesFilter(m: Msg, type: MsgFilterType): boolean {
+  switch (type) {
+    case 'todo':
+      return (m.todo ?? 0) > 0;
+    case 'tag':
+      return (m.tag ?? 0) > 0;
+    case 'link':
+      return !!m.link;
+    default:
+      return m.mtype === type;
+  }
+}
+
 /** 窗口最新一端已经是会话的最新消息（新推送可以直接接上） */
 export function atLatest(list: readonly Msg[]): boolean {
   return list.length === 0 || !((list[0]!.next_id ?? 0) > 0);

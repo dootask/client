@@ -2,6 +2,7 @@ import { createStore } from 'zustand/vanilla';
 
 import type { Dialog, Msg } from '../api/dialog';
 import type { LocalFile } from '../api/upload';
+import type { MsgFilterType } from './rules';
 
 /** 本地给会话记录加的字段（只存在缓存里，服务端不返回，合并时自然保留） */
 export interface LocalDialogFields {
@@ -17,6 +18,21 @@ export interface MsgWindow {
   synced: boolean;
   /** 正在加载的方向，界面显示加载中 */
   loading: 'latest' | 'earlier' | 'newer' | 'around' | null;
+}
+
+/**
+ * 聊天页的分类筛选（同一时间只有正在看的会话有）：服务端按分类取的一段，从该分类最新一条起连续，按 id 倒序。
+ * 筛选期间窗口照常收消息，变化同步过来
+ */
+export interface MsgFilter {
+  dialogId: number;
+  type: MsgFilterType;
+  list: Msg[];
+  /** 往前翻的位置：取 id ≤ 它的一页，0 为到头。单独记，筛选里的消息被去掉也不丢 */
+  earlier: number;
+  /** 已取到第一页 */
+  ready: boolean;
+  loading: boolean;
 }
 
 /** 发送队列里的消息（R18）：成功前在聊天窗口最新一端显示 */
@@ -75,6 +91,7 @@ export interface MessengerState {
   synced: boolean;
   dialogs: Record<number, StoredDialog>;
   windows: Record<number, MsgWindow>;
+  filter: MsgFilter | null;
   /** 正在看的会话，0 为没有 */
   openId: number;
   /** 草稿（R19），会话 id → HTML */
@@ -102,6 +119,7 @@ export const initialMessengerState = (): MessengerState => ({
   synced: false,
   dialogs: {},
   windows: {},
+  filter: null,
   openId: 0,
   drafts: {},
   outbox: [],

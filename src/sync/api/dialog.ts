@@ -89,6 +89,10 @@ export const msgSchema = z.looseObject({
   dot: num.nullish(),
   reply_id: num.nullish(),
   link: num.nullish(),
+  /** 标注人（0 为没标注） */
+  tag: num.nullish(),
+  /** 设待办的人（0 为不是待办） */
+  todo: num.nullish(),
   /** 只在一页的两端有值：最新一条的 next_id 是更新一条的 id，最旧一条的 prev_id 是更早一条的 id；0 表示到头 */
   next_id: num.optional(),
   prev_id: num.optional(),
@@ -454,7 +458,7 @@ export async function members(client: ApiClient, dialogId: number) {
   return data;
 }
 
-export const myTodoSchema = z.looseObject({ id: num, msg_id: num, dialog_id: num });
+export const myTodoSchema = z.looseObject({ id: num, msg_id: num, dialog_id: num, remind_at: str.nullish() });
 export type MyTodo = z.output<typeof myTodoSchema>;
 
 /** 自己在这个会话里没完成的待办（最多 50 条，新的在前） */

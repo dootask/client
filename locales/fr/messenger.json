@@ -172,7 +172,8 @@
     "hideSource": "Ne pas afficher les informations de l'expéditeur d'origine",
     "merge": "Transférer en message groupé",
     "max": "Sélectionnez jusqu'à {{n}} conversations",
-    "done": "Transfert réussi"
+    "done": "Transfert réussi",
+    "confirmTitle": "Confirmer le transfert"
   },
   "todos": {
     "setTitle": "Définir une tâche",
@@ -212,7 +213,8 @@
   },
   "selection": {
     "max": "Sélectionnez jusqu’à {{n}} messages",
-    "count": "{{n}} sélectionné(s)"
+    "count": "{{n}} sélectionné(s)",
+    "title": "({{n}}) sélectionné(s)"
   },
   "mention": {
     "everyone": "Tout le monde",
@@ -323,5 +325,33 @@
   "categories": "Catégories",
   "tabMessages": "Message",
   "tabContacts": "Contacts",
-  "notifyOff": "L’autorisation des notifications n’est pas activée"
+  "notifyOff": "L’autorisation des notifications n’est pas activée",
+  "filter": {
+    "msg": "Message",
+    "todo": "À faire",
+    "tag": "Marquer",
+    "image": "Image",
+    "file": "Fichier",
+    "link": "Lien",
+    "fullChat": "Conversation complète"
+  },
+  "picker": {
+    "searchDialogs": "Rechercher des membres, groupes, services ou projets",
+    "all": "Tous les membres",
+    "byDepartment": "Par service",
+    "byProject": "Par projet",
+    "department": "Département",
+    "project": "Projet",
+    "recentDialogs": "Conversations récentes",
+    "members": "Membres",
+    "groups": "Groupes",
+    "sources": "Services et projets",
+    "people": "{{n}} personnes",
+    "selected": "Sélectionnés",
+    "maxItems": "Jusqu'à {{n}} éléments",
+    "clear": "Effacer",
+    "notFound": "Aucun résultat pour « {{key}} »",
+    "overMax": "Limite maximale de sélection dépassée",
+    "noDepartment": "Département par défaut"
+  }
 }

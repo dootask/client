@@ -172,7 +172,8 @@
     "hideSource": "Jangan tampilkan informasi pengirim asli",
     "merge": "Teruskan sebagai pesan gabungan",
     "max": "Pilih maksimal {{n}} percakapan",
-    "done": "Penerusan berhasil"
+    "done": "Penerusan berhasil",
+    "confirmTitle": "Konfirmasi penerusan"
   },
   "todos": {
     "setTitle": "Atur Tugas",
@@ -212,7 +213,8 @@
   },
   "selection": {
     "max": "Pilih hingga {{n}} pesan",
-    "count": "{{n}} dipilih"
+    "count": "{{n}} dipilih",
+    "title": "({{n}}) dipilih"
   },
   "mention": {
     "everyone": "Semua Orang",
@@ -323,5 +325,33 @@
   "categories": "Kategori",
   "tabMessages": "Pesan",
   "tabContacts": "Kontak",
-  "notifyOff": "Izin notifikasi belum diaktifkan"
+  "notifyOff": "Izin notifikasi belum diaktifkan",
+  "filter": {
+    "msg": "Pesan",
+    "todo": "Tugas",
+    "tag": "Tandai",
+    "image": "Gambar",
+    "file": "Berkas",
+    "link": "Tautan",
+    "fullChat": "Percakapan lengkap"
+  },
+  "picker": {
+    "searchDialogs": "Cari anggota, grup, departemen, atau proyek",
+    "all": "Semua anggota",
+    "byDepartment": "Menurut departemen",
+    "byProject": "Menurut proyek",
+    "department": "Departemen",
+    "project": "Proyek",
+    "recentDialogs": "Obrolan terbaru",
+    "members": "Anggota",
+    "groups": "Grup",
+    "sources": "Departemen dan proyek",
+    "people": "{{n}} orang",
+    "selected": "Dipilih",
+    "maxItems": "Maksimal {{n}} item",
+    "clear": "Bersihkan",
+    "notFound": "Tidak ada hasil untuk \"{{key}}\"",
+    "overMax": "Batas maksimum pemilihan terlampaui",
+    "noDepartment": "Departemen Default"
+  }
 }

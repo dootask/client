@@ -252,6 +252,8 @@ const typography = {
   notice: font(14, 21, '400'),
   /** App 聊天页置顶发送人、待办横条的加粗小字（旧版 App） */
   footnoteStrong: font(13, 18, '600'),
+  /** App 分类条上待办数角标的数字（旧版 App） */
+  countMini: font(10, 12, '600'),
 } satisfies Record<string, TextStyle>;
 
 /** 按下态：图标按钮降透明度，主按钮略降（docs/ui-spec.md 第 4 节）；不可用的按钮 */
@@ -409,6 +411,9 @@ const size = {
   searchField: 36,
   /** 多选勾选圈、分段控件、选项胶囊（提醒时间这类快捷选择） */
   checkMark: 22,
+  /** App 多选：左侧勾选圈所在格宽、底栏按钮最小高（旧版 App） */
+  checkMarkCell: 44,
+  selectionBar: 56,
   segment: 32,
   option: 36,
   /** 聊天：输入框单行高、浮动圆钮（回到底部、@ 我）、回应胶囊高、文件卡片左侧色块、气泡对侧至少留出的空白 */
@@ -427,6 +432,39 @@ const size = {
   /** App 聊天页标题旁标签的内边距（旧版 App） */
   headerTagPadX: 5,
   headerTagPadY: 1,
+  /** App 聊天页标题下的分类条（旧版 App）：胶囊高、待办数角标 */
+  typeChip: 28,
+  typeCount: 16,
+  /** App「我的待办」弹层（旧版 App）：列表最高、打钩图标、提醒时间的闹钟图标，正文与提醒时间、闹钟与时间的间距 */
+  todoListMax: 420,
+  todoCheck: 26,
+  remindIcon: 13,
+  todoTextGap: 2,
+  remindGap: 3,
+  /**
+   * App 选人（转发，旧版 App UserPicker）：分节标题高、首页入口行高和图块、部门 / 项目图块、已选数角标、
+   * 成员页顶部条高、字母索引每格高和宽及离右缘、已选列表的移除钮、底部「确定」最小宽、没结果时的上留白和放大镜、
+   * 行里名字和副标题的间距、底部已选头像串的白圈粗细和相互叠压
+   */
+  pickHeader: 28,
+  pickEntry: 56,
+  pickEntryTile: 32,
+  pickTile: 36,
+  pickBadge: 22,
+  pickBar: 44,
+  pickLetter: 16,
+  pickLetterWidth: 20,
+  pickRemove: 28,
+  pickSubmit: 88,
+  pickEmptyTop: 70,
+  pickEmptyIcon: 28,
+  pickLetterInset: 2,
+  pickTextGap: 2,
+  pickStackRing: 2,
+  pickStackOverlap: 6,
+  /** App「确认转发」的留言框最小、最大高度（旧版 App） */
+  forwardMessageMin: 40,
+  forwardMessageMax: 120,
   /** App 聊天页置顶 / 待办横条（旧版 App）：行高、左侧色条宽、关闭图标 */
   banner: 40,
   bannerAccent: 3,
@@ -466,6 +504,16 @@ const palette = {
     other: '#8F959E',
     location: '#F0883E',
     meeting: '#4A86E8',
+  },
+  /** 消息分类的图标色（同旧版网页 public/images/dialog/*.svg，深浅主题相同）：消息、标注、待办、图片、文件、链接 */
+  msgType: { msg: '#8BCF70', tag: '#9D95E5', todo: '#F27B6B', image: '#53CBAE', file: '#F9B552', link: '#619BF2' },
+  /** 选人页部门、项目的图块底色（旧版 App）：全部成员、部门轮换、默认部门、「按部门」入口、项目 */
+  pickSource: {
+    all: '#7BA7D9',
+    departments: ['#7BA7D9', '#8FC1A9', '#D9A27B', '#B49AD6', '#D98F9F', '#7FBFC9', '#C9B26F', '#9AA6B8'],
+    noDepartment: '#C2C6CC',
+    departmentEntry: '#5BC7B0',
+    project: '#6E99EB',
   },
   /** 色块上的图标 */
   onTile: '#FFFFFF',
