@@ -1089,7 +1089,7 @@ export function createMessenger(deps: MessengerDeps) {
       ready: true,
       dialogs: Object.fromEntries(dialogs.map((d) => [d.id, d])),
       drafts: parseJson<Record<number, string>>(kv.get('drafts')) ?? {},
-      outbox: (parseJson<OutboxItem[]>(kv.get('outbox')) ?? []).map((item) => item),
+      outbox: parseJson<OutboxItem[]>(kv.get('outbox')) ?? [],
     });
     unsubs.push(
       deps.socket.on('dialog', handlePush),

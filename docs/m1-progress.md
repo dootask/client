@@ -8,7 +8,7 @@
 | N1 消息数据层 | ✅ | 见 git log |
 | N2 会话列表 | ✅ | 见 git log |
 | N3 聊天窗口：列表与收发 | ✅ | 见 git log |
-| N4 消息操作与输入区 | 🟡 N4a、N4b 第 1–11 块完成；剩 C5 后半、J6 | 见 git log |
+| N4 消息操作与输入区 | ✅ | 见 git log |
 | N5 卡片消息与媒体 | ⬜ | |
 | N6 会话信息与成员 | ⬜ | |
 | N7 AI 会话 | ⬜ | |
@@ -228,3 +228,11 @@ Web 输入框：Enter / `mod+Enter` 发送在 D5 已做；补上 Esc 取消回�
 - Android 验收（qoder，机柜模拟器，2026-11-11）：从第 1 条勾选圈向下拖过 4 条，`已选4项`、列表 y 不动；拖回去取消；点气泡切换勾选；退出多选后列表正常滚动。复测（改 aria 后）uiautomator 中 `checked="true"` 数与底栏「已选 N 项」一致
 - Web 验收（qoder，机柜 Chromium）：Shift 点选连选 4 条，`[role=checkbox][aria-checked="true"]` = 4，退出后 checkbox 全部消失
 - 发现：react-native-web 不认 `accessibilityState`，Web DOM 上没有勾选状态；全项目 17 处改为 `aria-*`，坑记在 `docs/dev.md`
+
+## N4b 第 13 块：断网文本排队（J6）
+
+排队逻辑 N1 已写好（存储里的 outbox，网络恢复或每 30 秒按顺序补发，超过 24 小时转失败），本块只做端到端验收，顺手去掉读 outbox 时多余的一次 `map`。
+
+- Android 验收（qoder，机柜模拟器，2026-11-11）：`svc wifi/data disable` 断网后连发两条，显示为排队（压暗、单勾、无失败图标，顶部「连接中...」）；恢复网络 20 秒内两条都发出，顺序不变，重进会话从服务端拉到仍是这个顺序；测完网络已恢复
+- Web 验收（qoder，机柜 Chromium）：离线发一条，localStorage 的 outbox 里有它；保持离线关页面，恢复在线重开，10 秒内发出、outbox 清空；何翔那边按顺序收到安卓两条和 Web 一条
+- 结果在机柜 `~/qa/j6-android-qoder/`、`~/qa/j6-web-qoder/`，按文字证据核对，没有取图
