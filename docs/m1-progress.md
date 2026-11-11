@@ -18,6 +18,8 @@
 
 ## 当前停在哪
 
+**2026-11-11 设计基准改为「界面照旧版」**（ui-spec 第 0 节第 1 条）。N1–N4 是按旧规则（旧网页只当功能清单、按平台习惯重新设计）做的，界面和旧版差别很大，先做逐屏对比清单、和用户逐项定，再返工还原；N5 等返工方式定了再开始。
+
 W6 暂停在工作区、没提交：`src/sync/crypto/`、`metro.config.js`、`src/app/pgp-bench.tsx`、`src/sync/api/user.ts` 的改动、package.json / package-lock.json 里 openpgp 相关的行。提交其他工作项时不要带上。
 
 ## 第 1 节 功能清单
