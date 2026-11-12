@@ -1,4 +1,5 @@
 export * from './client';
+export * as assistantApi from './assistant';
 export * as contactsApi from './contacts';
 export * as dialogApi from './dialog';
 export * from './errors';

@@ -1,3 +1,4 @@
+import type { AiBody } from '../../ai/timeline';
 import type { Preview } from '../preview';
 
 /**
@@ -71,6 +72,8 @@ export type MsgBody =
   | { kind: 'rich'; blocks: Block[]; long?: boolean; sticker?: boolean }
   /** AI 回复生成中的占位（正文是 `...`） */
   | { kind: 'typing' }
+  /** 聊天机器人回复（msg.ai）的块时间线 */
+  | AiBody
   | { kind: 'image' | 'video'; src: string; width: number; height: number; url: string }
   | { kind: 'file'; name: string; ext: string; size: number; url: string }
   | { kind: 'record'; url: string; duration: number; text: string }

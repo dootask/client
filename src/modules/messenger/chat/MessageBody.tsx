@@ -13,6 +13,7 @@ import type { LocalFile } from '../../../sync/api';
 import type { MsgBody } from '../../../sync/messenger/body';
 import { Icon } from '../../../ui/Icon';
 import type { AppTheme } from '../../../ui/theme';
+import { AiBodyView } from './AiBody';
 import { CardBody } from './cards/CardBody';
 import { formatBytes } from './bytes';
 import { useFileProgress } from './fileActions';
@@ -94,6 +95,8 @@ export function MessageBody({ body, tone, unplayed, msgId }: {
           {body.long && <LongMore msgId={msgId} tone={tone} />}
         </>
       );
+    case 'ai':
+      return <AiBodyView body={body} tone={tone} msgId={msgId} />;
     case 'typing':
       return <TypingDots color={tone.muted} />;
     case 'image':

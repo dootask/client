@@ -1,8 +1,12 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useStore } from 'zustand';
 import { useShallow } from 'zustand/react/shallow';
 import { createStore } from 'zustand/vanilla';
 
+import type { AiInfo } from '../../sync/ai/protocol';
+import type { LiveRun } from '../../sync/ai/runs';
+import { isActive } from '../../sync/ai/timeline';
+import type { Msg } from '../../sync/api/dialog';
 import { createMessengerStore, type MessengerState, type StoredDialog } from '../../sync/messenger';
 import type { CachedUser, UserDirectoryState } from '../../sync/users';
 import { useMessengerInstance } from './service';
@@ -10,6 +14,8 @@ import { useMessengerInstance } from './service';
 /** 未登录时给 hooks 用的空状态 */
 const emptyStore = createMessengerStore();
 const emptyUsers = createStore<UserDirectoryState>()(() => ({ users: {} }));
+const emptyTexts = createStore<Record<number, string>>()(() => ({}));
+const emptyRuns = createStore<Record<number, LiveRun>>()(() => ({}));
 
 export const useMessenger = () => useMessengerInstance((s) => s.messenger);
 
@@ -23,6 +29,27 @@ export const useGroupActions = () => useMessengerInstance((s) => s.group);
 export function useMessengerState<T>(selector: (state: MessengerState) => T): T {
   const messenger = useMessenger();
   return useStore(messenger?.store ?? emptyStore, selector);
+}
+
+/**
+ * AI 回复生成中的实时内容叠加到消息上，服务端推来最终结果后用消息本身。只订阅这一条消息：
+ * - 聊天机器人回复（msg.ai）进行中时订阅 Run 事件流，实时 parts 叠加为 msg.ai.live
+ * - 旧式文本流（msgStream，H1）把正文换成已吐出的文字
+ */
+export function useStreamingMsg(msg: Msg): Msg {
+  const streams = useMessengerInstance((s) => s.streams);
+  const runs = useMessengerInstance((s) => s.runs);
+  const text = useStore(streams?.texts ?? emptyTexts, (s) => s[msg.id]);
+  const live = useStore(runs?.live ?? emptyRuns, (s) => s[msg.id]);
+  const body = msg.msg && typeof msg.msg === 'object' ? (msg.msg as { text?: unknown; ai?: AiInfo }) : null;
+  const ai = body?.ai && typeof body.ai === 'object' ? body.ai : null;
+  const running = !!ai && isActive(ai.status);
+  useEffect(() => (running && runs ? runs.watch(msg.id) : undefined), [running, runs, msg.id]);
+  return useMemo(() => {
+    if (!body) return msg;
+    if (ai) return running && live ? { ...msg, msg: { ...body, ai: { ...ai, live } } } : msg;
+    return text === undefined ? msg : { ...msg, msg: { ...body, text } };
+  }, [msg, body, ai, running, live, text]);
 }
 
 /** 一个会话；每行只订阅自己这一条 */

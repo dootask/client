@@ -1,4 +1,6 @@
 import type { Msg } from '../../api/dialog';
+import { aiBody, rendersAsAi } from '../../ai/timeline';
+import type { AiInfo } from '../../ai/protocol';
 import { msgPreview } from '../preview';
 import { absoluteUrl, imageSource, parseRich } from './html';
 import { markdownToHtml } from './markdown';
@@ -79,6 +81,8 @@ function forwardInfo(m: Msg, msg: Data) {
 function richBody(type: string, msg: Data, ctx: BodyContext): MsgBody {
   const text = str(msg.text);
   const md = msg.type === 'md';
+  const ai = msg.ai && typeof msg.ai === 'object' ? (msg.ai as AiInfo) : null;
+  if (type === 'text' && ai && rendersAsAi(ai, text)) return aiBody(ai, text, ctx.userId, (markdown) => textBlocks(markdown, true, ctx));
   if (type === 'text' && md && text.trim() === '...') return { kind: 'typing' };
   const blocks = textBlocks(text, md, ctx);
   if (type === 'longtext') return { kind: 'rich', blocks, long: true };

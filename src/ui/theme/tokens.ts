@@ -432,6 +432,8 @@ const typography = {
   msgReactEmoji: font(24, 28, '400'),
   /** 代码块、行内代码 */
   code: { ...font(14, 20, '400'), fontFamily: monoFont },
+  /** AI 回复里工具的参数和结果 */
+  aiCode: { ...font(12, 17, '400'), fontFamily: monoFont },
   /** 旧版会话列表（docs/ui-spec.md 1.6）：行标题、行内小字、窄屏大标题、窄屏顶部条标题 */
   listTitle: font(14, 24, '400'),
   listDesc: font(12, 24, '400'),
@@ -735,6 +737,10 @@ const size = {
   listLineGap: 2,
   /** 资料页：文字占位条、标签占位的高度 */
   profile: { blankBar: 10, chipBlank: 28 },
+  /** 会话二级页的网页抽屉（旧版 .overlay-body）：宽 400，右上关闭 40×40 */
+  sidePage: { width: 400, close: 40, closeInset: 12, closeInsetNarrow: 8 },
+  /** 聊天机器人回复（旧版 App AiBody）：卡片、折叠组最小宽，组标题、按钮、状态行高，框内滚动的最大高，行内缩进 */
+  ai: { minWidth: 240, groupHead: 36, button: 36, status: 24, scrollMax: 240, rowIndent: 22, rowPadY: 4, icon: 16, badgePadX: 6, badgePadY: 2 },
   /** 分类胶囊、列表顶部搜索框的高度 */
   chip: 30,
   searchField: 36,

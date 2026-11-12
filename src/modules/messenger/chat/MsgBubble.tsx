@@ -12,7 +12,7 @@ import { UserAvatar } from '../../../ui/Avatar';
 import { type MessageRenderInfo } from '../../../ui/chat';
 import { Icon } from '../../../ui/Icon';
 import { Touchable } from '../../../ui/Touchable';
-import { useUser } from '../hooks';
+import { useStreamingMsg, useUser } from '../hooks';
 import { PreviewText } from '../PreviewText';
 import { BubbleTouch } from './BubbleTouch';
 import { chained, type RowData } from './chatModel';
@@ -60,7 +60,8 @@ function BubbleFrame({ info, variant, leading, touch, children }: {
 /** 长按浮起时重画的那条消息（不带定位高亮和间距） */
 export const MessagePreview = MsgRow;
 
-export function MsgRow({ info, msg }: { info: MessageRenderInfo<RowData>; msg: Msg }) {
+export function MsgRow({ info, msg: stored }: { info: MessageRenderInfo<RowData>; msg: Msg }) {
+  const msg = useStreamingMsg(stored);
   const ctx = useRowContext();
   const t = useT();
   const { isOwn, message, older } = info;

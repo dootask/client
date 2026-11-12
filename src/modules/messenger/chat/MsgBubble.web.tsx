@@ -13,7 +13,7 @@ import { Icon, type LucideIcon } from '../../../ui/Icon';
 import { Menu, type MenuEntry } from '../../../ui/popover';
 import { Touchable } from '../../../ui/Touchable';
 import { useToday } from '../clock';
-import { useNicknames, useUser } from '../hooks';
+import { useNicknames, useStreamingMsg, useUser } from '../hooks';
 import { listTimeText } from '../listModel';
 import { PreviewText } from '../PreviewText';
 import { BubbleTouch } from './BubbleTouch';
@@ -31,10 +31,10 @@ import { Dimmed, MyTodosContext, OPENABLE, ReadMark, SelectCheckContext, type To
  */
 
 /** 文字类消息最宽占一行的 70%（旧版 .dialog-view.text） */
-const TEXT_KINDS = new Set<MsgBody['kind']>(['rich', 'record', 'file', 'unknown']);
+const TEXT_KINDS = new Set<MsgBody['kind']>(['rich', 'ai', 'record', 'file', 'unknown']);
 
 /** 正文和图片在气泡内边距外再缩进一点（旧版 .content-text），文件卡等不缩 */
-const CONTENT_KINDS = new Set<MsgBody['kind']>(['rich', 'image', 'video', 'vote', 'wordChain']);
+const CONTENT_KINDS = new Set<MsgBody['kind']>(['rich', 'ai', 'image', 'video', 'vote', 'wordChain']);
 
 /** 头像、名字（群里、合并转发详情里有）、气泡、底部一行的外框；userid 是头像那个人 */
 function MsgFrame({ own, userid, name: showName, text, foot, children }: { own: boolean; userid: number; name: boolean; text: boolean; foot: ReactNode; children: ReactNode }) {
@@ -57,7 +57,8 @@ function MsgFrame({ own, userid, name: showName, text, foot, children }: { own: 
   );
 }
 
-export function MsgRow({ info, msg }: { info: MessageRenderInfo<RowData>; msg: Msg }) {
+export function MsgRow({ info, msg: stored }: { info: MessageRenderInfo<RowData>; msg: Msg }) {
+  const msg = useStreamingMsg(stored);
   const ctx = useRowContext();
   const { isOwn } = info;
   const tone = isOwn ? ctx.tones.own : ctx.tones.peer;
