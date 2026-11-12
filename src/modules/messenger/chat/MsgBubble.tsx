@@ -17,17 +17,14 @@ import { PreviewText } from '../PreviewText';
 import { BubbleTouch } from './BubbleTouch';
 import { chained, type RowData } from './chatModel';
 import { LIKE } from './emoji';
+import type { MergeRowProps } from './mergeDetail';
+import { formatTime } from './format';
 import { ReactionTip } from './ReactionTip';
+import { CardHostContext } from './cards/cardMsg';
 import { FileCard, isMediaBody, isStickerBody, LocalMedia, MediaBody, MessageBody, RecordBody, StickerBody } from './MessageBody';
 import { msgExtra } from './msgExtra';
 import { type BubbleTone } from './RichText';
 import { Dimmed, FailedNote, OPENABLE, ReadMark, TodoMark, type Touch, Understanding, UploadProgress, pendingMsg, useName, useRowContext } from './rowParts';
-
-/** 消息内时间：本地时区 HH:mm */
-function formatTime(ts: number): string {
-  const d = new Date(ts);
-  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-}
 
 /**
  * 气泡外框：左右对齐、连续消息圆角收紧、底色；对方在群里时左侧是头像列（连续消息只在最后一条显示头像）。
@@ -80,7 +77,8 @@ export function MsgRow({ info, msg }: { info: MessageRenderInfo<RowData>; msg: M
 
   const hasHeader = showName || !!forward || !!reply;
   const hasFooter = list.length > 0 || replyNum > 0;
-  const onPress = OPENABLE.has(body.kind) || (body.kind === 'rich' && body.long) ? () => ctx.onOpen(msg, body) : undefined;
+  // 位置只在 App 上可点（系统地图打开，同旧版 App；旧版网页不能点）
+  const onPress = OPENABLE.has(body.kind) || body.kind === 'location' || body.kind === 'mergeForward' || (body.kind === 'rich' && body.long) ? () => ctx.onOpen(msg, body) : undefined;
   const touch: Touch = {
     onPress,
     menu: () => ctx.menu(msg, body, isOwn),
@@ -164,7 +162,9 @@ export function MsgRow({ info, msg }: { info: MessageRenderInfo<RowData>; msg: M
   return (
     <BubbleFrame info={info} leading={leading} touch={touch}>
       {header}
-      <MessageBody body={body} tone={tone} unplayed={!isOwn && !!msg.dot} />
+      <CardHostContext.Provider value={{ msg, open: () => ctx.onOpen(msg, body) }}>
+        <MessageBody body={body} tone={tone} unplayed={!isOwn && !!msg.dot} msgId={msg.id} />
+      </CardHostContext.Provider>
       <Understanding msg={msg} tone={tone} />
       {footer}
       {meta(false)}
@@ -300,7 +300,39 @@ export function UploadRow({ info, item }: { info: MessageRenderInfo<RowData>; it
   );
 }
 
+/** 合并转发详情里的一条（旧版 App）：头像、名字和时间，下面浅底气泡；整个气泡点了打开 */
+export function MergeRow({ msg, body, tones, onOpen }: MergeRowProps) {
+  const { theme } = useUnistyles();
+  const user = useUser(msg.userid);
+  return (
+    <View style={styles.mergeRow}>
+      <UserAvatar uri={user?.userimg} userid={msg.userid} name={user?.nickname ?? ''} bot={!!user?.bot} size={theme.size.avatar.md} />
+      <View style={styles.mergeMain}>
+        <View style={styles.mergeHead}>
+          <Text style={[styles.mergeMeta, styles.mergeName]} numberOfLines={1}>{user?.nickname ?? ''}</Text>
+          <Text style={styles.mergeMeta}>{formatTime(toUnix(msg.created_at) * 1000)}</Text>
+        </View>
+        <Touchable onPress={onOpen} style={styles.mergeBubble}>
+          {isStickerBody(body) ? (
+            <StickerBody body={body} />
+          ) : (
+            <CardHostContext.Provider value={{ msg: null, open: onOpen }}>
+              <MessageBody body={body} tone={tones.peer} msgId={msg.id} />
+            </CardHostContext.Provider>
+          )}
+        </Touchable>
+      </View>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create((theme) => ({
+  mergeRow: { flexDirection: 'row', gap: theme.spacing.sm, paddingHorizontal: theme.spacing.page },
+  mergeMain: { flex: 1, gap: theme.spacing.xs },
+  mergeHead: { flexDirection: 'row', justifyContent: 'space-between', gap: theme.spacing.md },
+  mergeMeta: { ...theme.typography.caption, color: theme.colors.text3 },
+  mergeName: { flexShrink: 1 },
+  mergeBubble: { alignSelf: 'flex-start', maxWidth: '100%', padding: theme.spacing.md, borderRadius: theme.radius.card, backgroundColor: theme.colors.surface },
   caption: { ...theme.typography.caption },
   pressed: { opacity: theme.opacity.pressedIcon },
   row: { paddingHorizontal: theme.spacing.page, flexDirection: 'row', alignItems: 'flex-end' },

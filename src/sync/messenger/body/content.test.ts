@@ -60,7 +60,7 @@ describe('textBlocks（Markdown）', () => {
     expect(blocks).toEqual([
       { t: 'h', level: 1, runs: [{ text: '标题' }] },
       { t: 'p', runs: [{ text: '段落 一\n二' }] },
-      { t: 'code', lang: '', text: 'const a = 1;' },
+      { t: 'code', lang: 'js', text: 'const a = 1;' },
       { t: 'table', head: true, rows: [[[{ text: 'a' }], [{ text: 'b' }]], [[{ text: '1' }], [{ text: '2' }]]] },
     ]);
   });
@@ -80,6 +80,16 @@ describe('textBlocks（Markdown）', () => {
         items: [{ mark: 'bullet', blocks: [{ t: 'p', runs: [{ text: 'a ' }, { text: 'b', code: true }] }, { t: 'list', items: [{ mark: 'bullet', blocks: [{ t: 'p', runs: [{ text: 'c' }] }] }] }] }],
       },
     ]);
+  });
+
+  it('公式：$$ 独占行为块（可跨行），$…$ 为行内源码，金额不算公式', () => {
+    expect(textBlocks('math test\n\n$$\\sum_{i=1}^n i = \\frac{n(n+1)}{2}$$', true, ctx)).toEqual([
+      { t: 'p', runs: [{ text: 'math test' }] },
+      { t: 'math', text: '\\sum_{i=1}^n i = \\frac{n(n+1)}{2}' },
+    ]);
+    expect(textBlocks('$$\na < b\n$$', true, ctx)).toEqual([{ t: 'math', text: 'a < b' }]);
+    expect(textBlocks('设 $x^2$ 为', true, ctx)).toEqual([{ t: 'p', runs: [{ text: '设 ' }, { text: 'x^2', code: true }, { text: ' 为' }] }]);
+    expect(textBlocks('花了 $5 和 $6', true, ctx)).toEqual([{ t: 'p', runs: [{ text: '花了 $5 和 $6' }] }]);
   });
 });
 
@@ -114,6 +124,45 @@ describe('msgContent', () => {
   it('系统消息：待办设给别人', () => {
     const c = msgContent(msg({ type: 'todo', userid: 3, msg: { action: 'add', data: { type: 'text', msg: { text: '内容' }, userids: '5,6' } } }), ctx);
     expect(c.body).toEqual({ kind: 'system', parts: [{ userid: 3 }, { label: 'todoAdd' }, { preview: { labels: [], text: '内容' } }, { label: 'todoTarget' }, { userid: 5 }, { userid: 6 }] });
+  });
+
+  it('投票：各项票数、百分比、自己投的；匿名不带投票人', () => {
+    const vote = {
+      text: '<p>午饭</p>', uuid: 'u1', multiple: 0, anonymous: 0, state: 1, userid: 3,
+      list: [{ id: 1, text: '面' }, { id: 2, text: '饭' }],
+      votes: [{ userid: 3, votes: ['1'] }, { userid: 5, votes: [1] }, { userid: 6, votes: ['2'] }],
+    };
+    const body = msgContent(msg({ type: 'vote', msg: vote }), ctx).body;
+    expect(body).toMatchObject({
+      kind: 'vote', uuid: 'u1', multiple: false, anonymous: false, total: 3, mine: ['1'], active: true, own: true,
+      options: [{ id: '1', text: '面', voters: [3, 5], count: 2 }, { id: '2', text: '饭', voters: [6], count: 1 }],
+    });
+    expect(body.kind === 'vote' && body.options[0]!.percent).toBeCloseTo(66.667, 2);
+    const anonymous = msgContent(msg({ type: 'vote', msg: { ...vote, anonymous: 1, votes: [{ userid: 5, votes: ['2'] }] } }), ctx).body;
+    expect(anonymous).toMatchObject({ mine: [], options: [{ voters: [], count: 0, percent: 0 }, { voters: [], count: 1, percent: 100 }] });
+  });
+
+  it('接龙：示例单独拿出，空内容不计', () => {
+    const body = msgContent(msg({ type: 'word-chain', msg: {
+      text: '<p>报名</p>', uuid: 'c1', createid: 4,
+      list: [{ id: 0, type: 'case', text: '姓名' }, { id: 1, userid: 4, text: '甲' }, { id: 2, userid: 5, text: ' ' }],
+    } }), ctx).body;
+    expect(body).toMatchObject({ kind: 'wordChain', creatorId: 4, uuid: 'c1', example: '姓名', entries: [{ id: '1', userid: 4, text: '甲' }] });
+  });
+
+  it('位置、会议、合并转发', () => {
+    expect(msgContent(msg({ type: 'location', msg: { title: '公司', address: '上海', lng: '121.5', lat: 31.2, thumb: 'uploads/m.png' } }), ctx).body).toEqual({
+      kind: 'location', title: '公司', address: '上海', lng: 121.5, lat: 31.2, thumb: 'https://example.com/uploads/m.png',
+    });
+    expect(msgContent(msg({ type: 'meeting', msg: { name: '周会', userid: 7, meetingid: 12345678901, end_at: '2026-11-08 11:00:00' } }), ctx).body).toEqual({
+      kind: 'meeting', name: '周会', ended: true, creatorId: 7, meetingId: '12345678901',
+    });
+    const merge = msgContent(msg({ type: 'merge-forward', msg: {
+      sender_names: ['甲', '乙'], sender_total: 3, count: 5,
+      preview: [1, 2, 3, 4].map((i) => ({ userid: i, type: 'text', msg: { text: `<p>${i}</p>` } })),
+    } }), ctx).body;
+    expect(merge).toMatchObject({ kind: 'mergeForward', title: { names: ['甲', '乙'], total: 3 }, count: 5 });
+    expect(merge.kind === 'mergeForward' && merge.lines).toEqual([1, 2, 3].map((i) => ({ userid: i, preview: { labels: [], text: String(i) } })));
   });
 
   it('正文对象不变时沿用上次的结果', () => {

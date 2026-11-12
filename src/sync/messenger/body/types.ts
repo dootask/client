@@ -21,6 +21,8 @@ export interface Run {
   app?: Record<string, string>;
   /** 点了填进输入栏的命令：替换或插入 */
   fill?: 'set' | 'insert';
+  /** 页内查找的命中（current 是当前定位的那一处），只在长文阅读页出现 */
+  hl?: 'match' | 'current';
 }
 
 export interface ImageBlock {
@@ -48,8 +50,13 @@ export type Block =
   | { t: 'h'; level: number; runs: Run[] }
   | { t: 'quote'; blocks: Block[] }
   | { t: 'reasoning'; blocks: Block[] }
+  /** 可折叠段落（`<details>`），默认收起，点标题展开 */
+  | { t: 'details'; summary: Run[]; blocks: Block[] }
   | { t: 'list'; items: ListItem[] }
-  | { t: 'code'; lang: string; text: string }
+  /** runs 只在页内查找时带上（命中处高亮），平时按 text 显示 */
+  | { t: 'code'; lang: string; text: string; runs?: Run[] }
+  /** 块级数学公式：text 是 LaTeX 源码，排版由界面层做 */
+  | { t: 'math'; text: string }
   | { t: 'table'; head: boolean; rows: Run[][][] }
   | ImageBlock
   | { t: 'hr' };
@@ -68,9 +75,59 @@ export type MsgBody =
   | { kind: 'file'; name: string; ext: string; size: number; url: string }
   | { kind: 'record'; url: string; duration: number; text: string }
   | { kind: 'system'; parts: SystemPart[] }
-  /** 卡片类消息（投票、接龙、位置、会议、合并转发、模板），N5 做完整显示前只显示摘要 */
-  | { kind: 'card'; preview: Preview }
+  | VoteBody
+  | { kind: 'wordChain'; blocks: Block[]; creatorId: number; uuid: string; example: string; entries: WordChainEntry[] }
+  | { kind: 'location'; title: string; address: string; lng: number; lat: number; thumb: string }
+  | { kind: 'meeting'; name: string; ended: boolean; creatorId: number; meetingId: string }
+  | { kind: 'mergeForward'; title: MergeTitle; lines: { userid: number; preview: Preview }[]; count: number }
+  /** 模板消息（机器人命令回复、审批通知等）：原样带出数据，界面翻译后拼成块 */
+  | { kind: 'template'; template: TemplateData }
   | { kind: 'unknown' };
+
+export interface VoteOption {
+  id: string;
+  text: string;
+  /** 投了这项的人；匿名投票为空 */
+  voters: number[];
+  count: number;
+  /** 占总投票人数的百分比（不取整，界面按各端旧版格式化） */
+  percent: number;
+}
+
+export interface VoteBody {
+  kind: 'vote';
+  blocks: Block[];
+  uuid: string;
+  multiple: boolean;
+  anonymous: boolean;
+  options: VoteOption[];
+  /** 总投票人数 */
+  total: number;
+  /** 自己投过的选项；没投为空 */
+  mine: string[];
+  /** 进行中（发起人可再次发送、结束） */
+  active: boolean;
+  /** 自己发起的 */
+  own: boolean;
+}
+
+export interface WordChainEntry {
+  id: string;
+  userid: number;
+  text: string;
+}
+
+/** 合并转发的标题：界面按发送人名字拼（没有名字是「聊天记录」，超过两人是「甲和乙等人的聊天记录」） */
+export interface MergeTitle {
+  names: string[];
+  total: number;
+}
+
+/** 模板消息的原始数据：type 区分模板，其余字段按模板各自取 */
+export interface TemplateData {
+  type: string;
+  [key: string]: unknown;
+}
 
 /** 引用的原消息 */
 export interface ReplyInfo {

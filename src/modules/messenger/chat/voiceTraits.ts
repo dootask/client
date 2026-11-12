@@ -8,3 +8,6 @@ export const HOLD_TO_TALK = true;
 
 /** 浏览器录音格式：App 上不用 */
 export const WEB_MIME_TYPE = 'audio/mp4';
+
+/** App 上播完接着播紧挨着的下一条别人发的、没听过的语音（同旧版 App） */
+export const AUTO_NEXT = true;

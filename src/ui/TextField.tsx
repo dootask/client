@@ -8,7 +8,7 @@ export type TextFieldProps = Omit<TextInputProps, 'style' | 'placeholderTextColo
   right?: ReactNode;
 };
 
-/** 输入框：灰底圆角，聚焦时描边；multiline 时至少三行高、随内容变高 */
+/** 输入框：灰底圆角，聚焦时描边；multiline 时至少三行高、随内容变高；只读时字变浅 */
 export function TextField({ ref, right, multiline = false, onFocus, onBlur, ...rest }: TextFieldProps) {
   const { theme } = useUnistyles();
   const [focused, setFocused] = useState(false);
@@ -27,7 +27,7 @@ export function TextField({ ref, right, multiline = false, onFocus, onBlur, ...r
           setFocused(false);
           onBlur?.(event);
         }}
-        style={[styles.input, multiline && styles.multiline]}
+        style={[styles.input, multiline && styles.multiline, rest.editable === false && styles.readonly]}
       />
       {right}
     </View>
@@ -62,4 +62,5 @@ const styles = StyleSheet.create((theme) => ({
     paddingVertical: theme.spacing.md,
     textAlignVertical: 'top',
   },
+  readonly: { color: theme.colors.text2 },
 }));

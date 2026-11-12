@@ -16,5 +16,17 @@
   "refresh": "Actualiser",
   "clear": "Effacer",
   "loadFailed": "Échec du chargement",
-  "none": "Aucun"
+  "none": "Aucun",
+  "media": {
+    "image": "Image",
+    "failed": "Échec du chargement de l’image",
+    "videoFailed": "Échec du chargement de la vidéo",
+    "pip": "Image dans l’image",
+    "save": "Enregistrer dans Photos",
+    "saved": "Enregistré dans Photos",
+    "noAlbum": "Pas d'autorisation d'accès aux Photos",
+    "saveFailed": "Échec de l'enregistrement",
+    "share": "Partager",
+    "forward": "Transférer"
+  }
 }

@@ -20,6 +20,7 @@ type Data = Record<string, unknown>;
 const obj = (v: unknown): Data => (v && typeof v === 'object' ? (v as Data) : {});
 const str = (v: unknown) => (typeof v === 'string' ? v : '');
 const int = (v: unknown) => Number.parseInt(String(v ?? ''), 10) || 0;
+const list = (v: unknown): unknown[] => (Array.isArray(v) ? v : []);
 
 const cache = new WeakMap<object, { key: string; content: MsgContent }>();
 
@@ -105,17 +106,81 @@ function plainBody(m: Msg, msg: Data, ctx: BodyContext): MsgBody {
     case 'withdraw':
       return system([{ label: 'withdrawSelf' }]);
     case 'vote':
+      return voteBody(msg, ctx);
     case 'word-chain':
+      return wordChainBody(msg, ctx);
     case 'location':
+      return {
+        kind: 'location',
+        title: str(msg.title),
+        address: str(msg.address),
+        lng: Number(msg.lng) || 0,
+        lat: Number(msg.lat) || 0,
+        thumb: absoluteUrl(str(msg.thumb), ctx.origin),
+      };
     case 'meeting':
+      return { kind: 'meeting', name: str(msg.name), ended: !!msg.end_at, creatorId: int(msg.userid), meetingId: String(msg.meetingid ?? '') };
     case 'merge-forward':
-    case 'template': {
-      const preview = msgPreview({ type: m.type, msg: m.msg });
-      return preview ? { kind: 'card', preview } : { kind: 'unknown' };
-    }
+      return {
+        kind: 'mergeForward',
+        title: { names: list(msg.sender_names).map(str), total: int(msg.sender_total) },
+        lines: list(msg.preview)
+          .slice(0, 3)
+          .map((item) => {
+            const d = obj(item);
+            return { userid: int(d.userid), preview: msgPreview({ type: str(d.type), msg: d.msg }) ?? { labels: [], text: '' } };
+          }),
+        count: int(msg.count),
+      };
+    case 'template':
+      return { kind: 'template', template: { ...msg, type: str(msg.type) } };
     default:
       return { kind: 'unknown' };
   }
+}
+
+function voteBody(msg: Data, ctx: BodyContext): MsgBody {
+  const anonymous = int(msg.anonymous) === 1;
+  const votes = list(msg.votes).map(obj);
+  const options = list(msg.list).map((raw) => {
+    const item = obj(raw);
+    const id = String(item.id ?? '');
+    const voters = votes.filter((vote) => list(vote.votes).map(String).includes(id));
+    return {
+      id,
+      text: str(item.text),
+      voters: anonymous ? [] : voters.map((vote) => int(vote.userid)),
+      count: voters.length,
+      percent: votes.length ? (voters.length / votes.length) * 100 : 0,
+    };
+  });
+  const mine = votes.find((vote) => int(vote.userid) === ctx.userId);
+  return {
+    kind: 'vote',
+    blocks: textBlocks(str(msg.text), msg.type === 'md', ctx),
+    uuid: str(msg.uuid),
+    multiple: int(msg.multiple) === 1,
+    anonymous,
+    options,
+    total: votes.length,
+    mine: mine ? list(mine.votes).map(String) : [],
+    active: int(msg.state) === 1,
+    own: int(msg.userid) === ctx.userId,
+  };
+}
+
+function wordChainBody(msg: Data, ctx: BodyContext): MsgBody {
+  const items = list(msg.list).map(obj);
+  return {
+    kind: 'wordChain',
+    blocks: textBlocks(str(msg.text), msg.type === 'md', ctx),
+    creatorId: int(msg.createid) || int(msg.userid),
+    uuid: str(msg.uuid),
+    example: str(items.find((item) => item.type === 'case')?.text),
+    entries: items
+      .filter((item) => item.type !== 'case' && str(item.text).trim())
+      .map((item) => ({ id: String(item.id ?? ''), userid: int(item.userid), text: str(item.text) })),
+  };
 }
 
 function fileBody(msg: Data, ctx: BodyContext): MsgBody {

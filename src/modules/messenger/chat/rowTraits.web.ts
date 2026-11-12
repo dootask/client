@@ -14,6 +14,8 @@ export const rowTraits: {
   systemChip: boolean;
   /** 正文文字能用鼠标选中（旧版网页可以；App 长按出菜单，选字走「选择文本」页） */
   selectableText: boolean;
+  /** 合并转发详情推一页（旧版 App）；否则开右侧抽屉（旧版网页） */
+  mergePage: boolean;
 } = {
   tightChain: false,
   dayLabels: false,
@@ -21,4 +23,5 @@ export const rowTraits: {
   body: ({ typography }, narrow) => (narrow ? typography.msgTextNarrow : typography.msgText),
   systemChip: true,
   selectableText: true,
+  mergePage: false,
 };

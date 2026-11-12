@@ -39,7 +39,7 @@ export interface RowContext {
   onReply?: (msg: Msg) => void;
   /** Web 鼠标移上来：预取菜单要用的收藏状态 */
   onHover: (msg: Msg) => void;
-  /** 点气泡：打开图片、文件，播放语音，查看全文 */
+  /** 点气泡：打开图片、文件，播放语音，查看全文；点接龙卡片的「参与接龙」 */
   onOpen: (msg: Msg, body: MsgBody) => void;
   /** 点回应胶囊、双击、表情条（自己回应过的再点即取消） */
   onReact: (msg: Msg, symbol: string) => void;

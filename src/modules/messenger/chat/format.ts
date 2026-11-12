@@ -21,6 +21,12 @@ export function dayLabel(ts: number, today: number, t: Translate, f: DateFormats
   return date.getFullYear() === new Date(today).getFullYear() ? f.monthDay(date) : f.full(date);
 }
 
+/** 消息内时间：本地时区 HH:mm */
+export function formatTime(ts: number): string {
+  const d = new Date(ts);
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+}
+
 /** 单聊副标题：在线，或最后在线时间（同旧前端 sharedWebViewDialogBars.lastSeen） */
 export function onlineText(online: boolean, lineAt: string | null | undefined, now: number, t: Translate, f: DateFormats): string {
   if (online) return t('messenger:chat.online');
@@ -41,19 +47,6 @@ export function onlineText(online: boolean, lineAt: string | null | undefined, n
 /** 语音时长：一分钟内 12″，以上 1:05 */
 export function formatSeconds(seconds: number): string {
   return seconds >= 60 ? `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}` : `${seconds}″`;
-}
-
-export function formatBytes(bytes: number): string {
-  // 后端按两位小数的 KB 存再乘 1024，小文件会是带小数的字节数
-  if (bytes < 1024) return `${Math.round(bytes)} B`;
-  const units = ['KB', 'MB', 'GB', 'TB'];
-  let value = bytes / 1024;
-  let unit = 0;
-  while (value >= 1024 && unit < units.length - 1) {
-    value /= 1024;
-    unit += 1;
-  }
-  return `${value >= 100 ? Math.round(value) : value.toFixed(1)} ${units[unit]}`;
 }
 
 /** 角标数字，超过 99 显示 99+ */

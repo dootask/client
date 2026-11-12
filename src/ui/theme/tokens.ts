@@ -208,6 +208,36 @@ const light = {
   mergeCount: '#999999',
   mergeLine: '#E8E8E8',
   forwardInput: '#F4F5F7',
+  /**
+   * 旧版网页卡片消息：强调色（投票标题、接龙的展开和参与；对方气泡 / 自己气泡）、会议操作行顶线、投票标签字和底、
+   * 结果进度条轨道；iView 成功色、警告按钮（常态 / 悬停）、灰色禁用按钮（底、字）；合并转发卡片悬停底
+   */
+  msgCard: '#0BC037',
+  msgCardOwn: '#23241F',
+  voteTag: '#7076E4',
+  voteTagFill: '#DEE2FA',
+  voteTrack: '#E2E2E2',
+  ivuSuccess: '#19BE6B',
+  ivuWarning: '#FF9900',
+  ivuWarningHover: '#FFAD33',
+  ivuGrey: '#F7F7F7',
+  ivuGreyText: '#C5C8CE',
+  mergeFillHover: '#EFEFEF',
+  /** 旧版网页 Markdown（markdown-body）：表格边框和分割线、表格隔行底；审批卡片正文顶线 */
+  mdBorder: '#D0D7DE',
+  mdStripe: '#F6F8FA',
+  /** 代码块：底、正文（atom-one-light 基色）、语言和「复制」、「复制」悬停 */
+  mdCodeBg: '#FFFFFF',
+  mdCodeText: '#383A42',
+  mdCodeMeta: '#B3B3B3',
+  mdCodeCopyHover: '#65A665',
+  /** 长文页内查找：命中、当前定位的那处，及其上的文字 */
+  findMatch: '#FFE082',
+  findCurrent: '#FFB300',
+  findText: '#000000',
+  /** 长文气泡底部「查看详情」上的分隔线 */
+  longLine: 'rgba(227,227,227,0.42)',
+  approveLine: '#E3E3E3',
 };
 
 export type Colors = typeof light;
@@ -361,6 +391,28 @@ const dark: Colors = {
   mergeCount: '#8E8E93',
   mergeLine: '#3A3A3C',
   forwardInput: '#2C2C2E',
+  msgCard: '#30D158',
+  msgCardOwn: '#23241F',
+  voteTag: '#A5A9F5',
+  voteTagFill: 'rgba(112,118,228,0.24)',
+  voteTrack: '#3A3A3C',
+  ivuSuccess: '#30D158',
+  ivuWarning: '#FF9F0A',
+  ivuWarningHover: '#FFB340',
+  ivuGrey: '#2C2C2E',
+  ivuGreyText: '#636366',
+  mergeFillHover: '#3A3A3C',
+  mdBorder: '#3D444D',
+  mdStripe: 'rgba(255,255,255,0.04)',
+  mdCodeBg: '#282C34',
+  mdCodeText: '#ABB2BF',
+  mdCodeMeta: '#7D8590',
+  mdCodeCopyHover: '#65A665',
+  findMatch: '#FFE082',
+  findCurrent: '#FFB300',
+  findText: '#000000',
+  longLine: 'rgba(255,255,255,0.12)',
+  approveLine: 'rgba(255,255,255,0.12)',
 };
 
 const font = (fontSize: number, lineHeight: number, fontWeight: TextStyle['fontWeight']) => ({ fontSize, lineHeight, fontWeight });
@@ -404,6 +456,10 @@ const typography = {
   chatType: font(12, 24, '400'),
   chatTypeNarrow: font(14, 28, '400'),
   backNum: font(14, 24, '500'),
+  /** 图片查看：App 长按菜单项、倍速；网页窄屏页码（旧版 14/30） */
+  previewMenu: font(17, 22, '400'),
+  previewRate: font(14, 19, '600'),
+  previewCounter: font(14, 30, '400'),
   /** Web 聊天页置顶卡片的正文、待办条标签和胶囊（旧版网页） */
   topContent: font(14, 22, '400'),
   todoLabel: font(14, 22, '500'),
@@ -437,6 +493,11 @@ const typography = {
   modalTitle: font(18, 20, '500'),
   dooButton: font(14, 20, '500'),
   dooButtonNarrow: font(16, 22, '600'),
+  /** 旧版网页确认框（$A.modalConfirm）：宽屏标题、正文，窄屏标题、正文 */
+  layerTitle: font(16, 24, '500'),
+  layerMessage: font(14, 21, '400'),
+  layerTitleNarrow: font(17, 23, '600'),
+  layerMessageNarrow: font(14.5, 22, '400'),
   /** 旧版选择成员（宽屏 / 手机全屏），名字照旧版类名 */
   uspTitle: font(15, 20, '600'),
   uspSearch: font(15, 20, '400'),
@@ -480,10 +541,35 @@ const typography = {
   mergeCount: font(12, 16, '400'),
   forwardOption: font(14, 22, '400'),
   webEmojiNarrow: font(28, 50, '400'),
+  /**
+   * 旧版网页卡片消息：正文行（接龙名单、会议、位置标题）、投票标题、投票标签、投票选项、小字（位置地址、投票结果、会议操作行、合并条数）、
+   * 合并转发卡片标题
+   */
+  cardText: font(14, 21, '400'),
+  cardHead: font(14, 18, '700'),
+  /** 旧版网页 Markdown 标题（h1–h4，h5、h6 同 h4）、可折叠段落的标题、表格单元格 */
+  mdH1: font(28, 35, '600'),
+  mdH2: font(21, 26.25, '600'),
+  mdH3: font(17.5, 21.875, '600'),
+  mdH4: font(14, 17.5, '600'),
+  mdSummary: font(17.5, 26.25, '700'),
+  mdCell: font(14, 21, '400'),
+  /** 代码块正文（12 的 85%、1.45 倍行高）和右上角的语言、「复制」 */
+  mdCode: { ...font(11.9, 17.255, '400'), fontFamily: monoFont },
+  mdCodeMeta: font(11.9, 17.25, '400'),
+  /** App 公式卡片上一行的公式源码；公式查看页的公式 */
+  mathSource: { ...font(12, 16, '400'), fontFamily: monoFont },
+  mathFormula: font(24, 32, '400'),
+  /** 网页长文气泡底部的「查看详情」 */
+  mdLongMore: font(14, 21, '400'),
+  voteTag: font(12, 18, '400'),
+  voteOption: font(14, 34, '400'),
+  cardSmall: font(12, 18, '400'),
+  mergeCardTitle: font(13, 19.5, '500'),
 } satisfies Record<string, TextStyle>;
 
-/** 按下态：图标按钮降透明度，主按钮略降（docs/ui-spec.md 第 4 节）；不可用的按钮 */
-const opacity = { pressedIcon: 0.5, pressedPrimary: 0.85, disabled: 0.4 };
+/** 按下态：图标按钮降透明度，主按钮略降（docs/ui-spec.md 第 4 节）；不可用的按钮；旧版网页卡片里的次要字（位置地址）、已结束的会议 */
+const opacity = { previewButton: 0.8, previewCounter: 0.85, pressedIcon: 0.5, pressedPrimary: 0.85, disabled: 0.4, cardSub: 0.6, cardEnded: 0.7 };
 
 const spacing = { xs: 4, sm: 8, md: 12, lg: 16, xl: 20, xxl: 24, page: 16 };
 
@@ -599,6 +685,10 @@ const size = {
   /** 小圆钮（输入栏的全屏编辑按钮）和里面的图标 */
   miniButton: 24,
   iconTiny: 14,
+  /** 长文阅读页的页内查找框高 */
+  findInput: 36,
+  /** App 公式卡片左侧的 Σ */
+  mathIcon: 20,
   /**
    * 自绘菜单（Web / 桌面）同旧版两种下拉菜单：iView 样式（默认）行高 32、左右内边距 16、上下留 5、离触发元素 5；
    * Element 样式（消息分类下拉）行高 36、左右内边距 20、上下留 10、离触发元素 12
@@ -635,7 +725,7 @@ const size = {
   /** 图形验证码的显示宽度（高度同输入框） */
   captchaWidth: 120,
   /** 头像只用这几档（docs/ui-spec.md 第 3 节） */
-  avatar: { micro: 16, xs: 20, sm: 24, pickChip: 28, msg: 30, md: 32, pick: 34, pickSel: 36, lg: 40, list: 42, xl: 48, xxl: 64, huge: 80 },
+  avatar: { vote: 18, micro: 16, xs: 20, sm: 24, pickChip: 28, msg: 30, md: 32, pick: 34, pickSel: 36, lg: 40, list: 42, xl: 48, xxl: 64, huge: 80 },
   /** 未读角标的最小宽高（旧版 iView 角标） */
   badge: 20,
   badgePadding: 6,
@@ -810,6 +900,14 @@ const size = {
     footerTop: 20, footerX: 24, footerXNarrow: 22, footerBottom: 22, footerGap: 10,
     button: 36, buttonMin: 88, buttonPadX: 18, buttonNarrow: 48, buttonPadXNarrow: 16, buttonRadiusNarrow: 24,
   },
+  /**
+   * 旧版网页确认框（$A.modalConfirm）：宽屏卡片宽、内边距、圆角，标题行最低高、右留白，图标（26，左右各留 1）与标题间距，正文缩进，按钮行上距、按钮最窄；
+   * 窄屏卡片宽、离屏边、内边距（上 / 左右 / 下）、圆角，正文上距，按钮行上距、间距
+   */
+  layer: {
+    width: 416, padY: 22, padX: 32, radius: 18, head: 42, headEnd: 12, icon: 26, iconSide: 1, iconGap: 12, messageIndent: 40, footerTop: 22, buttonMin: 68,
+    narrowWidth: 300, narrowSide: 24, narrowTop: 24, narrowX: 20, narrowBottom: 20, narrowRadius: 28, narrowMessageTop: 6, narrowFooterTop: 22, gap: 10,
+  },
   webSelect: { cell: 28, cellTop: 1, cellGap: 4, icon: 22, bar: 52, barPadX: 24, button: 28, buttonPadX: 9, buttonGap: 8 },
   /** 旧版选择成员（宽屏三栏弹窗），名字照旧版类名：顶栏、左栏来源、中间列表、右栏已选、底栏 */
   usp: {
@@ -854,6 +952,38 @@ const size = {
     option: 22, optionGap: 6, optionLast: 16,
     inputPadY: 9, inputPadX: 12, inputMin: 40, inputMax: 84, inputRadius: 8, inputBottom: 4,
   },
+  /**
+   * 旧版网页卡片消息：投票（宽度、标题行、标签、选项和单选圈、按钮行和转圈、结果）、接龙（名单上距、行距、参与行、箭头）、
+   * 位置（宽、预览图高和圆角）、会议（内边距、最窄、行距、标签下距、创建人行高、操作行上距）、合并转发（宽度、冒号左右）；
+   * app* 是 App 卡片（旧版 App）：最窄、投票和会议最窄、按钮高、加入会议高、标签图标、选项图标
+   */
+  card: {
+    voteMin: 200, voteMax: 300, headBottom: 8, headPad: 4, headIcon: 16, tagPadX: 4, tagPadY: 2, tagGap: 4,
+    optionsTop: 10, option: 34, radio: 16, radioDot: 10, radioGap: 4, check: 12,
+    buttonsTop: 10, buttonsBottom: 5, buttonGap: 10, button: 32, buttonPadX: 15, spinner: 12,
+    resultTop: 14, resultGap: 14, resultLast: 10, resultTitle: 3, ticketGap: 10, track: 5, votersTop: 4, voterGap: 2,
+    chainTop: 20, chainGap: 5, joinTop: 10, chevron: 12, chevronGap: 2,
+    location: 260, locationPreview: 110, locationRadius: 6,
+    meetingPadX: 6, meetingPadY: 4, meetingMin: 220, meetingGap: 16, meetingLabel: 2, meetingCreator: 16, meetingOpTop: 12,
+    mergeMin: 200, mergeMax: 300, mergeColon: 2,
+    appMin: 200, appWide: 240, appButton: 38, appJoin: 36, appIcon: 14, appOptionIcon: 18,
+  },
+  /** 旧版网页 Markdown：块间距、标题比块间距多空的上距、分割线粗细和多空的上下距、单元格内边距、折叠三角；代码块的内边距、圆角和右上角的位置；长文「查看详情」的上距、内边距和下拉；长文阅读页内边距 */
+  markdown: { gap: 16, headTop: 8, hr: 3.5, hrPad: 8, cellPadX: 13, cellPadY: 6, marker: 10, codeTop: 24, codePadX: 16, codeBottom: 16, codeHeadTop: 5, codeRadius: 6, codeCopyGap: 8, longTop: 12, longPad: 12, longPull: 10, page: 16 },
+  /** 模板消息：审批卡片宽（窄屏）、正文上距和下距、首行上下内边距、行距、小标题下距、图片最大边；下载按钮上距 */
+  template: { approve: 280, approveNarrow: 300, causeTop: 10, causeBottom: 10, firstPad: 15, lineGap: 3, labelGap: 5, thumb: 220, buttonTop: 10 },
+  /**
+   * 图片、视频查看：App（旧版 App）的页码圆点和间距、页码离底、角上按钮离边、倍速胶囊内边距、画中画按钮内边距和图标、长按菜单行高和分隔、菜单圆角；
+   * web* 是旧版网页：关闭按钮和图标、按钮离边、左右切换和图标、底部工具条（高、左右内边距、离底、图标、间距、分隔）、
+   * 窄屏顶栏高和按钮宽、按钮图标、页码离左离上、视频宽高
+   */
+  preview: {
+    dot: 6, dotGap: 6, indicatorBottom: 20, chipTop: 12, chipSide: 16, rateX: 10, rateY: 4, pipPad: 6, pipIcon: 18,
+    menuRow: 52, menuGap: 8, menuRadius: 14,
+    webClose: 40, webCloseIcon: 26, webEdge: 40, webArrow: 44, webArrowIcon: 24,
+    webToolbar: 44, webToolbarPadX: 23, webToolbarBottom: 30, webTool: 23, webToolGap: 17, webToolSep: 26,
+    webTopBar: 60, webTopButton: 50, webTopIcon: 24, webCounterLeft: 20, webCounterTop: 15, webVideoWidth: 640, webVideoHeight: 360,
+  },
   msgReplyBar: 3,
   msgReplyPad: 9,
   msgTextMax: 0.7,
@@ -892,6 +1022,21 @@ const palette = {
     departmentEntry: '#5BC7B0',
     project: '#6E99EB',
   },
+  /**
+   * 图片、视频查看页固定深色，不跟随主题（旧版 App、旧版网页）：底色、字和图标、页码圆点未选中、角上按钮底、
+   * 长按菜单底和按下、菜单遮罩；网页的半透明底和按钮底
+   */
+  preview: {
+    bg: '#000000',
+    text: '#FFFFFF',
+    dotOff: 'rgba(255,255,255,0.4)',
+    chip: 'rgba(0,0,0,0.5)',
+    menu: '#1C1C1E',
+    menuPressed: 'rgba(255,255,255,0.08)',
+    menuBackdrop: 'rgba(0,0,0,0.4)',
+    webMask: 'rgba(0,0,0,0.8)',
+    webButton: '#606266',
+  },
   /** 色块上的图标 */
   onTile: '#FFFFFF',
   /** 色块上表示进度的填充 */
@@ -908,6 +1053,8 @@ const shadow = {
     menuRoomy: '0px 2px 12px rgba(0,0,0,0.1)',
     /** 旧版弹窗卡片 */
     modal: '0px 4px 12px rgba(0,0,0,0.15)',
+    /** 旧版窄屏确认框 */
+    layerNarrow: '0px 14px 44px rgba(0,0,0,0.2)',
     /** 旧版选择成员：左栏选中项、浮层 */
     uspNav: '0px 1px 2px rgba(15,20,30,0.06)',
     uspPop: '0px 0px 0px 1px rgba(15,20,30,0.06), 0px 12px 32px -6px rgba(15,20,30,0.22)',
@@ -918,6 +1065,7 @@ const shadow = {
     menu: '0px 1px 6px rgba(0,0,0,0.6), 0px 0px 0px 1px rgba(255,255,255,0.08)',
     menuRoomy: '0px 2px 12px rgba(0,0,0,0.5)',
     modal: '0px 4px 12px rgba(0,0,0,0.5), 0px 0px 0px 1px rgba(255,255,255,0.08)',
+    layerNarrow: '0px 14px 44px rgba(0,0,0,0.6), 0px 0px 0px 1px rgba(255,255,255,0.08)',
     uspNav: '0px 1px 2px rgba(0,0,0,0.3)',
     uspPop: '0px 0px 0px 1px rgba(255,255,255,0.08), 0px 12px 32px -6px rgba(0,0,0,0.6)',
   },

@@ -1,4 +1,7 @@
 export { ChatRoute } from './chat/ChatScreen';
+export { MergeRoute } from './chat/MergeScreen';
+export { LongTextRoute } from './chat/LongTextScreen';
+export { MathRoute } from './chat/MathScreen';
 export { MessengerHome } from './MessengerHome';
 export { DialogList } from './DialogList';
 export { useDialog, useMessenger, useMessengerState, useUser } from './hooks';

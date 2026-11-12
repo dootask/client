@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import type { ApiClient } from './client';
+import { toQuery, type ApiClient } from './client';
 import { phpList, requestParsed } from './schema';
 
 /**
@@ -193,6 +193,12 @@ export async function msgList(client: ApiClient, params: MsgListParams) {
   return data;
 }
 
+/** 文件消息的下载地址：身份放在地址里（交给浏览器或系统下载器，带不了请求头），权限与查看消息一致 */
+export function msgFileUrl(client: ApiClient, msgId: number): string {
+  const { url, headers } = client.endpoint('dialog/msg/download');
+  return `${url}?${toQuery({ msg_id: msgId, token: headers['dootask-token'] })}`;
+}
+
 /** 每个会话 latest_id 之后的最新消息（每次最多 5 个会话，每个最多 take 条，按 id 倒序） */
 export async function msgLatest(client: ApiClient, dialogs: { id: number; latest_id: number }[], take: number) {
   const { data } = await requestParsed(client, 'dialog/msg/latest', z.looseObject({ data: phpList(msgSchema) }), {
@@ -318,6 +324,17 @@ export async function voteCreate(client: ApiClient, { multiple, anonymous, ...pa
   return data;
 }
 
+/** 投票卡片上的操作：投票（vote 是选中的选项 id）、再次发送、结束 */
+export type VoteActionType = 'vote' | 'again' | 'finish';
+
+/**
+ * 对已发出的投票操作：再次发送返回新发出的那条；投票、结束返回同一投票（uuid 相同）的各条消息的新内容
+ */
+export async function voteAction(client: ApiClient, params: { dialog_id: number; uuid: string; type: VoteActionType; vote: string[] }) {
+  const { data } = await requestParsed(client, 'dialog/msg/vote', z.array(msgSchema), { method: 'post', data: params });
+  return data;
+}
+
 /** 接龙条目：case 是发起人写的示例（格式），text 是一条接龙 */
 export interface WordChainEntry {
   id: number;
@@ -326,9 +343,20 @@ export interface WordChainEntry {
   text: string;
 }
 
-/** 发起接龙（服务端分配 id 和 uuid），返回发出的消息 */
-export async function wordChainCreate(client: ApiClient, params: { dialog_id: number; text: string; list: WordChainEntry[] }) {
+/**
+ * 发起接龙（不带 uuid，服务端分配 id 和 uuid）或参与接龙（带 uuid：服务端在最新那条上加入新条目、改自己的条目，再发一条），返回发出的消息
+ */
+export async function wordChainSend(client: ApiClient, params: { dialog_id: number; text: string; list: WordChainEntry[]; uuid?: string }) {
   const { data } = await requestParsed(client, 'dialog/msg/wordchain', msgSchema, { method: 'post', data: params });
+  return data;
+}
+
+/** 勾选、取消自己文本消息里的待办项（index 是第几个 li）；返回改后的消息内容。服务端不推送，结果要自己合并 */
+export async function msgChecked(client: ApiClient, params: { dialog_id: number; msg_id: number; index: number; checked: boolean }) {
+  const { data } = await requestParsed(client, 'dialog/msg/checked', z.looseObject({ id: z.number(), msg: z.unknown() }), {
+    method: 'post',
+    data: { ...params, checked: params.checked ? 1 : 0 },
+  });
   return data;
 }
 
@@ -452,6 +480,20 @@ export async function msgVoice2text(client: ApiClient, msgId: number) {
 export async function msgReadList(client: ApiClient, msgId: number) {
   const { data } = await requestParsed(client, 'dialog/msg/readlist', phpList(z.looseObject({ userid: num, read_at: str.nullish() })), { data: { msg_id: msgId } });
   return data;
+}
+
+/** 合并转发里的各条消息（按发送时间先后，含已删除的），只有正文，没有会话、已读等字段 */
+export async function mergeDetail(client: ApiClient, msgId: number) {
+  const schema = z.looseObject({ msgs: phpList(z.looseObject({ id: num, userid: num, type: str, msg: z.unknown(), created_at: str })) });
+  const { data } = await requestParsed(client, 'dialog/msg/mergedetail', schema, { data: { msg_id: msgId } });
+  return data.msgs;
+}
+
+/** 长文消息的全文：type 为 md 时是 Markdown，否则是编辑器 HTML */
+export async function msgDetail(client: ApiClient, msgId: number) {
+  const schema = z.looseObject({ content: z.looseObject({ type: str, content: str }) });
+  const { data } = await requestParsed(client, 'dialog/msg/detail', schema, { data: { msg_id: msgId } });
+  return data.content;
 }
 
 /** 会话成员（不含已停用的账号） */

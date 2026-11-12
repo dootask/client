@@ -19,6 +19,8 @@ import { PreviewText } from '../PreviewText';
 import { BubbleTouch } from './BubbleTouch';
 import { type RowData } from './chatModel';
 import { LIKE } from './emoji';
+import type { MergeRowProps } from './mergeDetail';
+import { CardHostContext } from './cards/cardMsg';
 import { FileCard, isStickerBody, LocalMedia, MessageBody, RecordBody, StickerBody } from './MessageBody';
 import { msgExtra } from './msgExtra';
 import { Dimmed, MyTodosContext, OPENABLE, ReadMark, SelectCheckContext, type Touch, Understanding, UploadProgress, pendingMsg, useName, useRowContext } from './rowParts';
@@ -29,14 +31,13 @@ import { Dimmed, MyTodosContext, OPENABLE, ReadMark, SelectCheckContext, type To
  */
 
 /** 文字类消息最宽占一行的 70%（旧版 .dialog-view.text） */
-const TEXT_KINDS = new Set<MsgBody['kind']>(['rich', 'record', 'file', 'card', 'unknown']);
+const TEXT_KINDS = new Set<MsgBody['kind']>(['rich', 'record', 'file', 'unknown']);
 
 /** 正文和图片在气泡内边距外再缩进一点（旧版 .content-text），文件卡等不缩 */
-const CONTENT_KINDS = new Set<MsgBody['kind']>(['rich', 'image', 'video']);
+const CONTENT_KINDS = new Set<MsgBody['kind']>(['rich', 'image', 'video', 'vote', 'wordChain']);
 
-/** 头像、名字、气泡、底部一行的外框；userid 是头像那个人 */
-function MsgFrame({ own, userid, text, foot, children }: { own: boolean; userid: number; text: boolean; foot: ReactNode; children: ReactNode }) {
-  const ctx = useRowContext();
+/** 头像、名字（群里、合并转发详情里有）、气泡、底部一行的外框；userid 是头像那个人 */
+function MsgFrame({ own, userid, name: showName, text, foot, children }: { own: boolean; userid: number; name: boolean; text: boolean; foot: ReactNode; children: ReactNode }) {
   const { theme } = useUnistyles();
   const user = useUser(userid);
   const name = useName(userid);
@@ -48,7 +49,7 @@ function MsgFrame({ own, userid, text, foot, children }: { own: boolean; userid:
         <UserAvatar uri={user?.userimg} userid={userid} name={name} bot={!!user?.bot} size={theme.size.avatar.msg} />
       </View>
       <View style={styles.view(own, text)}>
-        {ctx.group && <Text testID="msg-name" style={styles.name} numberOfLines={1}>{name}</Text>}
+        {showName && <Text testID="msg-name" style={styles.name} numberOfLines={1}>{name}</Text>}
         {children}
         <View testID="msg-foot" style={styles.foot}>{foot}</View>
       </View>
@@ -62,7 +63,7 @@ export function MsgRow({ info, msg }: { info: MessageRenderInfo<RowData>; msg: M
   const tone = isOwn ? ctx.tones.own : ctx.tones.peer;
   const { body, reply, forward } = msgContent(msg, ctx.body);
   const list = reactions(msg, ctx.body.userId);
-  const onPress = OPENABLE.has(body.kind) || (body.kind === 'rich' && body.long) ? () => ctx.onOpen(msg, body) : undefined;
+  const onPress = OPENABLE.has(body.kind) ? () => ctx.onOpen(msg, body) : undefined;
   const touch: Touch = {
     onPress,
     menu: () => ctx.menu(msg, body, isOwn),
@@ -73,7 +74,7 @@ export function MsgRow({ info, msg }: { info: MessageRenderInfo<RowData>; msg: M
   // 只有一个表情时不套气泡（旧版 .dialog-head.transparent）
   const sticker = isStickerBody(body) && !reply && !forward && list.length === 0;
   return (
-    <MsgFrame own={isOwn} userid={msg.userid} text={TEXT_KINDS.has(body.kind)} foot={<Foot msg={msg} own={isOwn} />}>
+    <MsgFrame own={isOwn} userid={msg.userid} name={ctx.group} text={TEXT_KINDS.has(body.kind)} foot={<Foot msg={msg} own={isOwn} />}>
       <BubbleTouch rowStyle={styles.bubbleRow} bubbleStyle={sticker ? styles.bare : styles.bubble(isOwn)} {...touch}>
         {reply && <ReplyQuote reply={reply} own={isOwn} />}
         {forward && <ForwardQuote userid={forward.userid} own={isOwn} />}
@@ -81,7 +82,9 @@ export function MsgRow({ info, msg }: { info: MessageRenderInfo<RowData>; msg: M
           <StickerBody body={body} />
         ) : (
           <View testID="msg-content" style={CONTENT_KINDS.has(body.kind) && styles.content}>
-            <MessageBody body={body} tone={tone} unplayed={!isOwn && !!msg.dot} />
+            <CardHostContext.Provider value={{ msg, open: () => ctx.onOpen(msg, body) }}>
+              <MessageBody body={body} tone={tone} unplayed={!isOwn && !!msg.dot} msgId={msg.id} />
+            </CardHostContext.Provider>
           </View>
         )}
         <Understanding msg={msg} tone={tone} />
@@ -198,6 +201,30 @@ function FootIcon({ icon, color }: { icon: LucideIcon; color?: string }) {
   );
 }
 
+/**
+ * 合并转发详情里的一条（旧版网页 .dialog-wrapper.inde-list）：头像、名字、气泡同聊天行，底部只有时间；
+ * 只读，点气泡打开图片、文件等，卡片上的入口（嵌套的合并转发标题）同点气泡
+ */
+export function MergeRow({ msg, body, own, tones, onOpen }: MergeRowProps) {
+  const sticker = isStickerBody(body);
+  const onPress = OPENABLE.has(body.kind) ? onOpen : undefined;
+  return (
+    <MsgFrame own={own} userid={msg.userid} name text={TEXT_KINDS.has(body.kind)} foot={<FootTime createdAt={msg.created_at} />}>
+      <BubbleTouch rowStyle={styles.bubbleRow} bubbleStyle={sticker ? styles.bare : styles.bubble(own)} onPress={onPress}>
+        {sticker ? (
+          <StickerBody body={body} />
+        ) : (
+          <View style={CONTENT_KINDS.has(body.kind) && styles.content}>
+            <CardHostContext.Provider value={{ msg: null, open: onOpen }}>
+              <MessageBody body={body} tone={own ? tones.own : tones.peer} msgId={msg.id} />
+            </CardHostContext.Provider>
+          </View>
+        )}
+      </BubbleTouch>
+    </MsgFrame>
+  );
+}
+
 /** 时间同旧版 $A.timeFormat（今天 HH:mm、昨天 HH:mm、今年 MM-DD、更早 YYYY-MM-DD），点了换成完整时间 */
 function FootTime({ createdAt }: { createdAt: string }) {
   const t = useT();
@@ -231,7 +258,7 @@ export function PendingRow({ item }: { info: MessageRenderInfo<RowData>; item: O
   const failed = item.state === 'failed';
   return (
     <Dimmed on={!failed}>
-      <MsgFrame own userid={ctx.body.userId} text foot={<PendingFoot failed={failed} items={items} />}>
+      <MsgFrame own userid={ctx.body.userId} name={ctx.group} text foot={<PendingFoot failed={failed} items={items} />}>
         <BubbleTouch rowStyle={styles.bubbleRow} bubbleStyle={styles.bubble(true)} menu={items.length > 0 ? () => items : undefined}>
           <View style={styles.content}>
             <MessageBody body={body} tone={ctx.tones.own} />
@@ -253,7 +280,7 @@ export function UploadRow({ item }: { info: MessageRenderInfo<RowData>; item: Up
   const { file } = item;
   const media = item.duration === undefined && !!file.media;
   return (
-    <MsgFrame own userid={ctx.body.userId} text={!media} foot={<PendingFoot failed={failed} items={items} />}>
+    <MsgFrame own userid={ctx.body.userId} name={ctx.group} text={!media} foot={<PendingFoot failed={failed} items={items} />}>
       <BubbleTouch rowStyle={styles.bubbleRow} bubbleStyle={styles.bubble(true)} menu={() => items}>
         {item.duration !== undefined ? (
           <RecordBody url={file.uri} duration={item.duration} text="" tone={ctx.tones.own} />

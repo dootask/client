@@ -206,13 +206,25 @@ function parseBlock(el: El, parentCtx: Ctx): Block[] {
       return parseList(el, ctx);
     case 'pre': {
       const code = DomUtils.findOne((n) => n.name === 'code', el.children);
-      const lang = DomUtils.findOne((n) => hasClass(n as El, 'code-block-header__lang'), el.children);
-      return [{ t: 'code', lang: lang ? textOf(lang).trim() : '', text: textOf(code ?? el).replace(/\n$/, '') }];
+      // 旧版网页渲染的代码块带语言标题；Markdown 的 ```js 由 markdown-it 写在 code 的 language-js 类上
+      const header = DomUtils.findOne((n) => hasClass(n as El, 'code-block-header__lang'), el.children);
+      const lang = header ? textOf(header).trim() : (/(?:^|\s)language-(\S+)/.exec(code?.attribs.class ?? '')?.[1] ?? '');
+      return [{ t: 'code', lang, text: textOf(code ?? el).replace(/\n$/, '') }];
     }
     case 'table':
       return parseTable(el, ctx);
     case 'hr':
       return [{ t: 'hr' }];
+    case 'details': {
+      const summary = el.children.find((n): n is El => isEl(n) && n.name === 'summary');
+      return [
+        {
+          t: 'details',
+          summary: summary ? trimRuns(textRuns(collapseSpaces(parseInlineChildren(summary, ctx, baseMarks(ctx))))) : [],
+          blocks: parseBlocks(el.children.filter((n) => n !== summary), ctx),
+        },
+      ];
+    }
     case 'p': {
       // 编辑器的空段落是空行，合并段落时要用到；Markdown 的空段落直接丢掉
       const blocks = parseBlocks(el.children, ctx);
@@ -223,14 +235,14 @@ function parseBlock(el: El, parentCtx: Ctx): Block[] {
       return img ? [img] : [];
     }
   }
-  if (hasClass(el, 'katex-display')) return [{ t: 'code', lang: 'latex', text: katexSource(el) }];
+  if (hasClass(el, 'katex-display')) return [{ t: 'math', text: katexSource(el) }];
   if (hasClass(el, 'apply-reasoning')) {
     const content = DomUtils.findOne((n) => hasClass(n as El, 'reasoning-content'), el.children);
     const blocks = content ? parseBlocks(content.children, ctx) : [];
     return blocks.length ? [{ t: 'reasoning', blocks }] : [];
   }
   if (hasClass(el, 'input-blink')) return [];
-  // 其余容器（div、details 等）展开为子块
+  // 其余容器（div 等）展开为子块
   return parseBlocks(el.children, ctx);
 }
 

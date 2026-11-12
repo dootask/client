@@ -16,5 +16,17 @@
   "refresh": "Aktualisieren",
   "clear": "Löschen",
   "loadFailed": "Laden fehlgeschlagen",
-  "none": "Keine"
+  "none": "Keine",
+  "media": {
+    "image": "Bild",
+    "failed": "Bild konnte nicht geladen werden",
+    "videoFailed": "Video konnte nicht geladen werden",
+    "pip": "Bild-in-Bild",
+    "save": "In Fotos speichern",
+    "saved": "In Fotos gespeichert",
+    "noAlbum": "Keine Berechtigung für Fotos",
+    "saveFailed": "Speichern fehlgeschlagen",
+    "share": "Teilen",
+    "forward": "Weiterleiten"
+  }
 }

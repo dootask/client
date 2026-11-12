@@ -6,6 +6,6 @@ import type { MenuKey } from './messageMenu';
  * 表情在菜单底部的表情行里。「选择复制」直接选中气泡里的文字
  */
 export const menuTraits: { layout: readonly (readonly MenuKey[])[]; selectText: (() => void) | null } = {
-  layout: [['reply', 'edit', 'voice2text', 'translate', 'copy', 'selectText', 'forward', 'selectMany', 'withdraw', 'tag', 'favorite', 'todoCancel', 'todoSet', 'pin', 'fullChat']],
+  layout: [['reply', 'edit', 'voice2text', 'translate', 'copy', 'selectText', 'downloadImage', 'forward', 'selectMany', 'withdraw', 'download', 'tag', 'favorite', 'todoCancel', 'todoSet', 'pin', 'fullChat']],
   selectText: selectMenuBubble,
 };

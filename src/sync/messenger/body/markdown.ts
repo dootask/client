@@ -2,7 +2,8 @@ import MarkdownIt from 'markdown-it';
 
 /**
  * Markdown → HTML，对照旧前端 utils/markdown.js 的 MarkdownConver：配置相同（允许 HTML、换行即 `<br>`），
- * 加上 `:::reasoning` 思考过程块。代码高亮、公式（N5）、AI 操作按钮和深链（N7）在这层还没做
+ * 加上 `:::reasoning` 思考过程块和公式（同 markdown-it-katex 的写法：`$$…$$` 独占行为块级、`$…$` 为行内）。
+ * 公式在这层只标出源码（块级 `.katex-display`、行内 `.katex`），排版由界面层按需做；代码高亮、AI 操作按钮和深链（N7）在这层还没做
  */
 
 let md: MarkdownIt | null = null;
@@ -33,6 +34,35 @@ function create() {
     state.line = next + 1;
     return true;
   });
+  it.block.ruler.before('fence', 'math_block', (state, startLine, endLine, silent) => {
+    const start = state.bMarks[startLine]! + state.tShift[startLine]!;
+    if (state.sCount[startLine]! - state.blkIndent >= 4 || !state.src.startsWith('$$', start)) return false;
+    let source = state.src.slice(start + 2, state.eMarks[startLine]);
+    let next = startLine;
+    let closed = source.trimEnd().endsWith('$$');
+    if (closed) source = source.trimEnd().slice(0, -2);
+    while (!closed && ++next < endLine) {
+      const line = state.src.slice(state.bMarks[next]! + state.tShift[next]!, state.eMarks[next]);
+      closed = line.trimEnd().endsWith('$$');
+      source += `\n${closed ? line.trimEnd().slice(0, -2) : line}`;
+    }
+    if (!closed || !source.trim()) return false;
+    if (silent) return true;
+    state.push('math_block', 'div', 0).content = source.trim();
+    state.line = next + 1;
+    return true;
+  }, { alt: ['paragraph', 'reference', 'blockquote', 'list'] });
+  it.inline.ruler.after('escape', 'math_inline', (state, silent) => {
+    const { src, pos } = state;
+    if (src[pos] !== '$' || src[pos + 1] === '$' || /\s/.test(src[pos + 1] ?? ' ')) return false;
+    const end = src.indexOf('$', pos + 1);
+    if (end < 0 || /\s/.test(src[end - 1]!) || /\d/.test(src[end + 1] ?? '')) return false;
+    if (!silent) state.push('math_inline', 'span', 0).content = src.slice(pos + 1, end);
+    state.pos = end + 1;
+    return true;
+  });
+  it.renderer.rules.math_block = (tokens, idx) => `<div class="katex-display">${it.utils.escapeHtml(tokens[idx]!.content)}</div>\n`;
+  it.renderer.rules.math_inline = (tokens, idx) => `<span class="katex">${it.utils.escapeHtml(tokens[idx]!.content)}</span>`;
   return it;
 }
 

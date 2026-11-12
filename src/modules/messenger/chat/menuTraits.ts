@@ -6,7 +6,7 @@ import type { MenuKey } from './messageMenu';
  */
 export const menuTraits: { layout: readonly (readonly MenuKey[])[]; selectText: (() => void) | null } = {
   layout: [
-    ['fullChat', 'reply', 'forward', 'copy', 'selectText', 'selectMany'],
+    ['fullChat', 'reply', 'forward', 'copy', 'selectText', 'save', 'share', 'selectMany'],
     ['edit', 'withdraw', 'pin', 'tag', 'todoDetail', 'todoCancel', 'todoSet', 'favorite'],
     ['translate', 'voice2text'],
   ],

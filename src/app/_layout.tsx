@@ -5,6 +5,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { initI18n } from '../i18n';
+import { MediaHost } from '../modules/media';
 import { startMessengerService } from '../modules/messenger';
 import { entryHref, ProfilePrompt, refreshSession, useSession } from '../modules/session';
 import { restorePreferences } from '../modules/setting';
@@ -12,6 +13,7 @@ import { BrowserDefaults } from '../ui/BrowserDefaults';
 import { KeyboardRoot } from '../ui/KeyboardRoot';
 import { TooltipHost } from '../ui/popover';
 import { ThemeEffects } from '../ui/theme';
+import { LayerConfirmHost } from '../ui/LayerConfirm';
 import { ToastHost } from '../ui/Toast';
 
 export default function RootLayout() {
@@ -40,6 +42,9 @@ export default function RootLayout() {
             <BrowserDefaults />
             <Routes />
             <ProfilePrompt />
+            {/* 网页的图片、视频查看层（App 走 media-preview 页） */}
+            <MediaHost />
+            <LayerConfirmHost />
             <ToastHost />
             {/* 全页共用的悬停提示层（只在 Web 上有内容），放在最上面 */}
             <TooltipHost />
@@ -62,15 +67,21 @@ function Routes() {
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Protected guard={inside} redirectTo={entry}>
         <Stack.Screen name="(main)" options={NO_ANIMATION} />
+        {/* 长文阅读（App 整页推入；网页在新标签页打开，同旧版 /single/file/msg）、公式查看（App） */}
+        <Stack.Screen name="msg-detail/[msgId]" />
+        <Stack.Screen name="math" />
       </Stack.Protected>
       <Stack.Protected guard={!inside} redirectTo={entry}>
         <Stack.Screen name="(auth)" options={NO_ANIMATION} />
       </Stack.Protected>
+      {/* 图片、视频查看页：透明模态，下拉关闭时露出下层页面 */}
+      <Stack.Screen name="media-preview" options={MEDIA_PREVIEW} />
     </Stack>
   );
 }
 
 const NO_ANIMATION = { animation: 'none' } as const;
+const MEDIA_PREVIEW = { presentation: 'transparentModal', animation: 'fade', gestureEnabled: false, contentStyle: { backgroundColor: 'transparent' } } as const;
 
 /** 路由容器（页面底色、切页动画露出的底色）跟着应用主题走 */
 function NavigationTheme({ children }: { children: React.ReactNode }) {

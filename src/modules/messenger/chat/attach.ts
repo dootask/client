@@ -8,7 +8,7 @@ import { composeToHtml } from '../../../sync/messenger';
 import { showToast } from '../../../ui/Toast';
 import { useMessenger } from '../hooks';
 import type { ComposerMode } from './Composer';
-import { formatBytes } from './format';
+import { formatBytes } from './bytes';
 
 /**
  * 发文件：相册、拍摄、文件三个来源，Web 上还有拖进来、粘贴进来的。

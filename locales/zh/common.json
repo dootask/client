@@ -16,5 +16,17 @@
   "refresh": "刷新",
   "clear": "清除",
   "loadFailed": "加载失败",
-  "none": "暂无"
+  "none": "暂无",
+  "media": {
+    "image": "图片",
+    "failed": "图片加载失败",
+    "videoFailed": "视频加载失败",
+    "pip": "画中画",
+    "save": "保存到相册",
+    "saved": "已保存到相册",
+    "noAlbum": "没有相册权限",
+    "saveFailed": "保存失败",
+    "share": "分享",
+    "forward": "转发"
+  }
 }

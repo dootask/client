@@ -11,3 +11,6 @@ export const HOLD_TO_TALK = false;
 
 /** 浏览器录音格式 */
 export const WEB_MIME_TYPE = canRecord && MediaRecorder.isTypeSupported(AAC) ? AAC : 'audio/mp4';
+
+/** 网页播完就停（同旧版网页） */
+export const AUTO_NEXT = false;

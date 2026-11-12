@@ -2,7 +2,7 @@ import { createAudioPlayer, setAudioModeAsync, type AudioPlayer } from 'expo-aud
 import { useSyncExternalStore } from 'react';
 
 /**
- * 语音消息播放：全局只播一条，点正在播的那条即停止
+ * 语音消息播放：全局只播一条，点正在播的那条即停止；播完由 next 决定接着播哪条，没有就停止
  */
 
 let player: AudioPlayer | null = null;
@@ -22,7 +22,7 @@ export function stopVoice() {
   if (playing) update(null);
 }
 
-export function toggleVoice(url: string) {
+export function toggleVoice(url: string, next?: () => string | undefined) {
   const same = playing?.url === url;
   stopVoice();
   if (same) return;
@@ -31,7 +31,11 @@ export function toggleVoice(url: string) {
   const current = createAudioPlayer(url, { updateInterval: 100 });
   current.addListener('playbackStatusUpdate', (status) => {
     if (player !== current) return;
-    if (status.didJustFinish) stopVoice();
+    if (status.didJustFinish) {
+      stopVoice();
+      const upcoming = next?.();
+      if (upcoming) toggleVoice(upcoming, next);
+    }
     else if (status.duration > 0) update({ url, progress: Math.min(1, status.currentTime / status.duration) });
   });
   player = current;

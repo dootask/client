@@ -1,7 +1,7 @@
 import { Image } from 'expo-image';
 import type { LucideIcon } from 'lucide-react-native';
 import {
-  File, FileArchive, FileCode, FileImage, FileMusic, FileSpreadsheet, FileText, FileVideoCamera, Film, Pause, Play, Presentation,
+  File, FileArchive, FileCode, FileImage, FileMusic, FileSpreadsheet, FileText, FileVideoCamera, Film, Pause, Play, Presentation, X,
 } from 'lucide-react-native';
 import { useEffect, type ReactNode } from 'react';
 import { Text, View } from 'react-native';
@@ -13,10 +13,13 @@ import type { LocalFile } from '../../../sync/api';
 import type { MsgBody } from '../../../sync/messenger/body';
 import { Icon } from '../../../ui/Icon';
 import type { AppTheme } from '../../../ui/theme';
-import { PreviewText } from '../PreviewText';
-import { formatBytes, formatSeconds } from './format';
+import { CardBody } from './cards/CardBody';
+import { formatBytes } from './bytes';
+import { useFileProgress } from './fileActions';
+import { formatSeconds } from './format';
 import { fitSize, MEDIA_BOX, STICKER_BOX } from './media';
 import { RichBlocks, type BubbleTone } from './RichText';
+import { LongMore } from './LongMore';
 import { useVoiceProgress } from './voice';
 
 type Body<K extends MsgBody['kind']> = Extract<MsgBody, { kind: K }>;
@@ -74,9 +77,11 @@ export function StickerBody({ body }: { body: Body<'rich'> }) {
 /**
  * 文字气泡里的消息体（图片、视频、表情另见 MediaBody、StickerBody）
  */
-export function MessageBody({ body, tone, unplayed }: {
+export function MessageBody({ body, tone, unplayed, msgId }: {
   body: MsgBody;
   tone: BubbleTone;
+  /** 已发出的消息 ID（App 上文件下载进度按它显示） */
+  msgId?: number;
   /** 语音没听过（显示红点） */
   unplayed?: boolean;
 }) {
@@ -86,7 +91,7 @@ export function MessageBody({ body, tone, unplayed }: {
       return (
         <>
           <RichBlocks blocks={body.blocks} tone={tone} />
-          {body.long && <Text style={[styles.more, { color: tone.link }]}>{t('messenger:chat.viewFull')}</Text>}
+          {body.long && <LongMore msgId={msgId} tone={tone} />}
         </>
       );
     case 'typing':
@@ -95,15 +100,16 @@ export function MessageBody({ body, tone, unplayed }: {
     case 'video':
       return <MediaBody body={body} />;
     case 'file':
-      return <FileCard name={body.name} ext={body.ext} size={body.size} tone={tone} />;
+      return msgId ? <MsgFile msgId={msgId} body={body} tone={tone} /> : <FileCard name={body.name} ext={body.ext} size={body.size} tone={tone} />;
     case 'record':
       return <RecordBody url={body.url} duration={body.duration} text={body.text} tone={tone} unplayed={unplayed} />;
-    case 'card':
-      return (
-        <Text style={[styles.body, { color: tone.text }]}>
-          <PreviewText preview={body.preview} />
-        </Text>
-      );
+    case 'vote':
+    case 'wordChain':
+    case 'location':
+    case 'meeting':
+    case 'mergeForward':
+    case 'template':
+      return <CardBody body={body} tone={tone} />;
     case 'system':
     case 'unknown':
       return <Text style={[styles.body, styles.italic, { color: tone.muted }]}>{t('messenger:chat.unknown')}</Text>;
@@ -131,18 +137,28 @@ function fileKind(ext: string): [TileKind, LucideIcon] {
   return found ? [found[0], found[1]] : ['other', File];
 }
 
-/** 文件：左侧色块图标，右侧文件名和大小；发送中色块上换成进度（tile） */
-export function FileCard({ name, ext, size, tone, tile }: { name: string; ext: string; size: number; tone: BubbleTone; tile?: ReactNode }) {
+/** 已发出的文件（同旧版 App）：下载中色块自下而上填充、图标换成取消，大小换成「已下 / 总大小」 */
+function MsgFile({ msgId, body, tone }: { msgId: number; body: Body<'file'>; tone: BubbleTone }) {
+  const progress = useFileProgress(msgId);
+  return <FileCard name={body.name} ext={body.ext} size={body.size} tone={tone} progress={progress ?? undefined} />;
+}
+
+/** 文件：左侧色块图标，右侧文件名和大小；发送中色块上换成进度（tile），下载中带进度（progress，0–1） */
+export function FileCard({ name, ext, size, tone, tile, progress }: {
+  name: string; ext: string; size: number; tone: BubbleTone; tile?: ReactNode; progress?: number;
+}) {
   const { theme } = useUnistyles();
   const [kind, icon] = fileKind(ext);
+  const loading = progress !== undefined;
   return (
     <View style={styles.fileCard}>
       <View style={[styles.tile, { backgroundColor: theme.palette.tile[kind] }]}>
-        {tile ?? <Icon icon={icon} color={theme.palette.onTile} size={theme.size.icon} />}
+        {loading && <View style={[styles.tileFill, { height: `${progress * 100}%` }]} />}
+        {tile ?? <Icon icon={loading ? X : icon} color={theme.palette.onTile} size={theme.size.icon} />}
       </View>
       <View style={styles.fileText}>
         <Text style={[styles.fileName, { color: tone.text }]} numberOfLines={2}>{name}</Text>
-        <Text style={[styles.caption, { color: tone.muted }]}>{formatBytes(size)}</Text>
+        <Text style={[styles.caption, { color: tone.muted }]}>{loading ? `${formatBytes(size * progress)} / ${formatBytes(size)}` : formatBytes(size)}</Text>
       </View>
     </View>
   );
@@ -200,7 +216,6 @@ const styles = StyleSheet.create((theme) => ({
   body: { ...theme.typography.body },
   caption: { ...theme.typography.caption },
   italic: { fontStyle: 'italic' },
-  more: { ...theme.typography.footnote, marginTop: theme.spacing.sm },
   // 外层气泡留了 xs 内边距，圆角相应收一点，和气泡同心
   media: { borderRadius: theme.radius.bubble - theme.spacing.xs, overflow: 'hidden', backgroundColor: theme.colors.bubbleOverlay },
   center: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center' },
@@ -212,8 +227,9 @@ const styles = StyleSheet.create((theme) => ({
   fileCard: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.md, minWidth: theme.size.bubbleMaxWidth - theme.size.bubbleFarGap * 2 },
   tile: {
     width: theme.size.fileTile, height: theme.size.fileTile, borderRadius: theme.radius.block,
-    alignItems: 'center', justifyContent: 'center',
+    alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
   },
+  tileFill: { position: 'absolute', left: 0, right: 0, bottom: 0, backgroundColor: theme.palette.tileProgress },
   fileText: { flexShrink: 1, gap: 2 },
   fileName: { ...theme.typography.callout },
   recordWrap: { gap: theme.spacing.sm },

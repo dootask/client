@@ -13,6 +13,7 @@ import { confirmOnApp, type MenuAction, type MenuEntry } from '../../../ui/popov
 import { showToast } from '../../../ui/Toast';
 import { useErrorText } from '../../session';
 import { useMessenger, useMsgActions } from '../hooks';
+import { fileMenu } from './fileActions';
 import { menuTraits } from './menuTraits';
 import { msgExtra } from './msgExtra';
 import { translateLanguage } from './translateLanguage';
@@ -48,7 +49,8 @@ export interface MenuHandlers {
 /** 消息菜单的各项，排列和分组按平台（menuTraits.layout） */
 export type MenuKey =
   | 'fullChat' | 'reply' | 'forward' | 'copy' | 'selectText' | 'selectMany' | 'edit' | 'withdraw' | 'pin' | 'tag'
-  | 'todoDetail' | 'todoCancel' | 'todoSet' | 'favorite' | 'translate' | 'voice2text';
+  | 'todoDetail' | 'todoCancel' | 'todoSet' | 'favorite' | 'translate' | 'voice2text'
+  | 'save' | 'share' | 'download' | 'downloadImage';
 
 /**
  * 消息的长按 / 右键菜单：可用的项按 menuTraits.layout 排列（App 分三组，Web 照旧版一组平铺）。
@@ -148,6 +150,7 @@ export function useMessageMenus(handlers: MenuHandlers) {
             .then((res) => showToast(res.msg, res.favorited ? { label: t('messenger:action.editRemark'), onPress: () => latest.current.onFavoriteRemark(msg.id) } : undefined))
             .catch(failed),
       };
+      Object.assign(acts, fileMenu(msg, body, t));
 
       // 按平台的排列取出：组之间放分隔线，空组不要
       return menuTraits.layout

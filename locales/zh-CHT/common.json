@@ -16,5 +16,17 @@
   "refresh": "刷新",
   "clear": "清除",
   "loadFailed": "加載失敗",
-  "none": "暫無"
+  "none": "暫無",
+  "media": {
+    "image": "圖片",
+    "failed": "圖片載入失敗",
+    "videoFailed": "視頻載入失敗",
+    "pip": "子母畫面",
+    "save": "儲存到相簿",
+    "saved": "已儲存到相簿",
+    "noAlbum": "沒有相簿權限",
+    "saveFailed": "保存失敗",
+    "share": "分享",
+    "forward": "轉發"
+  }
 }

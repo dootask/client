@@ -60,10 +60,12 @@ export function DooModal({ visible, onClose, title, headerBottom, width, height,
 }
 
 /** 弹窗底部按钮（旧版 DooButton）：宽屏高 36 的圆角块，窄屏高 48 的等分胶囊 */
-export function DooButton({ label, primary = false, disabled = false, suffix, onPress }: {
+export function DooButton({ label, primary = false, disabled = false, minWidth, suffix, onPress }: {
   label: string;
   primary?: boolean;
   disabled?: boolean;
+  /** 宽屏最窄，不给为 88（确认框文字短，是 68） */
+  minWidth?: number;
   /** 文字后的附加内容（如快捷键提示） */
   suffix?: ReactNode;
   onPress: () => void;
@@ -77,7 +79,7 @@ export function DooButton({ label, primary = false, disabled = false, suffix, on
       aria-disabled={disabled}
       disabled={disabled}
       onPress={onPress}
-      style={({ pressed, hovered }) => styles.button(narrow, primary, disabled, hovered, pressed)}
+      style={({ pressed, hovered }) => styles.button(narrow, primary, disabled, hovered, pressed, minWidth)}
     >
       <Text style={styles.buttonText(narrow, primary)} numberOfLines={1}>{label}</Text>
       {suffix}
@@ -124,9 +126,9 @@ const styles = StyleSheet.create((theme, rt) => {
       paddingHorizontal: narrow ? m.footerXNarrow : m.footerX,
       paddingBottom: m.footerBottom,
     }),
-    button: (narrow: boolean, primary: boolean, disabled: boolean, hovered: boolean, pressed: boolean) => ({
+    button: (narrow: boolean, primary: boolean, disabled: boolean, hovered: boolean, pressed: boolean, minWidth = m.buttonMin) => ({
       height: narrow ? m.buttonNarrow : m.button,
-      minWidth: narrow ? 0 : m.buttonMin,
+      minWidth: narrow ? 0 : minWidth,
       flex: narrow ? 1 : undefined,
       paddingHorizontal: narrow ? m.buttonPadXNarrow : m.buttonPadX,
       flexDirection: 'row',

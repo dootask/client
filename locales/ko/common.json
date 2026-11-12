@@ -16,5 +16,17 @@
   "refresh": "새로고침",
   "clear": "지우기",
   "loadFailed": "로딩 실패",
-  "none": "없음"
+  "none": "없음",
+  "media": {
+    "image": "이미지",
+    "failed": "이미지 로드에 실패했습니다",
+    "videoFailed": "동영상 로드에 실패했습니다",
+    "pip": "화면 속 화면",
+    "save": "앨범에 저장",
+    "saved": "앨범에 저장됨",
+    "noAlbum": "앨범 접근 권한이 없습니다",
+    "saveFailed": "저장 실패",
+    "share": "공유",
+    "forward": "전달"
+  }
 }

@@ -16,5 +16,17 @@
   "refresh": "Segarkan",
   "clear": "Hapus",
   "loadFailed": "Gagal memuat",
-  "none": "Tidak ada"
+  "none": "Tidak ada",
+  "media": {
+    "image": "Gambar",
+    "failed": "Gagal memuat gambar",
+    "videoFailed": "Gagal memuat video",
+    "pip": "Gambar dalam Gambar",
+    "save": "Simpan ke Galeri",
+    "saved": "Disimpan ke Galeri",
+    "noAlbum": "Tidak ada izin akses Galeri",
+    "saveFailed": "Gagal menyimpan",
+    "share": "Bagikan",
+    "forward": "Teruskan"
+  }
 }

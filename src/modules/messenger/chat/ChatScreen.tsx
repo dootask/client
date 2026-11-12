@@ -1,18 +1,19 @@
 import { useLocalSearchParams } from 'expo-router';
 import { AtSign, ChevronDown } from 'lucide-react-native';
 import { type ComponentProps, type ReactNode, type Ref, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, AppState, BackHandler, Keyboard, Linking, Text, View } from 'react-native';
+import { ActivityIndicator, AppState, BackHandler, Keyboard, Text, View } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { useStore } from 'zustand';
 
 import { dateFormats, useLanguage, useT } from '../../../i18n';
 import type { Msg } from '../../../sync/api/dialog';
 import { atLatest, composerBlock, hasEarlier, htmlToCompose, type Emoticon, type WithdrawnMsg } from '../../../sync/messenger';
-import type { MsgBody, Reaction } from '../../../sync/messenger/body';
+import { msgContent, type MsgBody, type Reaction } from '../../../sync/messenger/body';
 import { ChatView, type ChatViewHandle, type MessageRenderInfo, type ScrollToBottomInfo } from '../../../ui/chat';
 import { Icon } from '../../../ui/Icon';
 import { showToast } from '../../../ui/Toast';
 import { Touchable } from '../../../ui/Touchable';
+import { openMedia } from '../../media';
 import { useErrorText, useSession } from '../../session';
 import { useToday } from '../clock';
 import { useDialog, useMessenger, useMessengerState, useMsgActions } from '../hooks';
@@ -31,11 +32,17 @@ import { countText, dayLabel } from './format';
 import { MessageActionMenu, type LongPressTarget } from './MessageActionMenu';
 import { MentionAccessory, type PickerKeys } from './MentionPicker';
 import { forwardable, type MenuHandlers, useMessageMenus } from './messageMenu';
+import { openGallery } from './gallery';
 import { MessageRow } from './MessageRow';
+import { openMsgFile } from './fileActions';
+import { pushMerge } from './MergeScreen';
+import { mergeTitleText } from './cards/cardModel';
 import { bubbleTones } from './bubbleTones';
 import { MyTodosContext, RowContextValue, type RowContext } from './rowParts';
 import { rowTraits } from './rowTraits';
 import { MorePanel, morePanelHeight } from './MorePanel';
+import { openLocation } from './openLocation';
+import { useOpenHref } from './openHref';
 import { RichHandlersContext, type RichHandlers } from './RichText';
 import { useSelectDrag } from './selectDrag';
 import { createSelection, SELECTION_MAX, type Selection } from './selection';
@@ -44,6 +51,7 @@ import { SendPreview } from './SendPreview';
 import { AnonSheet } from './sheets/AnonSheet';
 import { FavoriteRemarkSheet } from './sheets/FavoriteRemarkSheet';
 import { ForwardSheet } from './sheets/ForwardSheet';
+import { MergeDetailSheet } from './sheets/MergeDetailSheet';
 import { ReactionListSheet } from './sheets/ReactionListSheet';
 import { ReadListSheet } from './sheets/ReadListSheet';
 import { SelectTextSheet } from './sheets/SelectTextSheet';
@@ -53,9 +61,10 @@ import { TodoSetSheet } from './sheets/TodoSetSheet';
 import { TranslateSheet } from './sheets/TranslateSheet';
 import { VoteSheet } from './sheets/VoteSheet';
 import { WordChainSheet } from './sheets/WordChainSheet';
+import { openLongText } from './longText';
 import { toggleVoice } from './voice';
 import { useVoiceInput } from './VoiceRecorder';
-import { CAN_RECORD } from './voiceTraits';
+import { AUTO_NEXT, CAN_RECORD } from './voiceTraits';
 
 /** 离开会话时最上面看到的那条，下次打开回到这里（本次运行内） */
 const positions = new Map<number, number>();
@@ -79,6 +88,9 @@ type SheetContent =
   | { kind: 'selectText'; text: string }
   | { kind: 'reactions'; reactions: readonly Reaction[]; symbol: string }
   | { kind: 'stickerSearch' }
+  /** 参与接龙（接龙结果） */
+  | { kind: 'wordChainJoin'; msg: Msg }
+  | { kind: 'merge'; msgId: number; title: string }
   | ExtraSheet;
 /** seq：每次打开换一个，弹层重新挂载、状态从头开始；visible 置 false 时内容留着放完关闭动画 */
 type SheetState = { seq: number; visible: boolean; content: SheetContent };
@@ -288,6 +300,24 @@ function ChatScreen({ dialogId, msgId }: { dialogId: number; msgId: number }) {
     messenger?.toggleEmoji(msg, symbol).catch((err) => showToast(errorText(err)));
   }, [messenger, errorText]);
 
+  // 点开图片时读最新的消息，回调本身保持稳定，不因新消息让所有行重画
+  const shownRef = useRef(shown);
+  useEffect(() => {
+    shownRef.current = shown;
+  }, [shown]);
+  const showImage = useCallback(
+    (url: string) =>
+      openGallery({
+        msgs: [...(shownRef.current ?? [])].reverse(),
+        ctx: { userId, origin },
+        url,
+        canForward: forwardable,
+        onForward: (id) => openSheet({ kind: 'forward', msgIds: [id] }),
+        older: actions ? (prevId) => actions.imagePage(dialogId, prevId) : undefined,
+      }),
+    [userId, origin, openSheet, actions, dialogId],
+  );
+
   const rowContext = useMemo<RowContext>(() => ({
     group: dialog?.type === 'group',
     body: { userId, origin },
@@ -298,10 +328,35 @@ function ChatScreen({ dialogId, msgId }: { dialogId: number; msgId: number }) {
     uploadMenu,
     onOpen: (msg: Msg, body: MsgBody) => {
       if (body.kind === 'record') {
-        void toggleVoice(body.url);
         messenger?.clearDot(msg);
-      } else if (body.kind === 'image' || body.kind === 'video' || body.kind === 'file') {
-        void Linking.openURL(body.url).catch(() => {});
+        // 列表新的在前：播完取紧挨着的更新一条，是别人发的、还没听过的语音才接着播
+        let current = msg.id;
+        toggleVoice(body.url, AUTO_NEXT ? () => {
+          const msgs = shownRef.current ?? [];
+          const following = msgs[msgs.findIndex((m) => m.id === current) - 1];
+          if (!following?.dot || following.userid === userId) return undefined;
+          const next = msgContent(following, { userId, origin }).body;
+          if (next.kind !== 'record') return undefined;
+          current = following.id;
+          messenger?.clearDot(following);
+          return next.url;
+        } : undefined);
+      } else if (body.kind === 'rich' && body.long) {
+        openLongText(msg.id);
+      } else if (body.kind === 'image') {
+        showImage(body.url);
+      } else if (body.kind === 'video') {
+        openMedia({ kind: 'video', url: body.url });
+      } else if (body.kind === 'file') {
+        openMsgFile(msg, body, t);
+      } else if (body.kind === 'location') {
+        void openLocation(body).catch(() => {});
+      } else if (body.kind === 'wordChain' && canSend) {
+        openSheet({ kind: 'wordChainJoin', msg });
+      } else if (body.kind === 'mergeForward') {
+        const title = mergeTitleText(body.title, t);
+        if (rowTraits.mergePage) pushMerge(dialogId)(msg.id, title);
+        else openSheet({ kind: 'merge', msgId: msg.id, title });
       }
     },
     onReact,
@@ -328,16 +383,23 @@ function ChatScreen({ dialogId, msgId }: { dialogId: number; msgId: number }) {
           messenger?.forgetWithdrawn(item.id);
         }
       : undefined,
-  }), [canSend, dialog?.type, userId, origin, theme, opening.unreadOne, menu, pendingMenu, uploadMenu, messenger, actions, onReact, jumpTo, onReply, openSheet, selection, selectDrag, onSelectLimit]);
+  }), [canSend, dialog?.type, dialogId, t, userId, origin, theme, opening.unreadOne, menu, pendingMenu, uploadMenu, messenger, actions, onReact, jumpTo, onReply, openSheet, selection, selectDrag, onSelectLimit, showImage]);
 
+  const openHref = useOpenHref();
   const richHandlers = useMemo<RichHandlers>(() => ({
     onPressRun: (run) => {
-      if (run.href) void Linking.openURL(run.href).catch(() => {});
+      // 快捷命令（机器人帮助里的 /help 等）：mark-set 换掉输入框内容，mark-insert 插在光标处；不能发言时不处理
+      if (run.fill) {
+        if (!canSend) return;
+        if (run.fill === 'set') composerRef.current?.replace({ text: run.text, mentions: [] });
+        else composerRef.current?.insertText(run.text);
+      } else if (run.href) openHref(run.href);
     },
     onPressImage: (block) => {
-      if (block.url) void Linking.openURL(block.url).catch(() => {});
+      if (block.url) showImage(block.url);
     },
-  }), []);
+    onToggleCheck: canSend && actions ? (msg, index, checked) => void actions.checkItem(msg, index, checked).catch((err) => showToast(errorText(err))) : undefined,
+  }), [canSend, showImage, openHref, actions, errorText]);
 
   const language = useLanguage();
   const today = useToday();
@@ -390,7 +452,7 @@ function ChatScreen({ dialogId, msgId }: { dialogId: number; msgId: number }) {
     return true;
   };
   const attach = useAttach({ dialogId, mode, onModeEnd, onSent });
-  const onConverted = useCallback((text: string) => composerRef.current?.dictate(text), []);
+  const onConverted = useCallback((text: string) => composerRef.current?.insertText(text), []);
   const voice = useVoiceInput({ dialogId, mode, onModeEnd, onSent, onConverted });
   const extras = useExtras({ dialog, userId, openSheet });
   // 加号面板按入口排数定高（同旧版 App）；Web 不打开加号面板
@@ -535,6 +597,10 @@ function ChatSheet({ dialogId, content, visible, onClose, onForwarded, onSent, o
       return <VoteSheet {...common} dialogId={dialogId} onSent={onSent} />;
     case 'wordChain':
       return <WordChainSheet {...common} dialogId={dialogId} onSent={onSent} />;
+    case 'wordChainJoin':
+      return <WordChainSheet {...common} dialogId={dialogId} msg={content.msg} onSent={onSent} />;
+    case 'merge':
+      return <MergeDetailSheet {...common} dialogId={dialogId} msgId={content.msgId} title={content.title} />;
     case 'anon':
       return <AnonSheet {...common} userid={content.userid} />;
   }

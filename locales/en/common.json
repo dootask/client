@@ -16,5 +16,17 @@
   "refresh": "Refresh",
   "clear": "Clear",
   "loadFailed": "Loading failed",
-  "none": "None"
+  "none": "None",
+  "media": {
+    "image": "Image",
+    "failed": "Failed to load image",
+    "videoFailed": "Failed to load video",
+    "pip": "Picture in Picture",
+    "save": "Save to Photos",
+    "saved": "Saved to Photos",
+    "noAlbum": "No permission to access Photos",
+    "saveFailed": "Save failed",
+    "share": "Share",
+    "forward": "Forward"
+  }
 }

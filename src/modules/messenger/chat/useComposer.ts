@@ -50,8 +50,8 @@ export interface ComposerHandle {
   replace: (value: ComposeValue) => void;
   /** 选了候选：start 为候选符号的位置，到光标为止是查询文字 */
   pick: (start: number, char: PickerChar, item: Candidate) => void;
-  /** 语音转好的文字：插在光标处，切回键盘 */
-  dictate: (text: string) => void;
+  /** 插在光标处并切回键盘、聚焦（语音转好的文字、点了消息里的快捷命令） */
+  insertText: (text: string) => void;
   /** 删掉光标前的一个字（表情面板的删除键） */
   backspace: () => void;
   /** 发一个表情包或贴纸（带上正在回复的消息）；clear 时清空输入框（选了快捷表情，输入的字就是关键词） */
@@ -198,7 +198,7 @@ export function useComposer({ dialogId, store, mode, onModeEnd, onEditLast, onSe
       if (next.html) controller.dismiss();
       else controller.focusInput();
     },
-    dictate: (text) => {
+    insertText: (text) => {
       const { value: current, cursor } = store.get();
       if (current.html) {
         leaveVoice();

@@ -16,5 +16,17 @@
   "refresh": "更新",
   "clear": "クリア",
   "loadFailed": "読み込み失敗",
-  "none": "なし"
+  "none": "なし",
+  "media": {
+    "image": "画像",
+    "failed": "画像の読み込みに失敗しました",
+    "videoFailed": "ビデオの読み込みに失敗しました",
+    "pip": "ピクチャ・イン・ピクチャ",
+    "save": "写真に保存",
+    "saved": "写真に保存しました",
+    "noAlbum": "写真へのアクセス権限がありません",
+    "saveFailed": "保存に失敗しました",
+    "share": "共有",
+    "forward": "転送"
+  }
 }

@@ -9,6 +9,9 @@ import type { Messenger } from './engine';
 import { STICKER_ASSET, type Emoticon } from './emoticon';
 import { createMentionSession, type MentionApi } from './mention';
 
+/** 画廊往前取图时一页多少条 */
+const IMAGE_PAGE = 50;
+
 /** 消息操作用到的接口，client 已绑定；测试时注入假的 */
 export interface MsgActionsApi extends MentionApi {
   msgTop: (msgId: number) => ReturnType<typeof dialogApi.msgTop>;
@@ -19,6 +22,9 @@ export interface MsgActionsApi extends MentionApi {
   msgVoice2text: (msgId: number) => ReturnType<typeof dialogApi.msgVoice2text>;
   msgTopInfo: (dialogId: number) => ReturnType<typeof dialogApi.msgTopInfo>;
   msgReadList: (msgId: number) => ReturnType<typeof dialogApi.msgReadList>;
+  mergeDetail: (msgId: number) => ReturnType<typeof dialogApi.mergeDetail>;
+  msgDetail: (msgId: number) => ReturnType<typeof dialogApi.msgDetail>;
+  msgList: (params: dialogApi.MsgListParams) => ReturnType<typeof dialogApi.msgList>;
   favoriteCheck: (msgId: number) => Promise<boolean>;
   favoriteToggle: (msgId: number) => ReturnType<typeof usersApi.favoriteToggle>;
   favoriteRemark: (msgId: number, remark: string) => Promise<string>;
@@ -28,7 +34,9 @@ export interface MsgActionsApi extends MentionApi {
   msgDone: (todoId: number) => ReturnType<typeof dialogApi.msgDone>;
   stickerSearch: (key: string) => ReturnType<typeof dialogApi.stickerSearch>;
   voteCreate: (params: dialogApi.VoteCreateParams) => ReturnType<typeof dialogApi.voteCreate>;
-  wordChainCreate: (params: Parameters<typeof dialogApi.wordChainCreate>[1]) => ReturnType<typeof dialogApi.wordChainCreate>;
+  voteAction: (params: Parameters<typeof dialogApi.voteAction>[1]) => ReturnType<typeof dialogApi.voteAction>;
+  wordChainSend: (params: Parameters<typeof dialogApi.wordChainSend>[1]) => ReturnType<typeof dialogApi.wordChainSend>;
+  msgChecked: (params: Parameters<typeof dialogApi.msgChecked>[1]) => ReturnType<typeof dialogApi.msgChecked>;
   sendAnon: (userid: number, text: string) => ReturnType<typeof dialogApi.sendAnon>;
   tel: (dialogId: number) => ReturnType<typeof dialogApi.tel>;
 }
@@ -43,6 +51,9 @@ export function bindMsgActionsApi(client: ApiClient): MsgActionsApi {
     msgVoice2text: (id) => dialogApi.msgVoice2text(client, id),
     msgTopInfo: (id) => dialogApi.msgTopInfo(client, id),
     msgReadList: (id) => dialogApi.msgReadList(client, id),
+    mergeDetail: (id) => dialogApi.mergeDetail(client, id),
+    msgDetail: (id) => dialogApi.msgDetail(client, id),
+    msgList: (p) => dialogApi.msgList(client, p),
     favoriteCheck: (id) => usersApi.favoriteCheck(client, id),
     favoriteToggle: (id) => usersApi.favoriteToggle(client, id),
     favoriteRemark: (id, remark) => usersApi.favoriteRemark(client, id, remark),
@@ -53,7 +64,9 @@ export function bindMsgActionsApi(client: ApiClient): MsgActionsApi {
     msgDone: (id) => dialogApi.msgDone(client, id),
     stickerSearch: (key) => dialogApi.stickerSearch(client, key),
     voteCreate: (p) => dialogApi.voteCreate(client, p),
-    wordChainCreate: (p) => dialogApi.wordChainCreate(client, p),
+    voteAction: (p) => dialogApi.voteAction(client, p),
+    wordChainSend: (p) => dialogApi.wordChainSend(client, p),
+    msgChecked: (p) => dialogApi.msgChecked(client, p),
     sendAnon: (userid, text) => dialogApi.sendAnon(client, userid, text),
     tel: (id) => dialogApi.tel(client, id),
     searchUsers: (key, opts) => usersApi.search(client, key, opts),
@@ -135,6 +148,17 @@ export function createMsgActions(api: MsgActionsApi, messenger: Messenger) {
     },
 
     readList: (msgId: number) => api.msgReadList(msgId),
+    /** 合并转发详情：补上会话 id 当成普通消息，界面照常解析正文 */
+    mergeDetail: async (msgId: number, dialogId: number): Promise<Msg[]> =>
+      (await api.mergeDetail(msgId)).map((m) => ({ ...m, dialog_id: dialogId })),
+    /** 长文消息的全文（md 为 Markdown，否则是编辑器 HTML） */
+    longText: async (msgId: number): Promise<{ md: boolean; text: string }> => {
+      const { type, content } = await api.msgDetail(msgId);
+      return { md: type === 'md', text: content };
+    },
+    /** 会话里带图的消息（图片消息、正文有图的），从 prevId 往更早取一页，按 id 倒序；prevId 为 0 时从最新取 */
+    imagePage: async (dialogId: number, prevId: number): Promise<Msg[]> =>
+      (await api.msgList({ dialog_id: dialogId, msg_type: 'image', prev_id: prevId || undefined, take: IMAGE_PAGE })).list,
     todoList: (msgId: number) => api.msgTodoList(msgId),
     todoRemind: (params: Parameters<MsgActionsApi['msgTodoRemind']>[0]) => api.msgTodoRemind(params),
     members: (dialogId: number) => api.members(dialogId),
@@ -175,9 +199,22 @@ export function createMsgActions(api: MsgActionsApi, messenger: Messenger) {
       messenger.applyResult({ add: await api.voteCreate(params) });
     },
 
-    /** 发起接龙；发出的消息立即插进会话 */
-    async createWordChain(params: Parameters<MsgActionsApi['wordChainCreate']>[0]): Promise<void> {
-      messenger.applyResult({ add: await api.wordChainCreate(params) });
+    /** 投票卡片上的操作：再次发送的新消息插进会话；投票、结束改写同一投票的各条消息 */
+    async vote(msg: Msg, type: dialogApi.VoteActionType, picked: string[] = []): Promise<void> {
+      const uuid = String((msg.msg as { uuid?: unknown } | null)?.uuid ?? '');
+      const list = await api.voteAction({ dialog_id: msg.dialog_id, uuid, type, vote: picked });
+      if (type === 'again') messenger.applyResult({ add: list });
+      else for (const item of list) messenger.applyResult({ update: item as unknown as Record<string, unknown> });
+    },
+
+    /** 发起、参与接龙；发出的消息立即插进会话 */
+    async sendWordChain(params: Parameters<MsgActionsApi['wordChainSend']>[0]): Promise<void> {
+      messenger.applyResult({ add: await api.wordChainSend(params) });
+    },
+
+    /** 勾选、取消自己消息里的待办项（服务端不推送，返回的新内容直接合并） */
+    async checkItem(msg: Msg, index: number, checked: boolean): Promise<void> {
+      messenger.applyResult({ update: await api.msgChecked({ dialog_id: msg.dialog_id, msg_id: msg.id, index, checked }) });
     },
 
     /** 发匿名消息给单聊的对方；返回服务端的提示语 */
