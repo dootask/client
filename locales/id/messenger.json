@@ -117,7 +117,6 @@
     "album": "Galeri",
     "capture": "Kamera",
     "file": "Berkas",
-    "media": "Foto dan video",
     "cameraDenied": "Akses kamera tidak diizinkan",
     "fileTooLarge": "File ({{name}}) terlalu besar, tidak dapat melebihi: ({{size}})",
     "original": "Asli",
@@ -132,7 +131,14 @@
     "searchSticker": "Cari Emoji",
     "noSticker": "Tidak ada stiker ditemukan",
     "muted": "Bisu",
-    "disabled": "Akun ini telah dinonaktifkan"
+    "disabled": "Akun ini telah dinonaktifkan",
+    "selectMember": "Pilih Anggota",
+    "selectTask": "Pilih Tugas",
+    "more": "Perluas",
+    "sendImage": "Kirim gambar",
+    "uploadFile": "Unggah file",
+    "fullInput": "Input Layar Penuh",
+    "longPressRecord": "Tekan Lama untuk Merekam"
   },
   "system": {
     "tagAdd": "Ditandai",
@@ -155,6 +161,7 @@
     "unpin": "Batalkan sematan",
     "selectMany": "Pilihan Ganda",
     "selectText": "Pilih teks",
+    "selectCopy": "Pilih dan Salin",
     "tag": "Tandai",
     "untag": "Hapus tanda",
     "todoCancel": "Batalkan Tugas",
@@ -163,7 +170,6 @@
     "todoSet": "Atur Tugas",
     "translate": "Terjemahkan",
     "voice2text": "Ubah menjadi teks",
-    "more": "Lainnya",
     "translating": "Menerjemahkan",
     "voice2texting": "Mengubah ke teks"
   },
@@ -171,9 +177,11 @@
     "message": "Pesan",
     "hideSource": "Jangan tampilkan informasi pengirim asli",
     "merge": "Teruskan sebagai pesan gabungan",
-    "max": "Pilih maksimal {{n}} percakapan",
     "done": "Penerusan berhasil",
-    "confirmTitle": "Konfirmasi penerusan"
+    "confirmTitle": "Konfirmasi penerusan",
+    "oneByOne": "Teruskan satu per satu",
+    "records": "Riwayat chat",
+    "total": "Total {{n}} pesan"
   },
   "todos": {
     "setTitle": "Atur Tugas",
@@ -193,7 +201,9 @@
     "cancelRemind": "Batalkan pengingat",
     "removeConfirm": "Hapus tugas anggota ini?",
     "mine": "{{n}} tugas saya belum selesai",
-    "go": "Selesaikan"
+    "go": "Selesaikan",
+    "viewTitle": "Pesan yang harus dilakukan",
+    "backToOriginal": "Kembali ke asli"
   },
   "translate": {
     "pickLanguage": "Pilih Bahasa",
@@ -201,7 +211,8 @@
   },
   "top": {
     "unpinConfirm": "Apakah Anda yakin ingin membatalkan penyematan?",
-    "by": "Disematkan oleh {{name}}"
+    "by": "Disematkan oleh {{name}}",
+    "pinner": "Personel yang Disematkan"
   },
   "favorite": {
     "remark": "Catatan"
@@ -213,8 +224,8 @@
   },
   "selection": {
     "max": "Pilih hingga {{n}} pesan",
-    "count": "{{n}} dipilih",
-    "title": "({{n}}) dipilih"
+    "title": "({{n}}) dipilih",
+    "limit": "(maks {{n}})"
   },
   "mention": {
     "everyone": "Semua Orang",
@@ -352,6 +363,15 @@
     "clear": "Bersihkan",
     "notFound": "Tidak ada hasil untuk \"{{key}}\"",
     "overMax": "Batas maksimum pemilihan terlampaui",
-    "noDepartment": "Departemen Default"
+    "noDepartment": "Departemen Default",
+    "move": "Pindah",
+    "choose": "Pilih",
+    "removeLast": "Hapus yang terakhir",
+    "selectedHint": "Anggota yang dipilih akan muncul di sini",
+    "remove": "Hapus",
+    "noResult": "Belum ada hasil",
+    "searchResults": "Hasil pencarian",
+    "items": "{{n}} item",
+    "selectedIn": "{{n}} dipilih"
   }
 }

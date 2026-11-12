@@ -42,7 +42,10 @@ export function ListDetail({
     <View style={styles.root}>
       {split &&
         (dialog ? (
-          <View style={styles.dialogPane}>{list}</View>
+          <>
+            <View style={styles.dialogPane}>{list}</View>
+            <View style={styles.dialogLine} />
+          </>
         ) : (
           <ListPane resizable={breakpoint === 'lg'} initialWidth={width} onResize={onResize}>
             {list}
@@ -123,9 +126,9 @@ const styles = StyleSheet.create((theme) => ({
     minWidth: theme.size.dialogPaneMin,
     maxWidth: theme.size.dialogPaneMax,
     backgroundColor: theme.colors.surface,
-    borderRightWidth: 1,
-    borderRightColor: theme.colors.paneLine,
   },
+  // 竖线在列表栏外面（旧版 .messenger-line），不占列表栏的 30%
+  dialogLine: { width: 1, backgroundColor: theme.colors.paneLine },
   detail: (dialog: boolean) => ({
     flex: 1,
     minWidth: 0,

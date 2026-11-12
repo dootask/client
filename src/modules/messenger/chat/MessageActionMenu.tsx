@@ -12,7 +12,7 @@ import type { Rect } from '../../../ui/popover/position';
 import { useMessengerState, useMsgActions } from '../hooks';
 import type { RowData } from './chatModel';
 import { EMOJIS, quickReactions, rememberReaction } from './emoji';
-import { MessagePreview } from './MessageRow';
+import { MessagePreview } from './MsgBubble';
 
 export interface LongPressTarget {
   /** 被长按的整行在窗口里的位置 */

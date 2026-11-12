@@ -1,14 +1,14 @@
 import { Keyboard, Plus } from 'lucide-react-native';
+import type { Insets, StyleProp, ViewStyle } from 'react-native';
 import { useUnistyles } from 'react-native-unistyles';
 
 import { useT } from '../../../i18n';
 import { useChat } from '../../../ui/chat';
 import { Icon } from '../../../ui/Icon';
-import { Touchable } from '../../../ui/Touchable';
-import type { AttachButtonProps } from './attachButtonTypes';
+import { Touchable, type TouchState } from '../../../ui/Touchable';
 
-/** 加号（App）：开关加号面板（最近照片、相册、拍摄、文件）。Web 版是下拉菜单，见 AttachButton.web.tsx */
-export function AttachButton({ hitSlop, style }: AttachButtonProps) {
+/** 加号（App）：开关加号面板（最近照片、相册、拍摄、文件）（Web 的加号在 Composer.web.tsx 里） */
+export function AttachButton({ hitSlop, style }: { hitSlop: Insets; style: (state: TouchState) => StyleProp<ViewStyle> }) {
   const t = useT();
   const { theme } = useUnistyles();
   const controller = useChat();

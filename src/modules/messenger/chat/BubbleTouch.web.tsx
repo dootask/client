@@ -1,169 +1,80 @@
-import { Ellipsis, Reply, SmilePlus } from 'lucide-react-native';
-import { useState } from 'react';
-import { Text, View } from 'react-native';
-import { StyleSheet, useUnistyles } from 'react-native-unistyles';
+import { useRef, useState, type MouseEvent } from 'react';
+import { type HostInstance, View } from 'react-native';
+import { useUnistyles } from 'react-native-unistyles';
 
-import { useT } from '../../../i18n';
-import { Icon, type LucideIcon } from '../../../ui/Icon';
-import { Menu, type MenuEntry, Popover, Tooltip } from '../../../ui/popover';
+import type { MenuEntry } from '../../../ui/popover';
+import { MenuLayer } from '../../../ui/popover/MenuLayer';
 import { Touchable } from '../../../ui/Touchable';
+import { setMenuBubble } from './bubbleSelect';
 import type { BubbleTouchProps } from './bubbleTouchTypes';
-import { REACTIONS } from './emoji';
+import { rememberReaction } from './emoji';
+import { MsgReactAll, MsgReactBar } from './MsgReactBar';
+
+interface Opened {
+  x: number;
+  y: number;
+  items: readonly MenuEntry[];
+  /** 表情条展开成了全部表情（这时不显示列表） */
+  allEmoji: boolean;
+}
 
 /**
- * Web：右键出菜单，双击点赞；鼠标移到这一行时气泡旁出现操作条（回复、回应、更多）。
- * 操作条第一次悬停才挂上，之后只切换显隐：从它打开的菜单、表情弹层在它隐藏后还要留着。
- * 悬停用原生 mouseenter / mouseleave：React 的合成事件把弹出菜单（portal）算作这一行的子节点，
- * 菜单关闭、弹层盖上来时收不到离开，操作条会一直挂着
+ * Web：右键气泡（触屏长按同样触发 contextmenu）弹出列表菜单（同会话右键菜单的样式），上方是表情条；双击点赞；
+ * 悬停不出操作条（同旧版）。菜单左上角在鼠标位置，碰到窗口边就贴边往回推，气泡再大也看得到
  */
-export function BubbleTouch({ own, rowStyle, bubbleStyle, leading, onPress, menu, onReply, onDoubleTap, onReact, onHover, children }: BubbleTouchProps) {
-  const [armed, setArmed] = useState(false);
-  const [hovered, setHovered] = useState(false);
-  const hasBar = !!(onReply || onReact || menu);
+export function BubbleTouch({ rowStyle, bubbleStyle, leading, onPress, menu, onDoubleTap, onReact, onHover, children }: BubbleTouchProps) {
+  const { theme } = useUnistyles();
+  const bubble = useRef<HostInstance>(null);
+  const [opened, setOpened] = useState<Opened | null>(null);
+
+  const onContextMenu = (event: MouseEvent) => {
+    const node = bubble.current as unknown as HTMLElement | null;
+    if (!menu || !node) return;
+    event.preventDefault();
+    const items = menu();
+    if (items.length === 0 && !onReact) return;
+    setMenuBubble(node);
+    setOpened({ x: event.clientX, y: event.clientY, items, allEmoji: false });
+  };
+
+  const close = () => setOpened(null);
+  const react = (symbol: string) => {
+    rememberReaction(symbol);
+    onReact?.(symbol);
+    close();
+  };
+
   return (
-    <div
-      style={CONTENTS}
-      ref={(el) => {
-        if (!el) return;
-        const enter = () => {
-          setArmed(true);
-          setHovered(true);
-          onHover?.();
-        };
-        const leave = () => setHovered(false);
-        el.addEventListener('mouseenter', enter);
-        el.addEventListener('mouseleave', leave);
-        return () => {
-          el.removeEventListener('mouseenter', enter);
-          el.removeEventListener('mouseleave', leave);
-        };
-      }}
-      onDoubleClick={onDoubleTap && !onPress ? onDoubleTap : undefined}
-    >
+    <div style={CONTENTS} onMouseEnter={onHover} onContextMenu={onContextMenu} onDoubleClick={onDoubleTap && !onPress ? onDoubleTap : undefined}>
       <View style={rowStyle}>
         {leading !== undefined && leading}
-        <View style={styles.anchor}>
-          {menu ? (
-            <Menu items={menu} trigger="context" onPress={onPress} style={bubbleStyle}>
-              {children}
-            </Menu>
-          ) : (
-            <Touchable disabled={!onPress} onPress={onPress} style={bubbleStyle}>
-              {children}
-            </Touchable>
-          )}
-          {hasBar && armed && (
-            <View style={[styles.bar(own), !hovered && styles.hidden]}>
-              {onReply && <ReplyButton onReply={onReply} />}
-              {onReact && <ReactButton onReact={onReact} />}
-              {menu && <MoreButton menu={menu} />}
-            </View>
-          )}
-        </View>
+        {/* 气泡不渲染成 <button>：里面可能还有按钮（引用、已读圈、译文），会嵌套 */}
+        <Touchable ref={bubble} disabled={!onPress} onPress={onPress} style={bubbleStyle}>
+          {children}
+        </Touchable>
       </View>
+      {opened && (
+        <MenuLayer
+          // 展开全部表情后尺寸变了，重新定位
+          key={opened.allEmoji ? 'all' : 'menu'}
+          items={opened.allEmoji ? [] : opened.items}
+          anchor={{ x: opened.x, y: opened.y, width: 0, height: 0 }}
+          side="bottom"
+          align="start"
+          atPointer
+          look="iview"
+          minWidth={theme.size.msgReact.menuMinWidth}
+          iconEnd
+          header={
+            onReact &&
+            (opened.allEmoji ? <MsgReactAll onPick={react} /> : <MsgReactBar onPick={react} onMore={() => setOpened({ ...opened, allEmoji: true })} />)
+          }
+          onClose={close}
+        />
+      )}
     </div>
   );
 }
 
 /** 不产生盒子的包装，只用来接鼠标事件 */
 const CONTENTS = { display: 'contents' } as const;
-
-function BarIcon({ icon }: { icon: LucideIcon }) {
-  const { theme } = useUnistyles();
-  return <Icon icon={icon} color={theme.colors.text2} size={theme.size.iconSmall} />;
-}
-
-function ReplyButton({ onReply }: { onReply: () => void }) {
-  const label = useT()('messenger:chat.reply');
-  return (
-    <Tooltip label={label}>
-      <Touchable accessibilityRole="button" accessibilityLabel={label} onPress={onReply} style={({ pressed, hovered }) => styles.button(pressed, hovered)}>
-        <BarIcon icon={Reply} />
-      </Touchable>
-    </Tooltip>
-  );
-}
-
-function MoreButton({ menu }: { menu: () => readonly MenuEntry[] }) {
-  const label = useT()('messenger:action.more');
-  return (
-    <Tooltip label={label}>
-      <Menu items={menu} accessibilityLabel={label} style={({ pressed, hovered }) => styles.button(pressed, hovered)}>
-        <BarIcon icon={Ellipsis} />
-      </Menu>
-    </Tooltip>
-  );
-}
-
-function ReactButton({ onReact }: { onReact: (symbol: string) => void }) {
-  const label = useT()('messenger:chat.react');
-  return (
-    <Tooltip label={label}>
-      <Popover
-        side="top"
-        accessibilityLabel={label}
-        style={({ pressed, hovered }) => styles.button(pressed, hovered)}
-        content={(close) => (
-          <View style={styles.emojis}>
-            {REACTIONS.map((symbol) => (
-              <EmojiButton
-                key={symbol}
-                symbol={symbol}
-                onPress={() => {
-                  close();
-                  onReact(symbol);
-                }}
-              />
-            ))}
-          </View>
-        )}
-      >
-        <BarIcon icon={SmilePlus} />
-      </Popover>
-    </Tooltip>
-  );
-}
-
-function EmojiButton({ symbol, onPress }: { symbol: string; onPress: () => void }) {
-  return (
-    <Touchable accessibilityRole="button" accessibilityLabel={symbol} onPress={onPress} style={({ pressed, hovered }) => styles.emojiCell(pressed, hovered)}>
-      <Text style={styles.emoji} allowFontScaling={false}>{symbol}</Text>
-    </Touchable>
-  );
-}
-
-const styles = StyleSheet.create((theme) => ({
-  // 操作条相对气泡定位：放在气泡外侧（对方消息在右边，自己的在左边），顶部对齐
-  anchor: { flexShrink: 1, minWidth: 0 },
-  bar: (own: boolean) => ({
-    position: 'absolute',
-    top: 0,
-    ...(own ? { right: '100%', marginRight: theme.spacing.xs } : { left: '100%', marginLeft: theme.spacing.xs }),
-    flexDirection: 'row',
-    padding: 2,
-    borderRadius: theme.radius.pill,
-    backgroundColor: theme.colors.surface,
-    boxShadow: theme.shadow.popover,
-  }),
-  hidden: { opacity: 0, pointerEvents: 'none' },
-  button: (pressed: boolean, hovered: boolean) => ({
-    width: theme.size.hoverAction,
-    height: theme.size.hoverAction,
-    borderRadius: theme.radius.pill,
-    alignItems: 'center',
-    justifyContent: 'center',
-    opacity: pressed ? theme.opacity.pressedIcon : 1,
-    backgroundColor: hovered ? theme.colors.hover : 'transparent',
-  }),
-  emojis: { flexDirection: 'row', padding: theme.spacing.xs },
-  emojiCell: (pressed: boolean, hovered: boolean) => ({
-    width: theme.size.emojiCell,
-    height: theme.size.emojiCell,
-    borderRadius: theme.radius.pill,
-    alignItems: 'center',
-    justifyContent: 'center',
-    opacity: pressed ? theme.opacity.pressedIcon : 1,
-    backgroundColor: hovered ? theme.colors.hover : 'transparent',
-  }),
-  emoji: { ...theme.typography.emoji },
-}));

@@ -1,4 +1,5 @@
-import { contactsApi, projectApi, usersApi } from '../../../sync/api';
+import { contactsApi, dialogApi, projectApi, usersApi } from '../../../sync/api';
+import type { Dialog } from '../../../sync/api/dialog';
 import type { UserBasic } from '../../../sync/api/users';
 import type { StoredDialog } from '../../../sync/messenger';
 import { api } from '../../session';
@@ -18,7 +19,7 @@ export interface PickUser {
   az: string;
 }
 
-/** 最近会话里的群：match 为搜索用的名字和拼音（小写） */
+/** 群（最近会话里的，或按名字向服务端搜到的）：match 为搜索用的名字和拼音（小写） */
 export interface PickGroup {
   dialogId: number;
   name: string;
@@ -76,6 +77,11 @@ export function pickName(item: Picked): string {
   return isGroup(item) ? item.name : item.nickname;
 }
 
+function pickGroup(d: Pick<Dialog, 'id' | 'name' | 'avatar' | 'group_type' | 'people' | 'pinyin'>): PickGroup {
+  const name = d.name ?? '';
+  return { dialogId: d.id, name, avatar: d.avatar ?? '', groupType: d.group_type || 'default', people: d.people ?? 0, match: `${name} ${d.pinyin ?? ''}`.toLowerCase() };
+}
+
 function pickUser(user: UserBasic): PickUser {
   const departments = (user.department_info ?? []).map((dept) => dept.name).join(' · ');
   return {
@@ -98,10 +104,7 @@ export function recentsOf(dialogs: Record<number, StoredDialog>): Picked[] {
       return (b.last_at ?? '').localeCompare(a.last_at ?? '');
     })
     .map((d): Picked => {
-      if (d.type !== 'user') {
-        const name = d.name ?? '';
-        return { dialogId: d.id, name, avatar: d.avatar ?? '', groupType: d.group_type || 'default', people: d.people ?? 0, match: `${name} ${d.pinyin ?? ''}`.toLowerCase() };
-      }
+      if (d.type !== 'user') return pickGroup(d);
       return { userid: d.dialog_user!.userid, nickname: d.name ?? '', userimg: d.userimg ?? '', bot: !!d.bot, sub: d.email ?? '', az: '' };
     });
 }
@@ -143,4 +146,12 @@ export async function loadMembers(params: { departments?: readonly number[]; pro
 export async function searchUsers(word: string): Promise<PickUser[]> {
   const list = await usersApi.search(api, word, { bots: true, take: SEARCH_TAKE, withDepartment: true });
   return list.map(pickUser);
+}
+
+/**
+ * 按名字向服务端搜我所在的群（最多 20 个）：本地只缓存了最近的会话，很久没消息的群要靠这个找到（旧版只搜本地，搜不到）
+ */
+export async function searchGroups(word: string): Promise<PickGroup[]> {
+  const list = await dialogApi.search(api, word, { dialogOnly: true });
+  return list.flatMap((d) => (d.type !== 'user' && typeof d.id === 'number' ? [pickGroup({ ...d, id: d.id })] : []));
 }

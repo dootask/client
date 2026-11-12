@@ -7,7 +7,7 @@ import type { Emoticon } from '../../../../sync/messenger';
 import { Sheet } from '../../../../ui/layout';
 import { SearchField } from '../../../../ui/SearchField';
 import { useMsgActions } from '../../hooks';
-import { StickerGrid } from '../EmojiPanel';
+import { StickerGrid } from '../StickerGrid';
 
 /** 停止输入多久后搜索 */
 const SEARCH_DELAY = 400;

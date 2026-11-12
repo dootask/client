@@ -11,6 +11,7 @@ import { Icon } from '../../../ui/Icon';
 import { showToast } from '../../../ui/Toast';
 import { Touchable } from '../../../ui/Touchable';
 import { fitSize, INLINE_IMAGE_BOX, STICKER_BOX } from './media';
+import { rowTraits } from './rowTraits';
 
 /** 气泡里文字的配色：自己与对方的气泡底色不同 */
 export interface BubbleTone {
@@ -26,6 +27,10 @@ export interface BubbleTone {
   /** 图片上的浮层 */
   scrim: string;
   danger: string;
+  /** @ 提及的字色，没有时同链接 */
+  mention?: string;
+  /** @ 我的样式，没有时只加粗 */
+  mentionMe?: TextStyle;
 }
 
 export interface RichHandlers {
@@ -89,7 +94,7 @@ function BlockView({ block, tone }: { block: Block; tone: BubbleTone }) {
       return (
         <View style={[styles.code, { backgroundColor: tone.overlay }]}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            <Text style={[styles.codeText, { color: tone.text }]}>{block.text}</Text>
+            <Text selectable={rowTraits.selectableText} style={[styles.codeText, { color: tone.text }]}>{block.text}</Text>
           </ScrollView>
           <Touchable
             hitSlop={theme.spacing.sm}
@@ -188,7 +193,7 @@ function Table({ rows, head, tone }: { rows: Run[][][]; head: boolean; tone: Bub
 
 function Runs({ runs, tone, style, numberOfLines }: { runs: Run[]; tone: BubbleTone; style: StyleProp<TextStyle>; numberOfLines?: number }) {
   return (
-    <Text style={style} numberOfLines={numberOfLines}>
+    <Text selectable={rowTraits.selectableText} style={style} numberOfLines={numberOfLines}>
       {runs.length === 0 ? ' ' : runs.map((run, index) => <RunText key={index} run={run} tone={tone} />)}
     </Text>
   );
@@ -200,10 +205,11 @@ function RunText({ run, tone }: { run: Run; tone: BubbleTone }) {
   let decoration: TextStyle['textDecorationLine'];
   if (run.u || run.s) decoration = run.u && run.s ? 'underline line-through' : run.u ? 'underline' : 'line-through';
   const style: TextStyle = {
-    fontWeight: run.b || run.mention === 'me' ? '600' : undefined,
+    fontWeight: run.b || (run.mention === 'me' && !tone.mentionMe) ? '600' : undefined,
     fontStyle: run.i ? 'italic' : undefined,
     textDecorationLine: decoration,
-    color: linked ? tone.link : undefined,
+    color: run.mention ? (tone.mention ?? tone.link) : linked ? tone.link : undefined,
+    ...(run.mention === 'me' && tone.mentionMe),
   };
   const pressable = !!onPressRun && (!!run.href || (!!run.mention && !!run.id));
   return (
@@ -213,11 +219,11 @@ function RunText({ run, tone }: { run: Run; tone: BubbleTone }) {
   );
 }
 
-const styles = StyleSheet.create((theme) => ({
+const styles = StyleSheet.create((theme, rt) => ({
   blocks: (compact: boolean) => ({ gap: compact ? theme.spacing.xs : theme.spacing.sm }),
-  body: { ...theme.typography.body },
+  body: rowTraits.body(theme, rt.breakpoint === 'xs'),
   heading: { ...theme.typography.title2 },
-  subheading: { ...theme.typography.body, fontWeight: '600' },
+  subheading: { ...rowTraits.body(theme, rt.breakpoint === 'xs'), fontWeight: '600' },
   bold: { fontWeight: '600' },
   pressed: { opacity: theme.opacity.pressedIcon },
   quote: { borderLeftWidth: 3, paddingLeft: theme.spacing.sm },
@@ -225,7 +231,7 @@ const styles = StyleSheet.create((theme) => ({
   list: { gap: theme.spacing.xs },
   listItem: (indent: number) => ({ flexDirection: 'row', paddingLeft: indent * theme.spacing.lg }),
   // 高度与正文行高一致，符号与首行对齐
-  listMarker: { minWidth: theme.spacing.xl, height: theme.typography.body.lineHeight, marginRight: theme.spacing.xs, justifyContent: 'center' },
+  listMarker: { minWidth: theme.spacing.xl, height: rowTraits.body(theme, rt.breakpoint === 'xs').lineHeight, marginRight: theme.spacing.xs, justifyContent: 'center' },
   listBody: { flexShrink: 1 },
   code: { borderRadius: theme.radius.bubbleTight, overflow: 'hidden' },
   codeText: { ...theme.typography.code, padding: theme.spacing.sm, paddingRight: theme.spacing.xxl + theme.spacing.sm },

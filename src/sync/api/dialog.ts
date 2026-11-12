@@ -56,6 +56,8 @@ export const dialogSchema = z.looseObject({
   mention: num.nullish(),
   mention_ids: phpList(num).optional(),
   people: num.nullish(),
+  /** 群成员里的真人数（不含机器人），聊天页标题显示 */
+  people_user: num.nullish(),
   todo_num: num.nullish(),
   last_msg: lastMsgSchema.nullish(),
   pinyin: str.nullish(),
@@ -140,9 +142,9 @@ const searchItemSchema = dialogSchema.extend({
 });
 export type SearchItem = z.output<typeof searchItemSchema>;
 
-/** 搜索：先会话名，不够 20 个再补联系人，再补消息内容 */
-export async function search(client: ApiClient, key: string) {
-  const { data } = await requestParsed(client, 'dialog/search', phpList(searchItemSchema), { data: { key } });
+/** 搜索：先会话名，不够 20 个再补联系人，再补消息内容；dialogOnly 不补消息内容 */
+export async function search(client: ApiClient, key: string, { dialogOnly = false }: { dialogOnly?: boolean } = {}) {
+  const { data } = await requestParsed(client, 'dialog/search', phpList(searchItemSchema), { data: dialogOnly ? { key, dialog_only: 1 } : { key } });
   return data;
 }
 

@@ -117,7 +117,6 @@
     "album": "앨범",
     "capture": "촬영",
     "file": "파일",
-    "media": "사진 및 동영상",
     "cameraDenied": "카메라 권한이 허용되지 않았습니다",
     "fileTooLarge": "파일({{name}})이 너무 커서 ({{size}})를 초과할 수 없습니다.",
     "original": "원본",
@@ -132,7 +131,14 @@
     "searchSticker": "이모티콘 검색",
     "noSticker": "검색된 스티커가 없습니다",
     "muted": "발언 금지",
-    "disabled": "이 계정은 비활성화되었습니다"
+    "disabled": "이 계정은 비활성화되었습니다",
+    "selectMember": "멤버 선택",
+    "selectTask": "작업 선택",
+    "more": "펼치기",
+    "sendImage": "이미지 전송",
+    "uploadFile": "파일 업로드",
+    "fullInput": "전체 화면 입력",
+    "longPressRecord": "길게 눌러 녹음"
   },
   "system": {
     "tagAdd": "표시됨",
@@ -155,6 +161,7 @@
     "unpin": "고정 해제",
     "selectMany": "다중 선택",
     "selectText": "텍스트 선택",
+    "selectCopy": "선택하여 복사",
     "tag": "표시",
     "untag": "표시 해제",
     "todoCancel": "할 일 취소",
@@ -163,7 +170,6 @@
     "todoSet": "할 일 설정",
     "translate": "번역",
     "voice2text": "텍스트로 변환",
-    "more": "더 보기",
     "translating": "번역 중",
     "voice2texting": "텍스트로 변환 중"
   },
@@ -171,9 +177,11 @@
     "message": "메시지",
     "hideSource": "원래 발신자 정보를 표시하지 않음",
     "merge": "묶어서 전달",
-    "max": "최대 {{n}}개의 대화를 선택할 수 있습니다",
     "done": "전달 성공",
-    "confirmTitle": "전달 확인"
+    "confirmTitle": "전달 확인",
+    "oneByOne": "개별 전달",
+    "records": "채팅 기록",
+    "total": "총 {{n}}개 메시지"
   },
   "todos": {
     "setTitle": "할 일 설정",
@@ -193,7 +201,9 @@
     "cancelRemind": "알림 취소",
     "removeConfirm": "이 멤버의 할 일을 취소하시겠습니까?",
     "mine": "미완료 할 일 {{n}}개",
-    "go": "완료하기"
+    "go": "완료하기",
+    "viewTitle": "할 일 메시지",
+    "backToOriginal": "원문으로 돌아가기"
   },
   "translate": {
     "pickLanguage": "언어 선택",
@@ -201,7 +211,8 @@
   },
   "top": {
     "unpinConfirm": "고정을 취소하시겠습니까?",
-    "by": "{{name}}님이 고정함"
+    "by": "{{name}}님이 고정함",
+    "pinner": "고정된 인원"
   },
   "favorite": {
     "remark": "비고"
@@ -213,8 +224,8 @@
   },
   "selection": {
     "max": "최대 {{n}}개의 메시지를 선택할 수 있습니다",
-    "count": "{{n}}개 선택됨",
-    "title": "({{n}})개 선택됨"
+    "title": "({{n}})개 선택됨",
+    "limit": "(최대 {{n}}개)"
   },
   "mention": {
     "everyone": "모든 사람",
@@ -352,6 +363,15 @@
     "clear": "지우기",
     "notFound": "\"{{key}}\"에 대한 결과 없음",
     "overMax": "최대 선택 수를 초과했습니다",
-    "noDepartment": "기본 부서"
+    "noDepartment": "기본 부서",
+    "move": "이동",
+    "choose": "선택",
+    "removeLast": "마지막 항목 제거",
+    "selectedHint": "선택한 구성원이 여기에 표시됩니다",
+    "remove": "제거",
+    "noResult": "아직 결과 없음",
+    "searchResults": "검색 결과",
+    "items": "{{n}}개",
+    "selectedIn": "{{n}} 선택됨"
   }
 }

@@ -117,7 +117,6 @@
     "album": "アルバム",
     "capture": "撮影",
     "file": "ファイル",
-    "media": "写真と動画",
     "cameraDenied": "カメラへのアクセスが許可されていません",
     "fileTooLarge": "ファイル({{name}})が大きすぎます。上限は:({{size}})です。",
     "original": "オリジナル",
@@ -132,7 +131,14 @@
     "searchSticker": "絵文字を検索",
     "noSticker": "スタンプが見つかりませんでした",
     "muted": "発言禁止",
-    "disabled": "このアカウントは停止されました"
+    "disabled": "このアカウントは停止されました",
+    "selectMember": "メンバーを選択",
+    "selectTask": "タスクを選択",
+    "more": "展開",
+    "sendImage": "画像を送信",
+    "uploadFile": "ファイルをアップロード",
+    "fullInput": "全画面入力",
+    "longPressRecord": "長押しで録音"
   },
   "system": {
     "tagAdd": "マークされました",
@@ -155,6 +161,7 @@
     "unpin": "ピン留めを解除",
     "selectMany": "複数選択",
     "selectText": "テキストを選択",
+    "selectCopy": "選択してコピー",
     "tag": "マーク",
     "untag": "マークを解除",
     "todoCancel": "タスクをキャンセル",
@@ -163,7 +170,6 @@
     "todoSet": "タスクを設定",
     "translate": "翻訳",
     "voice2text": "テキストに変換",
-    "more": "もっと見る",
     "translating": "翻訳中",
     "voice2texting": "テキストに変換中"
   },
@@ -171,9 +177,11 @@
     "message": "メッセージ",
     "hideSource": "元の送信者情報を表示しない",
     "merge": "まとめて転送",
-    "max": "最大{{n}}件の会話を選択できます",
     "done": "転送成功",
-    "confirmTitle": "転送を確認する"
+    "confirmTitle": "転送を確認する",
+    "oneByOne": "個別に転送",
+    "records": "チャット履歴",
+    "total": "合計{{n}}件のメッセージ"
   },
   "todos": {
     "setTitle": "タスク設定",
@@ -193,7 +201,9 @@
     "cancelRemind": "リマインダーをキャンセル",
     "removeConfirm": "このメンバーの ToDo を取り消しますか？",
     "mine": "未完了の ToDo が {{n}} 件",
-    "go": "完了する"
+    "go": "完了する",
+    "viewTitle": "ToDoメッセージ",
+    "backToOriginal": "原文に戻る"
   },
   "translate": {
     "pickLanguage": "言語を選択",
@@ -201,7 +211,8 @@
   },
   "top": {
     "unpinConfirm": "ピン留めを解除してもよろしいですか？",
-    "by": "{{name}} が固定"
+    "by": "{{name}} が固定",
+    "pinner": "ピン留めされた人員"
   },
   "favorite": {
     "remark": "備考"
@@ -213,8 +224,8 @@
   },
   "selection": {
     "max": "最大{{n}}件のメッセージを選択できます",
-    "count": "{{n}}件選択中",
-    "title": "({{n}})件選択済み"
+    "title": "({{n}})件選択済み",
+    "limit": "(最大{{n}}件)"
   },
   "mention": {
     "everyone": "全員",
@@ -352,6 +363,15 @@
     "clear": "クリア",
     "notFound": "「{{key}}」は見つかりません",
     "overMax": "最大選択数を超えました",
-    "noDepartment": "デフォルト部署"
+    "noDepartment": "デフォルト部署",
+    "move": "移動",
+    "choose": "選択",
+    "removeLast": "最後の1人を削除",
+    "selectedHint": "選択したメンバーがここに表示されます",
+    "remove": "削除",
+    "noResult": "結果はまだありません",
+    "searchResults": "検索結果",
+    "items": "{{n}}項目",
+    "selectedIn": "{{n}} 選択済み"
   }
 }

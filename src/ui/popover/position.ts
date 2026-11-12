@@ -93,3 +93,20 @@ export function place({ anchor, size, viewport, side, align, gap, margin }: Plac
   }
   return { left, top, side: chosen, maxWidth: vertical ? crossRoom : mainRoom, maxHeight: vertical ? mainRoom : crossRoom };
 }
+
+/**
+ * 右键菜单：左上角放在鼠标位置，超出可视区就贴着边缘往回推（不翻转），比可视区还大时才限制尺寸。
+ * 锚点在多大的元素上都不影响（气泡占满整屏时菜单照样完整显示）
+ */
+export function placeAtPoint({ point, size, viewport, margin }: { point: { x: number; y: number }; size: Size; viewport: Size; margin: number }): Placement {
+  const maxWidth = Math.max(0, viewport.width - margin * 2);
+  const maxHeight = Math.max(0, viewport.height - margin * 2);
+  const clamp = (pos: number, length: number, limit: number) => Math.max(margin, Math.min(pos, limit - margin - length));
+  return {
+    left: clamp(point.x, Math.min(size.width, maxWidth), viewport.width),
+    top: clamp(point.y, Math.min(size.height, maxHeight), viewport.height),
+    side: 'bottom',
+    maxWidth,
+    maxHeight,
+  };
+}

@@ -126,8 +126,88 @@ const light = {
   noticeFill: '#FEF7EE',
   noticeLine: '#FAE0B5',
   /** App 会话标题旁「已完成」「已删除」标签的底色（主色、危险色 15%，同旧 App） */
+  /** 旧版网页聊天页：窄屏标题下的在线状态、分类条选中底（主色 18%） */
+  headDesc: '#AAAAAA',
+  typeActiveFill: 'rgba(132,197,106,0.18)',
+  /** 旧版网页置顶卡片：描边、阴影色、图钉圆底、置顶人的灰字；待办条里每条的底色和字色 */
+  topCardLine: '#EBEBEB',
+  topCardShadow: 'rgba(205,205,205,0.5)',
+  topPin: '#FF821A',
+  topPinner: '#AFAFAF',
+  todoChipFill: '#FDF1DC',
+  todoChipText: '#B86E00',
   tagSuccessFill: '#84C56A26',
   tagDangerFill: '#F04A4A26',
+  /**
+   * 旧版网页消息：对方气泡底、自己气泡里的次要字、二级块（代码、引用）底、正文链接、@ 提及、时间；引用竖线（主色 70%）；
+   * 表情回应的底（对方气泡里 / 自己气泡里，各分「我也回应了」）和名字
+   */
+  msgBubbleIn: '#F4F5F7',
+  msgOwnMuted: 'rgba(255,255,255,0.8)',
+  msgOwnOverlay: 'rgba(255,255,255,0.2)',
+  msgLink: '#436FF6',
+  msgMention: '#0BC037',
+  msgTime: '#BBBBBB',
+  msgReplyBar: 'rgba(132,197,106,0.7)',
+  msgReaction: 'rgba(225,225,225,0.5)',
+  msgReactionMine: '#E1E1E1',
+  msgReactionOwn: 'rgba(91,169,60,0.5)',
+  msgReactionOwnMine: '#5BA93C',
+  msgReactionNames: '#818181',
+  msgNotice: '#EFEFEF',
+  /** 旧版网页输入栏：输入框底色（窄屏白底）、窄屏输入栏底色、占位文字 */
+  webInput: '#F4F5F7',
+  webFooterNarrow: '#F8F8F8',
+  webQuickMsg: '#F0F1F3',
+  webPlaceholder: '#CCCCCC',
+  /** 表情面板分类栏底色、图标色 */
+  emojiNav: '#F8F8F8',
+  emojiNavIcon: '#5E6D82',
+  /** 表情面板底部（表情包切换）底色；⊕ 菜单悬停 */
+  emojiMenu: '#F2F4F7',
+  webMenuHover: '#ECF5FF',
+  /** 旧版网页多选：未选的勾选圈、底部操作条底色和顶线 */
+  selectCircle: '#C5C5C5',
+  selectBar: '#F4F5F7',
+  selectBarLine: '#F4F5F5',
+  /** 旧版 iView 按钮：主色按钮底色、默认按钮描边；DooButton 默认按钮底色和字色 */
+  ivuPrimary: '#8BCF70',
+  ivuBorder: '#DCDEE2',
+  dooButton: '#E9EAEE',
+  dooButtonText: '#1F2329',
+  /** 主色弹窗按钮悬停时叠的白 */
+  dooButtonHover: 'rgba(255,255,255,0.15)',
+  /** 旧版弹窗（DooModal）：遮罩、右上关闭 */
+  modalMask: 'rgba(55,55,55,0.6)',
+  modalClose: '#999999',
+  modalCloseHover: '#444444',
+  /** 旧版网页选择成员（.usp）：栏底、填充、悬停、按下、四级文字、主色字、选中底（常态 / 悬停） */
+  uspPanel: '#F7F7F8',
+  uspFill: '#F1F2F4',
+  uspSearchFocus: '#F2F3F5',
+  uspHover: 'rgba(15,20,30,0.045)',
+  uspPressed: 'rgba(15,20,30,0.08)',
+  uspText: '#16181D',
+  uspText2: '#5B616B',
+  uspText3: '#8B9099',
+  uspText4: '#B9BDC4',
+  uspPrimaryText: '#3F8A28',
+  uspPrimarySoft: 'rgba(132,197,106,0.14)',
+  uspPrimarySoftHover: 'rgba(132,197,106,0.2)',
+  uspLine: 'rgba(15,20,30,0.1)',
+  /** 确认转发：「不显示原发送者」未选的圈、留言框底色 */
+  radioIcon: 'rgba(144,147,153,0.7)',
+  /** 旧版选择成员：已选满的进度条、手机已选浮层的遮罩、主按钮上的快捷键底 */
+  uspMeterFull: '#E8A33D',
+  uspMask: 'rgba(0,0,0,0.32)',
+  uspKbdOnPrimary: 'rgba(255,255,255,0.2)',
+  /** 旧版确认转发：合并预览块（底、标题、摘要、条数、分隔线）、留言框底 */
+  mergeFill: '#F7F7F7',
+  mergeTitle: '#333333',
+  mergeText: '#666666',
+  mergeCount: '#999999',
+  mergeLine: '#E8E8E8',
+  forwardInput: '#F4F5F7',
 };
 
 export type Colors = typeof light;
@@ -216,8 +296,71 @@ const dark: Colors = {
   pageText: '#C9CDD4',
   noticeFill: 'rgba(245,165,36,0.12)',
   noticeLine: 'rgba(245,165,36,0.3)',
+  headDesc: '#7C7C80',
+  typeActiveFill: 'rgba(132,197,106,0.24)',
+  topCardLine: '#38383A',
+  topCardShadow: 'rgba(0,0,0,0.4)',
+  topPin: '#FF8A2A',
+  topPinner: '#7C7C80',
+  todoChipFill: 'rgba(245,165,36,0.16)',
+  todoChipText: '#F5B54A',
   tagSuccessFill: '#84C56A26',
   tagDangerFill: '#FF696126',
+  msgBubbleIn: '#2C2C2E',
+  msgOwnMuted: 'rgba(255,255,255,0.8)',
+  msgOwnOverlay: 'rgba(255,255,255,0.2)',
+  msgLink: '#6B8FFF',
+  msgMention: '#30D158',
+  msgTime: '#7C7C80',
+  msgReplyBar: 'rgba(132,197,106,0.7)',
+  msgReaction: 'rgba(255,255,255,0.08)',
+  msgReactionMine: 'rgba(255,255,255,0.16)',
+  msgReactionOwn: 'rgba(91,169,60,0.5)',
+  msgReactionOwnMine: '#5BA93C',
+  msgReactionNames: '#AEAEB2',
+  msgNotice: 'rgba(255,255,255,0.08)',
+  webInput: '#2C2C2E',
+  webFooterNarrow: '#1C1C1E',
+  webQuickMsg: '#2C2C2E',
+  webPlaceholder: '#636366',
+  emojiNav: '#1C1C1E',
+  emojiNavIcon: '#8E9AAB',
+  emojiMenu: '#2C2C2E',
+  webMenuHover: 'rgba(132,197,106,0.12)',
+  selectCircle: '#545458',
+  selectBar: '#1C1C1E',
+  selectBarLine: '#2C2C2E',
+  ivuPrimary: '#84C56A',
+  ivuBorder: '#3A3A3C',
+  dooButton: '#2C2C2E',
+  dooButtonText: '#F2F2F2',
+  dooButtonHover: 'rgba(255,255,255,0.1)',
+  modalMask: 'rgba(0,0,0,0.6)',
+  modalClose: '#8E8E93',
+  modalCloseHover: '#F2F2F2',
+  uspPanel: '#242426',
+  uspFill: '#2C2C2E',
+  uspSearchFocus: '#3A3A3C',
+  uspHover: 'rgba(255,255,255,0.06)',
+  uspPressed: 'rgba(255,255,255,0.1)',
+  uspText: '#F2F2F2',
+  uspText2: '#AEAEB2',
+  uspText3: '#8E8E93',
+  uspText4: '#636366',
+  uspPrimaryText: '#84C56A',
+  uspPrimarySoft: 'rgba(132,197,106,0.18)',
+  uspPrimarySoftHover: 'rgba(132,197,106,0.24)',
+  uspLine: 'rgba(255,255,255,0.12)',
+  radioIcon: 'rgba(174,174,178,0.7)',
+  uspMeterFull: '#D9952F',
+  uspMask: 'rgba(0,0,0,0.5)',
+  uspKbdOnPrimary: 'rgba(255,255,255,0.2)',
+  mergeFill: '#2C2C2E',
+  mergeTitle: '#F2F2F2',
+  mergeText: '#AEAEB2',
+  mergeCount: '#8E8E93',
+  mergeLine: '#3A3A3C',
+  forwardInput: '#2C2C2E',
 };
 
 const font = (fontSize: number, lineHeight: number, fontWeight: TextStyle['fontWeight']) => ({ fontSize, lineHeight, fontWeight });
@@ -233,6 +376,8 @@ const typography = {
   caption2: font(11, 13, '500'),
   /** 表情面板里的表情 */
   emoji: font(26, 32, '400'),
+  /** Web 消息菜单表情条里的表情 */
+  msgReactEmoji: font(24, 28, '400'),
   /** 代码块、行内代码 */
   code: { ...font(14, 20, '400'), fontFamily: monoFont },
   /** 旧版会话列表（docs/ui-spec.md 1.6）：行标题、行内小字、窄屏大标题、窄屏顶部条标题 */
@@ -254,6 +399,87 @@ const typography = {
   footnoteStrong: font(13, 18, '600'),
   /** App 分类条上待办数角标的数字（旧版 App） */
   countMini: font(10, 12, '600'),
+  /** 旧版网页聊天页：标题后的人数、宽屏 / 窄屏分类条、窄屏返回键旁的未读数 */
+  chatPeople: font(17, 22, '500'),
+  chatType: font(12, 24, '400'),
+  chatTypeNarrow: font(14, 28, '400'),
+  backNum: font(14, 24, '500'),
+  /** Web 聊天页置顶卡片的正文、待办条标签和胶囊（旧版网页） */
+  topContent: font(14, 22, '400'),
+  todoLabel: font(14, 22, '500'),
+  todoChip: font(13, 26, '400'),
+  /**
+   * 旧版网页消息：正文（窄屏 msgTextNarrow）、群里气泡上方的名字、引用的名字和摘要、底部一行（时间、回复数）、
+   * @ 我的绿底标签、表情回应的表情（窄屏 reactionSymbolNarrow）和名字
+   */
+  msgText: font(14, 20, '400'),
+  msgTextNarrow: font(15, 20, '400'),
+  msgName: font(14, 22, '400'),
+  msgReplyName: font(13, 20, '500'),
+  msgReplyDesc: font(13, 19.5, '400'),
+  msgFoot: font(12, 12, '400'),
+  mentionMe: font(13, 20, '600'),
+  reactionSymbol: font(16, 22, '400'),
+  reactionSymbolNarrow: font(14, 22, '400'),
+  reactionNames: font(12, 22, '400'),
+  msgNotice: font(12, 18, '400'),
+  webInput: font(14, 22, '400'),
+  webInputNarrow: font(16, 22, '400'),
+  webQuickMsg: font(13, 26, '400'),
+  webQuote: font(13, 19, '400'),
+  webQuoteName: font(13, 19, '500'),
+  webEmoji: font(22, 40, '400'),
+  /** 旧版网页多选操作条：已选计数、到上限的提示；iView 小按钮文字 */
+  selectInfo: font(14, 21, '400'),
+  selectMax: font(12, 18, '400'),
+  ivuButton: font(14, 20, '400'),
+  /** 旧版弹窗标题、弹窗按钮（宽 / 窄屏） */
+  modalTitle: font(18, 20, '500'),
+  dooButton: font(14, 20, '500'),
+  dooButtonNarrow: font(16, 22, '600'),
+  /** 旧版选择成员（宽屏 / 手机全屏），名字照旧版类名 */
+  uspTitle: font(15, 20, '600'),
+  uspSearch: font(15, 20, '400'),
+  uspSearchNarrow: font(16, 22, '400'),
+  uspSideTitle: font(11, 14, '600'),
+  uspNav: font(13, 18, '400'),
+  uspNavOn: font(13, 18, '600'),
+  uspCount: font(11, 14, '400'),
+  uspBadge: font(11, 17, '600'),
+  uspBadgeNarrow: font(12, 19, '600'),
+  uspChTitle: font(15, 20, '600'),
+  uspChSub: font(12, 16, '400'),
+  uspGrp: font(11, 14, '600'),
+  uspGrpNarrow: font(13, 17, '600'),
+  uspName: font(14, 19, '500'),
+  uspNameNarrow: font(16, 22, '400'),
+  uspDesc: font(12, 16, '400'),
+  uspDescNarrow: font(13, 18, '400'),
+  uspEmpty: font(13, 18, '400'),
+  uspEmptyNarrow: font(14, 20, '400'),
+  uspRh: font(12, 16, '600'),
+  uspRhCount: font(12, 16, '400'),
+  uspPrName: font(13, 18, '400'),
+  uspPrNameNarrow: font(16, 22, '400'),
+  uspRempty: font(12, 19, '400'),
+  uspFoot: font(11, 14, '400'),
+  uspBarButton: font(16, 22, '400'),
+  uspBarTitle: font(17, 22, '600'),
+  uspEntry: font(16, 22, '400'),
+  uspEntryCount: font(13, 18, '400'),
+  uspStack: font(14, 20, '400'),
+  uspStackMore: font(11, 14, '600'),
+  uspSubmit: font(16, 22, '600'),
+  uspIndex: font(10, 15, '600'),
+  uspSelTitle: font(17, 22, '600'),
+  uspSelCount: font(14, 20, '400'),
+  uspSelClear: font(15, 20, '400'),
+  /** 旧版确认转发：合并预览标题、摘要行、条数；单选项、留言 */
+  mergeTitle: font(13, 18, '500'),
+  mergeItem: font(12, 22, '400'),
+  mergeCount: font(12, 16, '400'),
+  forwardOption: font(14, 22, '400'),
+  webEmojiNarrow: font(28, 50, '400'),
 } satisfies Record<string, TextStyle>;
 
 /** 按下态：图标按钮降透明度，主按钮略降（docs/ui-spec.md 第 4 节）；不可用的按钮 */
@@ -280,6 +506,10 @@ const radius = {
   emptyPill: 14,
   /** 宽屏会话列表顶部的提示条 */
   notice: 6,
+  /** 旧版网页聊天页：分类条每项、置顶卡片、待办条每条 */
+  chatType: 5,
+  topCard: 10,
+  todoChip: 13,
   ...platformRadius,
 };
 
@@ -291,8 +521,8 @@ const size = {
   tabBar: 56,
   /** 中屏图标侧栏 */
   rail: 72,
-  /** 宽屏完整侧栏 */
-  sidebar: 220,
+  /** 宽屏完整侧栏（同旧版默认宽 255，不能拖） */
+  sidebar: 255,
   /** 列表栏：中屏固定宽度；宽屏默认宽度和拖动范围 */
   listPane: 320,
   listPaneMin: 260,
@@ -389,8 +619,8 @@ const size = {
   actionMenuWidth: 220,
   actionMenuRow: 40,
   emojiCell: 40,
-  /** Web 悬停消息时旁边操作条的按钮 */
-  hoverAction: 28,
+  /** Web 消息菜单：列表最小宽度；上方表情条的格子、内边距、右端展开按钮；展开后全部表情显示几行（超出滚动） */
+  msgReact: { menuMinWidth: 148, cell: 34, pad: 3, more: 28, moreIcon: 18, allRows: 8 },
   /** 确认气泡、悬停提示的最大宽度 */
   bubbleMaxWidth: 280,
   tooltipMaxWidth: 240,
@@ -405,7 +635,7 @@ const size = {
   /** 图形验证码的显示宽度（高度同输入框） */
   captchaWidth: 120,
   /** 头像只用这几档（docs/ui-spec.md 第 3 节） */
-  avatar: { xs: 20, sm: 24, md: 32, lg: 40, list: 42, xl: 48, xxl: 64, huge: 80 },
+  avatar: { micro: 16, xs: 20, sm: 24, pickChip: 28, msg: 30, md: 32, pick: 34, pickSel: 36, lg: 40, list: 42, xl: 48, xxl: 64, huge: 80 },
   /** 未读角标的最小宽高（旧版 iView 角标） */
   badge: 20,
   badgePadding: 6,
@@ -483,7 +713,151 @@ const size = {
   /** 输入栏上方快捷消息胶囊的最大宽度（文字过长截断） */
   quickMsgMax: 150,
   voiceTrack: 4,
+  /**
+   * 旧版网页聊天页头部：宽屏高和左右内边距、头像和标题的间距；窄屏返回键 / 「…」的格子、标题两侧留白、返回键图标、
+   * 未读数离左缘和高；分类条：窄屏那一行的高和左右内边距、每项上边距、项间距、宽屏 / 窄屏的项内边距和图标、图标与文字间距
+   */
+  chatHead: 68,
+  chatHeadPadX: 22,
+  chatHeadAvatarGap: 14,
+  chatHeadCell: 52,
+  chatHeadInset: 84,
+  chatHeadBack: 26,
+  backNumLeft: 32,
+  backNum: 24,
+  /** 已完成任务群标题栏右侧的大勾：大小、离右缘（宽屏 / 窄屏） */
+  chatHeadDone: 40,
+  chatHeadDoneNarrow: 36,
+  chatHeadDoneRight: 60,
+  chatHeadDoneRightNarrow: 44,
+  chatTypesNarrow: 32,
+  chatTypesPadX: 8,
+  chatTypeTop: 4,
+  chatTypeGap: 6,
+  chatTypePadX: 6,
+  chatTypePadXNarrow: 8,
+  chatTypeIcon: 14,
+  chatTypeIconNarrow: 16,
+  chatTypeIconGap: 4,
+  chatTypeIconGapNarrow: 3,
+  /** 旧版网页置顶卡片：图钉圆的内边距、右侧按钮图标和内边距；待办条每条的高和最大宽 */
+  /** 置顶卡片图钉格的高（旧版 line-height 42）、iView 大号按钮的高 */
+  topPinCell: 42,
+  buttonLarge: 40,
+  topPinPad: 5,
+  topPin: 16,
+  topPinTop: 2,
+  topAction: 18,
+  topActionPad: 4,
+  todoChip: 26,
+  todoChipMax: 180,
   dot: 8,
+  /**
+   * 旧版网页消息（头像用 avatar.msg）：列表左右内边距（宽屏 / 窄屏）、头像底下留空、头像与气泡的间距、名字行高和下距、气泡圆角（大 / 尖角）和内边距、
+   * 底部一行的高和上距、底部图标（标注、待办、已编辑）和间距、已读的勾和群里的已读环、回应胶囊的内边距和间距、引用竖线宽和文字左距、
+   * 文字气泡最宽（占列表宽的比例）、窄屏气泡对侧留空
+   */
+  msgPadX: 32,
+  msgPadXNarrow: 14,
+  msgAvatarBottom: 20,
+  msgAvatarGap: 8,
+  msgNameGap: 6,
+  msgBubbleRadius: 8,
+  msgBubbleTip: 2,
+  msgBubblePad: 8,
+  msgTextPad: 2,
+  msgFoot: 21,
+  msgFootTop: 4,
+  msgFootIcon: 13,
+  msgFootGap: 6,
+  msgReadIcon: 12,
+  msgReadRing: 14,
+  msgReactionPadX: 8,
+  msgReactionPadY: 2,
+  msgReactionGap: 8,
+  msgReactionTop: 6,
+  msgReactionUsers: 6,
+  /** 旧版网页消息右键菜单（.dialog-wrapper-operate）：宽、操作区内边距、项宽高、项下间距、图标；表情行的格子、内边距、右侧「更多」 */
+  /**
+   * 旧版网页输入栏（.dialog-footer / .chat-input-wrapper）：外边距、输入框圆角和内边距、编辑区外边距和最高、
+   * 工具条按钮、发送按钮和绿圆、回复条（左右内边距、竖线、关闭按钮）、⊕ 菜单（宽、内边距、项高、图标）、
+   * 机器人快捷消息胶囊（高、左右内边距、间距、所在行上下内边距）
+   */
+  webComposer: {
+    padX: 24, bottom: 16, padXNarrow: 10, padYNarrow: 8, radius: 10, padY: 8, padX2: 2, editorY: 4, editorX: 12, editorMax: 200,
+    tool: 30, toolIcon: 22, send: 48, sendCircle: 36, sendIcon: 20,
+    quoteLeft: 24, quoteRight: 48, quoteBottom: 8, quoteLine: 3, quoteLineLeft: 12, quoteClose: 48, quoteCloseIcon: 22,
+    popGap: 10, moreMin: 100, morePad: 8, moreRow: 36, moreItemPad: 8, moreIcon: 20, moreIconGap: 8,
+    quick: 26, quickPadX: 12, quickGap: 8, quickBarY: 8,
+  },
+  /**
+   * 旧版网页表情面板：宽屏浮层宽 376、内容区高 280、每行 9 格 40；窄屏内嵌每行 7 格 50；顶部分类栏 46×40、图标 18；
+   * 底部表情包切换栏（宽 40 高 / 窄 48 高带 4 内边距，每项左右 13）；表情包格子 72 / 80；窄屏的删除键
+   */
+  webEmoji: {
+    width: 376, height: 280, cell: 40, columns: 9, cellNarrow: 50, columnsNarrow: 7, pad: 8, nav: 40, navItem: 46, navIcon: 18,
+    menu: 40, menuNarrow: 48, menuPadNarrow: 4, menuItemPad: 13, menuIcon: 22, stickerColumns: 5, stickerColumnsNarrow: 4, stickerPad: 8,
+    deleteRight: 12, deletePadY: 10, deletePadX: 14, deleteIcon: 20,
+  },
+  /** 旧版网页多选：勾选格 28（上距 1、与头像隔 4）、圈 22；底部操作条高 52、左右内边距 24；小按钮高 28、左右内边距 9、间距 8 */
+  /**
+   * 旧版弹窗（DooModal）：卡片圆角、外边距（宽 / 窄屏）、右上关闭（位置、大小、图标）、标题区 / 正文 / 底部内边距、底部按钮间距；
+   * 弹窗按钮（DooButton）宽屏高 36 最窄 88、窄屏胶囊高 48
+   */
+  dooModal: {
+    radius: 18, wrapY: 24, wrapX: 16, wrapXNarrow: 10, closeTop: 12, closeRight: 10, close: 38, closeIcon: 24,
+    headerTop: 22, headerX: 24, headerBottom: 20, titleEnd: 24, bodyTop: 16, bodyX: 32, bodyBottom: 2,
+    footerTop: 20, footerX: 24, footerXNarrow: 22, footerBottom: 22, footerGap: 10,
+    button: 36, buttonMin: 88, buttonPadX: 18, buttonNarrow: 48, buttonPadXNarrow: 16, buttonRadiusNarrow: 24,
+  },
+  webSelect: { cell: 28, cellTop: 1, cellGap: 4, icon: 22, bar: 52, barPadX: 24, button: 28, buttonPadX: 9, buttonGap: 8 },
+  /** 旧版选择成员（宽屏三栏弹窗），名字照旧版类名：顶栏、左栏来源、中间列表、右栏已选、底栏 */
+  usp: {
+    width: 860, height: 620,
+    top: 64, topPadL: 22, topPadR: 16, topGap: 12,
+    search: 40, searchRadius: 12, searchPadX: 14, searchGap: 10, searchIcon: 17, clear: 18, clearIcon: 10,
+    close: 32, closeRadius: 9, closeIcon: 18,
+    mainGap: 8, mainPadX: 12, panelRadius: 14,
+    side: 200, sidePad: 6, sideTitleTop: 14, sideTitleX: 10, sideTitleBottom: 4,
+    nav: 32, navGap: 9, navPadX: 10, navRadius: 8, navIcon: 15, navIconBox: 18, navIndent: 12, dot: 8, dotRadius: 3, dotMargin: 5, badgePadX: 6,
+    ch: 46, chPadL: 12, chPadR: 8, chGap: 8,
+    grpTop: 10, grpX: 12, grpBottom: 4,
+    row: 52, rowPadX: 12, rowRadius: 10, rowGap: 12, rowIndent: 16, avatar: 34, descTop: 1, chev: 16, sq: 34, sqRadius: 9, sqIcon: 17,
+    tick: 20, tickIcon: 12, tickRing: 1.5, listBottom: 10, loading: 16, empty: 90, emptyIcon: 28, emptyGap: 8,
+    rPadX: 6, rh: 42, rhTop: 14, rhX: 10, rhGap: 6, meter: 3, meterX: 10, meterBottom: 6, meterRadius: 2, rlBottom: 8,
+    pr: 38, prPadL: 10, prPadR: 8, prRadius: 8, prGap: 10, rm: 22, rmRadius: 6, rmIcon: 13,
+    remptyGap: 10, remptyX: 18, remptyBottom: 40, remptyDot: 28, remptyOverlap: 8, remptyRing: 2,
+    foot: 68, footPadL: 22, footPadR: 14, footGap: 16, keyGap: 5, kbdPadY: 2, kbdPadX: 6, kbdRadius: 5, kbdGap: 4, actsGap: 8,
+  },
+  /** 旧版选择成员（手机全屏）：标题栏、搜索、首页入口、分组、行、字母索引、底栏、已选浮层 */
+  uspNarrow: {
+    bar: 50, barPadX: 8, barButton: 40, barButtonPadX: 8, barButtonGap: 2, barButtonIcon: 24, barTitleX: 100,
+    search: 38, searchTop: 2, searchX: 16, searchBottom: 8, searchPadX: 12, searchGap: 8,
+    entriesTop: 4, entriesX: 16, entriesBottom: 6, entriesPad: 4, entry: 50, entryPadL: 12, entryPadR: 10, entryGap: 12, entryRadius: 10,
+    entryIcon: 30, entryIconRadius: 9, entryGlyph: 16, badgePadX: 7,
+    grpTop: 14, grpX: 20, grpBottom: 6,
+    row: 60, rowPadX: 20, avatar: 40, sq: 40, sqRadius: 11, sqIcon: 19, tick: 22, tickIcon: 13, listBottom: 12, empty: 70,
+    indexRight: 2, indexWidth: 18, indexPad: 26,
+    footY: 10, footX: 12, footGap: 10,
+    stack: 44, stackPadL: 8, stackPadR: 10, stackRadius: 14, stackGap: 10, stackAvatar: 28, stackOverlap: 8, stackRing: 2, stackChev: 14,
+    submit: 44, submitMin: 104, submitPadX: 20, submitRadius: 14,
+    selTop: 8, selBottom: 12, selHeadTop: 6, selHeadX: 20, selHeadBottom: 8, selRadius: 14, selMax: 0.62,
+    pr: 56, prPadL: 20, prPadR: 12, prGap: 12, rm: 40, rmIcon: 16,
+  },
+  /** 旧版确认转发：收件人头像行、转发方式单选、合并预览块、消息预览、选项、留言框 */
+  forward: {
+    width: 420, headerBottom: 14, padX: 24,
+    avatar: 32, avatarGap: 6, nameGap: 5, recipientsTop: 4, recipientsBottom: 16,
+    modeBottom: 12, modeGap: 4, radio: 14, radioDot: 8, radioGap: 4, radioItemGap: 8,
+    mergePad: 12, mergeRadius: 8, mergeBottom: 8, mergeTitleBottom: 8, mergeItemGap: 4, mergeCountTop: 8,
+    previewItemBottom: 16,
+    option: 22, optionGap: 6, optionLast: 16,
+    inputPadY: 9, inputPadX: 12, inputMin: 40, inputMax: 84, inputRadius: 8, inputBottom: 4,
+  },
+  msgReplyBar: 3,
+  msgReplyPad: 9,
+  msgTextMax: 0.7,
+  msgFarNarrow: 80,
   ...platformSize,
 };
 
@@ -532,12 +906,20 @@ const shadow = {
     /** 旧版下拉菜单：iView、Element 两种 */
     menu: '0px 1px 6px rgba(0,0,0,0.2)',
     menuRoomy: '0px 2px 12px rgba(0,0,0,0.1)',
+    /** 旧版弹窗卡片 */
+    modal: '0px 4px 12px rgba(0,0,0,0.15)',
+    /** 旧版选择成员：左栏选中项、浮层 */
+    uspNav: '0px 1px 2px rgba(15,20,30,0.06)',
+    uspPop: '0px 0px 0px 1px rgba(15,20,30,0.06), 0px 12px 32px -6px rgba(15,20,30,0.22)',
   },
   dark: {
     popover: '0px 8px 28px rgba(0,0,0,0.5), 0px 0px 0px 1px rgba(255,255,255,0.08)',
     float: '0px 2px 8px rgba(0,0,0,0.4), 0px 0px 0px 1px rgba(255,255,255,0.08)',
     menu: '0px 1px 6px rgba(0,0,0,0.6), 0px 0px 0px 1px rgba(255,255,255,0.08)',
     menuRoomy: '0px 2px 12px rgba(0,0,0,0.5)',
+    modal: '0px 4px 12px rgba(0,0,0,0.5), 0px 0px 0px 1px rgba(255,255,255,0.08)',
+    uspNav: '0px 1px 2px rgba(0,0,0,0.3)',
+    uspPop: '0px 0px 0px 1px rgba(255,255,255,0.08), 0px 12px 32px -6px rgba(0,0,0,0.6)',
   },
 };
 

@@ -1,59 +1,76 @@
-import { Forward } from 'lucide-react-native';
 import { Text, View } from 'react-native';
-import { StyleSheet, useUnistyles } from 'react-native-unistyles';
+import { StyleSheet } from 'react-native-unistyles';
 import { useStore } from 'zustand';
 
 import { useT } from '../../../i18n';
-import { Icon } from '../../../ui/Icon';
 import { Touchable } from '../../../ui/Touchable';
+import { SELECTION_MAX } from './selection';
 import type { SelectionBarProps } from './selectionBarTypes';
 
-/** Web 多选栏（保持原样）：取消 · 已选 n 项 · 转发 */
+/**
+ * Web 多选操作条（旧版 .dialog-multi-select-bar）：顶替输入区，左边「已选N条」（到上限加红字提示），
+ * 右边「转发」「取消」两个 iView 小按钮；转发默认逐条
+ */
 export function SelectionBar({ selection, onForward }: SelectionBarProps) {
   const t = useT();
-  const { theme } = useUnistyles();
   const ids = useStore(selection.store, (s) => s.ids);
   return (
-    <View style={styles.selectBar}>
-      <Touchable accessibilityRole="button" onPress={selection.clear} style={({ pressed, hovered }) => styles.barButton(pressed, hovered)}>
-        <Text style={styles.barCancel}>{t('cancel')}</Text>
-      </Touchable>
-      <Text style={styles.barCount}>{t('messenger:selection.count', { n: ids.size })}</Text>
-      <Touchable
-        accessibilityRole="button"
-        disabled={ids.size === 0}
-        onPress={() => onForward([...ids].sort((a, b) => a - b), true)}
-        style={({ pressed, hovered }) => styles.barButton(pressed, hovered)}
-      >
-        <Icon icon={Forward} color={ids.size ? theme.colors.primaryText : theme.colors.text4} size={theme.size.icon} />
-        <Text style={styles.barForward(ids.size > 0)}>{t('messenger:action.forward')}</Text>
-      </Touchable>
+    <View testID="selection-bar" style={styles.bar}>
+      <Text style={styles.info}>
+        {t('messenger:selection.title', { n: ids.size })}
+        {ids.size >= SELECTION_MAX && <Text style={styles.max}> {t('messenger:selection.limit', { n: SELECTION_MAX })}</Text>}
+      </Text>
+      <View style={styles.actions}>
+        <IvuButton label={t('messenger:action.forward')} primary disabled={ids.size === 0} onPress={() => onForward([...ids].sort((a, b) => a - b), false)} />
+        <IvuButton label={t('cancel')} onPress={selection.clear} />
+      </View>
     </View>
   );
 }
 
-const styles = StyleSheet.create((theme) => ({
-  selectBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    minHeight: theme.size.navBar,
-    paddingHorizontal: theme.spacing.sm,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: theme.colors.separator,
-    backgroundColor: theme.colors.surface,
-  },
-  barButton: (pressed: boolean, hovered: boolean) => ({
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.spacing.xs,
-    minHeight: theme.size.touch,
-    paddingHorizontal: theme.spacing.sm,
-    borderRadius: theme.radius.block,
-    opacity: pressed ? theme.opacity.pressedIcon : 1,
-    backgroundColor: hovered ? theme.colors.hover : 'transparent',
-  }),
-  barCancel: { ...theme.typography.callout, color: theme.colors.text2 },
-  barCount: { ...theme.typography.callout, color: theme.colors.text, fontVariant: ['tabular-nums'] },
-  barForward: (enabled: boolean) => ({ ...theme.typography.callout, fontWeight: '600', color: enabled ? theme.colors.primaryText : theme.colors.text4 }),
-}));
+/** iView 小按钮（高 28、圆角 3、有描边）：主色或白底默认 */
+function IvuButton({ label, primary = false, disabled = false, onPress }: { label: string; primary?: boolean; disabled?: boolean; onPress: () => void }) {
+  return (
+    <Touchable
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      aria-disabled={disabled}
+      disabled={disabled}
+      onPress={onPress}
+      style={({ pressed, hovered }) => styles.button(primary, disabled, pressed || hovered)}
+    >
+      <Text style={styles.buttonText(primary)}>{label}</Text>
+    </Touchable>
+  );
+}
+
+const styles = StyleSheet.create((theme) => {
+  const { webSelect } = theme.size;
+  return {
+    bar: {
+      height: webSelect.bar,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: webSelect.barPadX,
+      borderTopWidth: 1,
+      borderTopColor: theme.colors.selectBarLine,
+      backgroundColor: theme.colors.selectBar,
+    },
+    info: { ...theme.typography.selectInfo, color: theme.colors.pageText },
+    // 旧版 iView 的错误红，与未读角标同色
+    max: { ...theme.typography.selectMax, color: theme.colors.badge },
+    actions: { flexDirection: 'row', gap: webSelect.buttonGap },
+    button: (primary: boolean, disabled: boolean, active: boolean) => ({
+      height: webSelect.button,
+      paddingHorizontal: webSelect.buttonPadX,
+      justifyContent: 'center',
+      borderWidth: 1,
+      borderRadius: theme.radius.tag,
+      borderColor: primary ? theme.colors.ivuPrimary : active ? theme.colors.ivuPrimary : theme.colors.ivuBorder,
+      backgroundColor: primary ? theme.colors.ivuPrimary : theme.colors.surface,
+      opacity: disabled ? theme.opacity.disabled : primary && active ? theme.opacity.pressedPrimary : 1,
+    }),
+    buttonText: (primary: boolean) => ({ ...theme.typography.ivuButton, color: primary ? theme.colors.onPrimary : theme.colors.regularText }),
+  };
+});

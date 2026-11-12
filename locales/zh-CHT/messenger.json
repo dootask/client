@@ -117,7 +117,6 @@
     "album": "相簿",
     "capture": "拍攝",
     "file": "文件",
-    "media": "圖片和影片",
     "cameraDenied": "未開啟相機權限",
     "fileTooLarge": "檔案({{name}})太大，不能超過：({{size}})",
     "original": "原圖",
@@ -132,7 +131,14 @@
     "searchSticker": "搜索表情",
     "noSticker": "沒有搜尋到任何表情",
     "muted": "禁言發言",
-    "disabled": "此帳號已停用"
+    "disabled": "此帳號已停用",
+    "selectMember": "選擇成員",
+    "selectTask": "選擇任務",
+    "more": "展開",
+    "sendImage": "發送圖片",
+    "uploadFile": "上傳文件",
+    "fullInput": "全屏輸入",
+    "longPressRecord": "長按錄音"
   },
   "system": {
     "tagAdd": "標註了",
@@ -155,6 +161,7 @@
     "unpin": "取消置頂",
     "selectMany": "多選",
     "selectText": "選擇文字",
+    "selectCopy": "選擇複製",
     "tag": "標註",
     "untag": "取消標註",
     "todoCancel": "取消待辦",
@@ -163,7 +170,6 @@
     "todoSet": "設待辦",
     "translate": "翻譯",
     "voice2text": "轉文字",
-    "more": "更多",
     "translating": "翻譯中",
     "voice2texting": "轉文字中"
   },
@@ -171,9 +177,11 @@
     "message": "留言",
     "hideSource": "不顯示原發送者信息",
     "merge": "合併轉發",
-    "max": "最多選擇{{n}}個會話",
     "done": "轉發成功",
-    "confirmTitle": "確認轉發"
+    "confirmTitle": "確認轉發",
+    "oneByOne": "逐條轉發",
+    "records": "聊天記錄",
+    "total": "共{{n}}則訊息"
   },
   "todos": {
     "setTitle": "設置待辦",
@@ -193,7 +201,9 @@
     "cancelRemind": "取消提醒",
     "removeConfirm": "確定取消該成員的待辦嗎？",
     "mine": "我有{{n}}條未完成",
-    "go": "去完成"
+    "go": "去完成",
+    "viewTitle": "待辦消息",
+    "backToOriginal": "回到原文"
   },
   "translate": {
     "pickLanguage": "選擇語言",
@@ -201,7 +211,8 @@
   },
   "top": {
     "unpinConfirm": "你確定取消置頂嗎？",
-    "by": "由{{name}}置頂"
+    "by": "由{{name}}置頂",
+    "pinner": "置頂人員"
   },
   "favorite": {
     "remark": "備註"
@@ -213,8 +224,8 @@
   },
   "selection": {
     "max": "最多選擇{{n}}則訊息",
-    "count": "已選{{n}}項",
-    "title": "已選{{n}}條"
+    "title": "已選{{n}}條",
+    "limit": "(最多{{n}}條)"
   },
   "mention": {
     "everyone": "所有人",
@@ -352,6 +363,15 @@
     "clear": "清空",
     "notFound": "沒有找到「{{key}}」",
     "overMax": "已超過最大選擇數量",
-    "noDepartment": "默認部門"
+    "noDepartment": "默認部門",
+    "move": "移動",
+    "choose": "選擇",
+    "removeLast": "移除最後一位",
+    "selectedHint": "勾選的成員會出現在這裡",
+    "remove": "移除",
+    "noResult": "暫無結果",
+    "searchResults": "搜索結果",
+    "items": "{{n}} 項",
+    "selectedIn": "已選{{n}}"
   }
 }

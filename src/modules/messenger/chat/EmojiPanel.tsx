@@ -1,5 +1,5 @@
 import { Image } from 'expo-image';
-import { Car, Delete, Flag, Lightbulb, PawPrint, Search, Shapes, Smile, Trophy, UtensilsCrossed, type LucideIcon } from 'lucide-react-native';
+import { Delete, Search, Smile } from 'lucide-react-native';
 import { useState } from 'react';
 import { FlatList, ScrollView, Text, View } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
@@ -9,12 +9,10 @@ import { emojiGroups, emoticonPacks, type EmojiCategory, type Emoticon, type Emo
 import { KeepFocus } from '../../../ui/chat';
 import { Icon } from '../../../ui/Icon';
 import { Touchable } from '../../../ui/Touchable';
+import { CATEGORY_ICONS } from './emoji';
+import { StickerGrid } from './StickerGrid';
 
 const EMOJI_COLUMNS = 8;
-const STICKER_COLUMNS = 4;
-const CATEGORY_ICONS: Record<EmojiCategory, LucideIcon> = {
-  p: Smile, n: PawPrint, d: UtensilsCrossed, s: Shapes, a: Trophy, t: Car, o: Lightbulb, f: Flag,
-};
 
 // expo-image 不是 unistyles 接管的组件，Web 上收不到 StyleSheet 生成的样式，尺寸直接传
 
@@ -96,26 +94,6 @@ export function EmojiPanel({ origin, onInsert, onDelete, onSend, onSearch }: {
   );
 }
 
-/** 表情包、贴纸的网格：每行 4 个，按所在区域的宽度均分 */
-export function StickerGrid({ items, onPick }: { items: readonly Emoticon[]; onPick: (item: Emoticon) => void }) {
-  return (
-    <FlatList
-      data={items}
-      numColumns={STICKER_COLUMNS}
-      keyExtractor={(item, index) => `${index}${item.src}`}
-      keyboardShouldPersistTaps="always"
-      contentContainerStyle={styles.stickers}
-      renderItem={({ item }) => (
-        <Touchable accessibilityRole="button" accessibilityLabel={item.name} onPress={() => onPick(item)} style={({ pressed, hovered }) => styles.sticker(pressed, hovered)}>
-          <View style={styles.stickerImage}>
-            <Image source={item.src} recyclingKey={item.src} style={StyleSheet.absoluteFill} contentFit="contain" cachePolicy="memory-disk" />
-          </View>
-        </Touchable>
-      )}
-    />
-  );
-}
-
 const styles = StyleSheet.create((theme) => ({
   root: { flex: 1 },
   categories: {
@@ -169,13 +147,4 @@ const styles = StyleSheet.create((theme) => ({
     justifyContent: 'center',
     backgroundColor: active ? theme.colors.fill : hovered ? theme.colors.hover : undefined,
   }),
-  stickers: { padding: theme.spacing.sm },
-  sticker: (pressed: boolean, hovered: boolean) => ({
-    width: `${100 / STICKER_COLUMNS}%`,
-    aspectRatio: 1,
-    padding: theme.spacing.xs,
-    borderRadius: theme.radius.block,
-    backgroundColor: pressed ? theme.colors.fillPressed : hovered ? theme.colors.hover : undefined,
-  }),
-  stickerImage: { flex: 1 },
 }));

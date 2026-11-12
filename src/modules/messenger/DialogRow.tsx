@@ -13,6 +13,7 @@ import { Badge } from '../../ui/Badge';
 import { Icon } from '../../ui/Icon';
 import { Menu } from '../../ui/popover';
 import { useBreakpoint } from '../../ui/theme';
+import { Tag } from '../../ui/Tag';
 import { Touchable } from '../../ui/Touchable';
 import { thinLine } from '../../ui/thinLine';
 import { useSession } from '../session';
@@ -21,6 +22,7 @@ import { useDialogMenu } from './dialogMenu';
 import { useToday } from './clock';
 import { useDialog, useMessengerState, useUser } from './hooks';
 import { listTimeText } from './listModel';
+import { OnlineAvatar } from './OnlineAvatar';
 import { PreviewText } from './PreviewText';
 
 /** 会话行能显示的数据：本地会话和搜索结果（联系人的 id 是 `u:<userid>`）共用 */
@@ -75,7 +77,7 @@ export function DialogRowBody({ d, draft, active = false, searching = false, ope
               <Icon icon={Bot} color={theme.colors.primary} size={theme.typography.body.fontSize} />
             </View>
           )}
-          {tagged && info?.deleted_at ? <Tag text={t('messenger:tag.deleted')} danger /> : tagged && info?.archived_at ? <Tag text={t('messenger:tag.archived')} /> : null}
+          {tagged && info?.deleted_at ? <Tag text={t('messenger:tag.deleted')} danger style={styles.tag} /> : tagged && info?.archived_at ? <Tag text={t('messenger:tag.archived')} style={styles.tag} /> : null}
           <Text style={styles.name} numberOfLines={1}>
             {d.name}
           </Text>
@@ -121,22 +123,6 @@ export function RowAvatar({ d, size, withOnline = false }: { d: RowData; size: A
   const userid = d.dialog_user.userid;
   const avatar = { uri: d.userimg, userid, name: d.name ?? '', bot: !!d.bot, size };
   return withOnline ? <OnlineAvatar {...avatar} /> : <UserAvatar {...avatar} />;
-}
-
-function OnlineAvatar(props: { uri?: string | null; userid: number; name: string; bot: boolean; size: AvatarSize }) {
-  const selfId = useSession((s) => s.user?.userid ?? 0);
-  const online = useUser(props.userid)?.online;
-  return <UserAvatar {...props} online={props.bot || props.userid === selfId || !!online} />;
-}
-
-function Tag({ text, danger = false }: { text: string; danger?: boolean }) {
-  return (
-    <View style={styles.tag(danger)}>
-      <Text style={styles.tagText(danger)} numberOfLines={1}>
-        {text}
-      </Text>
-    </View>
-  );
 }
 
 /** 列表时间同旧版：今天 HH:mm、昨天 HH:mm、今年 MM-DD、跨年 YYYY-MM-DD */
@@ -305,20 +291,7 @@ const styles = StyleSheet.create((theme) => ({
   after: {
     marginLeft: theme.spacing.sm,
   },
-  tag: (danger: boolean) => ({
-    height: theme.size.tag,
-    justifyContent: 'center',
-    paddingHorizontal: theme.size.tagPadding,
-    marginRight: theme.spacing.xs,
-    borderRadius: theme.radius.tag,
-    borderWidth: 1,
-    borderColor: danger ? theme.colors.tagRedLine : theme.colors.menuDivider,
-    backgroundColor: danger ? theme.colors.tagRedFill : theme.colors.searchFill,
-  }),
-  tagText: (danger: boolean) => ({
-    ...theme.typography.caption,
-    color: danger ? theme.colors.tagRedText : theme.colors.tagText,
-  }),
+  tag: { marginRight: theme.spacing.xs },
   time: {
     ...theme.typography.caption,
     marginLeft: theme.spacing.sm,

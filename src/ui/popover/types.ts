@@ -65,6 +65,10 @@ export interface PopoverProps {
   align?: Align;
   accessibilityLabel?: string;
   style?: StyleProp<ViewStyle> | ((state: TouchState) => StyleProp<ViewStyle>);
+  /** 与触发元素的间距，默认 spacing.xs */
+  gap?: number;
+  /** 盖在默认气泡样式上（圆角、阴影、内边距照旧版各处的浮层） */
+  panelStyle?: StyleProp<ViewStyle>;
   children: ReactNode | ((state: TouchState) => ReactNode);
 }
 

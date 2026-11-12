@@ -117,7 +117,6 @@
     "album": "Photos",
     "capture": "Appareil photo",
     "file": "Fichier",
-    "media": "Photos et vidéos",
     "cameraDenied": "L'accès à l'appareil photo n'est pas autorisé",
     "fileTooLarge": "Le fichier ({{name}}) est trop gros, il ne peut pas dépasser: ({{size}})",
     "original": "Original",
@@ -132,7 +131,14 @@
     "searchSticker": "Rechercher des émojis",
     "noSticker": "Aucun autocollant trouvé",
     "muted": "Parole interdite",
-    "disabled": "Ce compte a été désactivé"
+    "disabled": "Ce compte a été désactivé",
+    "selectMember": "Sélectionner un membre",
+    "selectTask": "Sélectionner la tâche",
+    "more": "Développer",
+    "sendImage": "Envoyer une image",
+    "uploadFile": "Télécharger le fichier",
+    "fullInput": "Saisie en plein écran",
+    "longPressRecord": "Appui long pour enregistrer"
   },
   "system": {
     "tagAdd": "Marqué",
@@ -155,6 +161,7 @@
     "unpin": "Désépingler",
     "selectMany": "Sélection multiple",
     "selectText": "Sélectionner le texte",
+    "selectCopy": "Sélectionner et copier",
     "tag": "Marquer",
     "untag": "Retirer la marque",
     "todoCancel": "Annuler la tâche",
@@ -163,7 +170,6 @@
     "todoSet": "Définir une tâche",
     "translate": "Traduire",
     "voice2text": "Convertir en texte",
-    "more": "Plus",
     "translating": "Traduction en cours",
     "voice2texting": "Conversion en texte"
   },
@@ -171,9 +177,11 @@
     "message": "Message",
     "hideSource": "Ne pas afficher les informations de l'expéditeur d'origine",
     "merge": "Transférer en message groupé",
-    "max": "Sélectionnez jusqu'à {{n}} conversations",
     "done": "Transfert réussi",
-    "confirmTitle": "Confirmer le transfert"
+    "confirmTitle": "Confirmer le transfert",
+    "oneByOne": "Transférer individuellement",
+    "records": "Historique de chat",
+    "total": "Total : {{n}} messages"
   },
   "todos": {
     "setTitle": "Définir une tâche",
@@ -193,7 +201,9 @@
     "cancelRemind": "Annuler le rappel",
     "removeConfirm": "Supprimer la tâche de ce membre ?",
     "mine": "{{n}} tâches à terminer",
-    "go": "Terminer"
+    "go": "Terminer",
+    "viewTitle": "Messages à faire",
+    "backToOriginal": "Retour à l'original"
   },
   "translate": {
     "pickLanguage": "Sélectionner la langue",
@@ -201,7 +211,8 @@
   },
   "top": {
     "unpinConfirm": "Êtes-vous sûr de vouloir détacher ?",
-    "by": "Épinglé par {{name}}"
+    "by": "Épinglé par {{name}}",
+    "pinner": "Personnel épinglé"
   },
   "favorite": {
     "remark": "Remarques"
@@ -213,8 +224,8 @@
   },
   "selection": {
     "max": "Sélectionnez jusqu’à {{n}} messages",
-    "count": "{{n}} sélectionné(s)",
-    "title": "({{n}}) sélectionné(s)"
+    "title": "({{n}}) sélectionné(s)",
+    "limit": "(max {{n}})"
   },
   "mention": {
     "everyone": "Tout le monde",
@@ -352,6 +363,15 @@
     "clear": "Effacer",
     "notFound": "Aucun résultat pour « {{key}} »",
     "overMax": "Limite maximale de sélection dépassée",
-    "noDepartment": "Département par défaut"
+    "noDepartment": "Département par défaut",
+    "move": "Déplacer",
+    "choose": "Sélectionner",
+    "removeLast": "Retirer le dernier",
+    "selectedHint": "Les membres sélectionnés apparaîtront ici",
+    "remove": "Retirer",
+    "noResult": "Pas encore de résultats",
+    "searchResults": "Résultats de recherche",
+    "items": "{{n}} éléments",
+    "selectedIn": "{{n}} sélectionné(s)"
   }
 }

@@ -1,6 +1,6 @@
 import * as Clipboard from 'expo-clipboard';
 import {
-  Captions, Copy, Flag, FlagOff, Forward, Languages, ListChecks, ListTodo, ListX, MessagesSquare, Pencil, Pin, PinOff, Reply, RotateCw, SmilePlus, Star, StarOff,
+  Captions, Copy, Flag, FlagOff, Forward, Languages, ListChecks, ListTodo, ListX, MessagesSquare, Pencil, Pin, PinOff, Reply, RotateCw, Star, StarOff,
   TextSelect, Trash2, Undo2, X,
 } from 'lucide-react-native';
 import { useLayoutEffect, useMemo, useRef } from 'react';
@@ -13,7 +13,6 @@ import { confirmOnApp, type MenuAction, type MenuEntry } from '../../../ui/popov
 import { showToast } from '../../../ui/Toast';
 import { useErrorText } from '../../session';
 import { useMessenger, useMsgActions } from '../hooks';
-import { REACTIONS } from './emoji';
 import { menuTraits } from './menuTraits';
 import { msgExtra } from './msgExtra';
 import { translateLanguage } from './translateLanguage';
@@ -46,9 +45,14 @@ export interface MenuHandlers {
   onFullChat?: (msg: Msg) => void;
 }
 
+/** 消息菜单的各项，排列和分组按平台（menuTraits.layout） */
+export type MenuKey =
+  | 'fullChat' | 'reply' | 'forward' | 'copy' | 'selectText' | 'selectMany' | 'edit' | 'withdraw' | 'pin' | 'tag'
+  | 'todoDetail' | 'todoCancel' | 'todoSet' | 'favorite' | 'translate' | 'voice2text';
+
 /**
- * 消息的长按 / 右键菜单，分三组：① 回复、转发、复制等最常用的；② 处理这条消息（编辑、撤回、置顶、标注、待办、收藏）；
- * ③ 理解这条消息（翻译、转文字）。发送失败的消息：重新发送、删除；发送中的文件：取消
+ * 消息的长按 / 右键菜单：可用的项按 menuTraits.layout 排列（App 分三组，Web 照旧版一组平铺）。
+ * 发送失败的消息：重新发送、删除；发送中的文件：取消发送
  */
 export function useMessageMenus(handlers: MenuHandlers) {
   const t = useT();
@@ -78,27 +82,29 @@ export function useMessageMenus(handlers: MenuHandlers) {
       const { tag, todo } = msgExtra(msg);
 
       const { onReply, onEdit, onFullChat } = latest.current;
-      const main: MenuAction[] = [];
-      if (onFullChat) main.push({ label: t('messenger:filter.fullChat'), icon: MessagesSquare, onSelect: () => onFullChat(msg) });
-      if (onReply) main.push({ label: t('messenger:chat.reply'), icon: Reply, onSelect: () => onReply(msg) });
-      if (menuTraits.reactSubmenu) {
-        main.push({
-          label: t('messenger:chat.react'),
-          icon: SmilePlus,
-          children: REACTIONS.map((symbol) => ({ label: symbol, onSelect: () => void messenger.toggleEmoji(msg, symbol).catch(failed) })),
-        });
+      const acts: Partial<Record<MenuKey, MenuAction>> = {};
+      if (onFullChat) acts.fullChat = { label: t('messenger:filter.fullChat'), icon: MessagesSquare, onSelect: () => onFullChat(msg) };
+      if (onReply) acts.reply = { label: t('messenger:chat.reply'), icon: Reply, onSelect: () => onReply(msg) };
+      if (forwardable(msg)) {
+        acts.forward = { label: t('messenger:action.forward'), icon: Forward, onSelect: () => latest.current.onForward(msg) };
+        acts.selectMany = { label: t('messenger:action.selectMany'), icon: ListChecks, onSelect: () => latest.current.onSelectMany(msg) };
       }
-      if (forwardable(msg)) main.push({ label: t('messenger:action.forward'), icon: Forward, onSelect: () => latest.current.onForward(msg) });
       if (text) {
-        main.push({ label: t('messenger:chat.copy'), icon: Copy, onSelect: () => copy(text) });
-        if (menuTraits.selectTextPage) main.push({ label: t('messenger:action.selectText'), icon: TextSelect, onSelect: () => latest.current.onSelectText(text) });
+        acts.copy = { label: t('messenger:chat.copy'), icon: Copy, onSelect: () => copy(text) };
+        const { selectText } = menuTraits;
+        acts.selectText = selectText
+          ? { label: t('messenger:action.selectCopy'), icon: TextSelect, onSelect: selectText }
+          : { label: t('messenger:action.selectText'), icon: TextSelect, onSelect: () => latest.current.onSelectText(text) };
+        acts.translate = state.translations[msg.id]
+          ? { label: t('messenger:action.hideTranslation'), icon: Languages, onSelect: () => actions.hideTranslation(msg.id) }
+          : { label: t('messenger:action.translate'), icon: Languages, onSelect: () => void actions.translate(msg, translateLanguage.get()).catch(failed) };
       }
-      if (forwardable(msg)) main.push({ label: t('messenger:action.selectMany'), icon: ListChecks, onSelect: () => latest.current.onSelectMany(msg) });
-
-      const manage: MenuAction[] = [];
-      if (own && msg.type === 'text' && onEdit) manage.push({ label: t('messenger:chat.edit'), icon: Pencil, onSelect: () => onEdit(msg) });
+      if (body.kind === 'record' && !body.text) {
+        acts.voice2text = { label: t('messenger:action.voice2text'), icon: Captions, onSelect: () => void actions.voice2text(msg).catch(failed) };
+      }
+      if (own && msg.type === 'text' && onEdit) acts.edit = { label: t('messenger:chat.edit'), icon: Pencil, onSelect: () => onEdit(msg) };
       if (own) {
-        manage.push({
+        acts.withdraw = {
           label: t('messenger:chat.withdraw'),
           icon: Undo2,
           destructive: true,
@@ -110,41 +116,29 @@ export function useMessageMenus(handlers: MenuHandlers) {
               destructive: true,
               onConfirm: () => void messenger.withdraw(msg).catch(failed),
             }),
-        });
+        };
       }
       const topped = (state.dialogs[msg.dialog_id]?.top_msg_id ?? 0) === msg.id;
-      manage.push(
-        {
-          label: t(topped ? 'messenger:action.unpin' : 'messenger:action.pin'),
-          icon: topped ? PinOff : Pin,
-          onSelect: () => void actions.toggleTop(msg).catch(failed),
-        },
-        {
-          label: t(tag ? 'messenger:action.untag' : 'messenger:action.tag'),
-          icon: tag ? FlagOff : Flag,
-          onSelect: () => void actions.toggleTag(msg).catch(failed),
-        },
-      );
+      acts.pin = { label: t(topped ? 'messenger:action.unpin' : 'messenger:action.pin'), icon: topped ? PinOff : Pin, onSelect: () => void actions.toggleTop(msg).catch(failed) };
+      acts.tag = { label: t(tag ? 'messenger:action.untag' : 'messenger:action.tag'), icon: tag ? FlagOff : Flag, onSelect: () => void actions.toggleTag(msg).catch(failed) };
       if (todo) {
-        manage.push(
-          { label: t('messenger:action.todoDetail'), icon: ListChecks, onSelect: () => latest.current.onTodoDetail(msg) },
-          {
-            label: t('messenger:action.todoCancel'),
-            icon: ListX,
-            onSelect: () =>
-              confirmOnApp({
-                title: t('messenger:action.todoCancelConfirm'),
-                confirmLabel: t('confirm'),
-                cancelLabel: t('messenger:chat.cancel'),
-                destructive: true,
-                onConfirm: () => void actions.setTodo({ msg_id: msg.id, type: 'user', userids: [] }).then(showToast).catch(failed),
-              }),
-          },
-        );
+        acts.todoDetail = { label: t('messenger:action.todoDetail'), icon: ListChecks, onSelect: () => latest.current.onTodoDetail(msg) };
+        acts.todoCancel = {
+          label: t('messenger:action.todoCancel'),
+          icon: ListX,
+          onSelect: () =>
+            confirmOnApp({
+              title: t('messenger:action.todoCancelConfirm'),
+              confirmLabel: t('confirm'),
+              cancelLabel: t('messenger:chat.cancel'),
+              destructive: true,
+              onConfirm: () => void actions.setTodo({ msg_id: msg.id, type: 'user', userids: [] }).then(showToast).catch(failed),
+            }),
+        };
       } else {
-        manage.push({ label: t('messenger:action.todoSet'), icon: ListTodo, onSelect: () => latest.current.onSetTodo(msg) });
+        acts.todoSet = { label: t('messenger:action.todoSet'), icon: ListTodo, onSelect: () => latest.current.onSetTodo(msg) };
       }
-      manage.push({
+      acts.favorite = {
         label: t(favorited ? 'messenger:action.unfavorite' : 'messenger:action.favorite'),
         icon: favorited ? StarOff : Star,
         onSelect: () =>
@@ -153,21 +147,13 @@ export function useMessageMenus(handlers: MenuHandlers) {
             // 同旧前端：收藏后的提示里可以接着改备注
             .then((res) => showToast(res.msg, res.favorited ? { label: t('messenger:action.editRemark'), onPress: () => latest.current.onFavoriteRemark(msg.id) } : undefined))
             .catch(failed),
-      });
+      };
 
-      const extra: MenuAction[] = [];
-      if (text) {
-        extra.push(
-          state.translations[msg.id]
-            ? { label: t('messenger:action.hideTranslation'), icon: Languages, onSelect: () => actions.hideTranslation(msg.id) }
-            : { label: t('messenger:action.translate'), icon: Languages, onSelect: () => void actions.translate(msg, translateLanguage.get()).catch(failed) },
-        );
-      }
-      if (body.kind === 'record' && !body.text) {
-        extra.push({ label: t('messenger:action.voice2text'), icon: Captions, onSelect: () => void actions.voice2text(msg).catch(failed) });
-      }
-
-      return [main, manage, extra].filter((group) => group.length > 0).flatMap((group, index) => (index > 0 ? ['separator' as const, ...group] : group));
+      // 按平台的排列取出：组之间放分隔线，空组不要
+      return menuTraits.layout
+        .map((group) => group.flatMap((key) => acts[key] ?? []))
+        .filter((group) => group.length > 0)
+        .flatMap((group, index) => (index > 0 ? ['separator' as const, ...group] : group));
     };
 
     const pendingMenu = (item: OutboxItem): MenuEntry[] => {

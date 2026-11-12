@@ -1,5 +1,6 @@
 import { Check } from 'lucide-react-native';
 import { Text, View } from 'react-native';
+import Svg, { Circle, Path } from 'react-native-svg';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { Icon } from './Icon';
@@ -9,6 +10,21 @@ import { Touchable } from './Touchable';
 export function CheckMark({ checked }: { checked: boolean }) {
   const { theme } = useUnistyles();
   return <View style={styles.mark(checked)}>{checked && <Icon icon={Check} color={theme.colors.onPrimary} size={theme.size.checkMark - 8} />}</View>;
+}
+
+/**
+ * 旧版网页的圆形勾选（DooIcon Circle / CircleCheck solid）：未选是 offColor 描边圆圈，
+ * 选中是品牌色实心圆加白勾；线宽 1.75 同旧版 DooIcon
+ */
+export function CircleCheck({ checked, size, offColor }: { checked: boolean; size: number; offColor: string }) {
+  const { theme } = useUnistyles();
+  const color = checked ? theme.colors.primary : offColor;
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
+      <Circle cx={12} cy={12} r={10} stroke={color} fill={checked ? color : 'none'} />
+      {checked && <Path d="m9 12 2 2 4-4" stroke={theme.colors.onPrimary} />}
+    </Svg>
+  );
 }
 
 /** 勾选项：勾选圈加文字，整行可点（两端一致，不用平台开关） */

@@ -117,7 +117,6 @@
     "album": "Photos",
     "capture": "Camera",
     "file": "File",
-    "media": "Photos & videos",
     "cameraDenied": "Camera access is not allowed",
     "fileTooLarge": "The file ({{name}}) is too large, it cannot exceed: ({{size}})",
     "original": "Original",
@@ -132,7 +131,14 @@
     "searchSticker": "Search Emojis",
     "noSticker": "No stickers found",
     "muted": "Mute Speaking",
-    "disabled": "This account has been deactivated"
+    "disabled": "This account has been deactivated",
+    "selectMember": "Select Member",
+    "selectTask": "Select Task",
+    "more": "Expand",
+    "sendImage": "Send image",
+    "uploadFile": "Upload file",
+    "fullInput": "Fullscreen Input",
+    "longPressRecord": "Long Press to Record"
   },
   "system": {
     "tagAdd": "Marked",
@@ -155,6 +161,7 @@
     "unpin": "Unpin",
     "selectMany": "Multiple Selection",
     "selectText": "Select Text",
+    "selectCopy": "Select & Copy",
     "tag": "Mark",
     "untag": "Unmark",
     "todoCancel": "Cancel To-Do",
@@ -163,7 +170,6 @@
     "todoSet": "Set To-Do",
     "translate": "Translate",
     "voice2text": "Convert to text",
-    "more": "More",
     "translating": "Translating",
     "voice2texting": "Converting to text"
   },
@@ -171,9 +177,11 @@
     "message": "Message",
     "hideSource": "Do not display original sender information",
     "merge": "Forward as a combined message",
-    "max": "Select up to {{n}} conversations",
     "done": "Forward successful",
-    "confirmTitle": "Confirm forwarding"
+    "confirmTitle": "Confirm forwarding",
+    "oneByOne": "Forward individually",
+    "records": "Chat history",
+    "total": "Total: {{n}} messages"
   },
   "todos": {
     "setTitle": "Set To-Do",
@@ -193,7 +201,9 @@
     "cancelRemind": "Cancel reminder",
     "removeConfirm": "Remove this member's to-do?",
     "mine": "{{n}} to-dos left for me",
-    "go": "Complete"
+    "go": "Complete",
+    "viewTitle": "To-do messages",
+    "backToOriginal": "Back to original"
   },
   "translate": {
     "pickLanguage": "Select Language",
@@ -201,7 +211,8 @@
   },
   "top": {
     "unpinConfirm": "Are you sure you want to unpin?",
-    "by": "Pinned by {{name}}"
+    "by": "Pinned by {{name}}",
+    "pinner": "Pinned Personnel"
   },
   "favorite": {
     "remark": "Remarks"
@@ -213,8 +224,8 @@
   },
   "selection": {
     "max": "Select up to {{n}} messages",
-    "count": "{{n}} selected",
-    "title": "Selected: ({{n}})"
+    "title": "Selected: ({{n}})",
+    "limit": "(max {{n}})"
   },
   "mention": {
     "everyone": "Everyone",
@@ -352,6 +363,15 @@
     "clear": "Clear",
     "notFound": "No results for \"{{key}}\"",
     "overMax": "Maximum selection limit exceeded",
-    "noDepartment": "Default Department"
+    "noDepartment": "Default Department",
+    "move": "Move",
+    "choose": "Select",
+    "removeLast": "Remove last",
+    "selectedHint": "Selected members will appear here",
+    "remove": "Remove",
+    "noResult": "No results yet",
+    "searchResults": "Search results",
+    "items": "{{n}} items",
+    "selectedIn": "{{n}} selected"
   }
 }

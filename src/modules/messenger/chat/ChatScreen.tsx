@@ -31,7 +31,10 @@ import { countText, dayLabel } from './format';
 import { MessageActionMenu, type LongPressTarget } from './MessageActionMenu';
 import { MentionAccessory, type PickerKeys } from './MentionPicker';
 import { forwardable, type MenuHandlers, useMessageMenus } from './messageMenu';
-import { bubbleTones, MessageRow, MyTodosContext, RowContextValue, type RowContext } from './MessageRow';
+import { MessageRow } from './MessageRow';
+import { bubbleTones } from './bubbleTones';
+import { MyTodosContext, RowContextValue, type RowContext } from './rowParts';
+import { rowTraits } from './rowTraits';
 import { MorePanel, morePanelHeight } from './MorePanel';
 import { RichHandlersContext, type RichHandlers } from './RichText';
 import { useSelectDrag } from './selectDrag';
@@ -70,7 +73,7 @@ const renderMessage = (info: MessageRenderInfo<RowData>) => <MessageRow info={in
 
 /** 聊天页上弹出的弹层（一次只开一个） */
 type SheetContent =
-  | { kind: 'forward'; msgIds: number[]; defaultMerge?: boolean }
+  | { kind: 'forward'; msgIds: number[]; multi?: boolean; defaultMerge?: boolean }
   | { kind: 'todoSet' | 'todoDetail' | 'translate'; msg: Msg }
   | { kind: 'remark' | 'readList'; msgId: number }
   | { kind: 'selectText'; text: string }
@@ -227,7 +230,7 @@ function ChatScreen({ dialogId, msgId }: { dialogId: number; msgId: number }) {
   const closeSheet = useCallback(() => setSheet((prev) => prev && { ...prev, visible: false }), []);
 
   const forwardSelection = useCallback((msgIds: number[], merge: boolean) => {
-    openSheet({ kind: 'forward', msgIds, defaultMerge: merge });
+    openSheet({ kind: 'forward', msgIds, multi: true, defaultMerge: merge });
   }, [openSheet]);
   const mergeSelection = useCallback((msgIds: number[]) => forwardSelection(msgIds, true), [forwardSelection]);
   // 同旧版：没全收藏就补齐没收藏的，全收藏了再点才是取消；成功后退多选
@@ -288,7 +291,7 @@ function ChatScreen({ dialogId, msgId }: { dialogId: number; msgId: number }) {
   const rowContext = useMemo<RowContext>(() => ({
     group: dialog?.type === 'group',
     body: { userId, origin },
-    tones: bubbleTones(theme.colors),
+    tones: bubbleTones(theme),
     newFrom: opening.unreadOne,
     menu,
     pendingMenu,
@@ -325,7 +328,7 @@ function ChatScreen({ dialogId, msgId }: { dialogId: number; msgId: number }) {
           messenger?.forgetWithdrawn(item.id);
         }
       : undefined,
-  }), [canSend, dialog?.type, userId, origin, theme.colors, opening.unreadOne, menu, pendingMenu, uploadMenu, messenger, actions, onReact, jumpTo, onReply, openSheet, selection, selectDrag, onSelectLimit]);
+  }), [canSend, dialog?.type, userId, origin, theme, opening.unreadOne, menu, pendingMenu, uploadMenu, messenger, actions, onReact, jumpTo, onReply, openSheet, selection, selectDrag, onSelectLimit]);
 
   const richHandlers = useMemo<RichHandlers>(() => ({
     onPressRun: (run) => {
@@ -393,6 +396,7 @@ function ChatScreen({ dialogId, msgId }: { dialogId: number; msgId: number }) {
   // 加号面板按入口排数定高（同旧版 App）；Web 不打开加号面板
   const panelHeights = useMemo(() => ({ more: morePanelHeight(theme, extras.length) }), [theme, extras.length]);
 
+  const onStickerSearch = useCallback(() => openSheet({ kind: 'stickerSearch' }), [openSheet]);
   const nextMention = mentions.length ? Math.min(...mentions) : 0;
   // 面板一直挂着：元素要稳定，否则页面每次重渲染（如开始、结束录音）都连带重渲染整个表情面板
   const emojiPanel = useMemo(() => (
@@ -401,9 +405,9 @@ function ChatScreen({ dialogId, msgId }: { dialogId: number; msgId: number }) {
       onInsert={(emoji) => composerRef.current?.insert(emoji)}
       onDelete={() => composerRef.current?.backspace()}
       onSend={(item) => composerRef.current?.sendEmoticon(item, false)}
-      onSearch={() => openSheet({ kind: 'stickerSearch' })}
+      onSearch={onStickerSearch}
     />
-  ), [origin, openSheet]);
+  ), [origin, onStickerSearch]);
   // 传给列表的元素要稳定，每次新建会让整个消息列表跟着重渲染
   const loadingIndicator = useMemo(() => <ActivityIndicator color={theme.colors.text3} />, [theme.colors.text3]);
 
@@ -419,7 +423,7 @@ function ChatScreen({ dialogId, msgId }: { dialogId: number; msgId: number }) {
                 scrollLock={selectDrag.scrollLock}
                 currentUserId={String(userId)}
                 renderMessage={renderMessage}
-                renderDay={renderDay}
+                renderDay={rowTraits.dayLabels ? renderDay : undefined}
                 header={<ChatTopBar dialogId={dialogId} dialog={dialog} selection={selection} onJump={onJump} />}
                 composer={
                   <BottomBar selection={selection} onForward={forwardSelection} onMerge={mergeSelection} onFavorite={favoriteSelection}>
@@ -428,7 +432,7 @@ function ChatScreen({ dialogId, msgId }: { dialogId: number; msgId: number }) {
                     ) : (
                       <>
                         {dialog && !mode && <QuickMsgBar dialog={dialog} onSent={onSent} />}
-                        <Composer ref={composerRef} dialogId={dialogId} store={compose} pickerKeysRef={pickerKeysRef} mentionSession={mentionSession} mode={mode} onModeEnd={onModeEnd} onEditLast={onEditLast} onSent={onSent} attach={attach} extras={extras} voice={CAN_RECORD ? voice : null} />
+                        <Composer ref={composerRef} dialogId={dialogId} store={compose} pickerKeysRef={pickerKeysRef} mentionSession={mentionSession} mode={mode} onModeEnd={onModeEnd} onEditLast={onEditLast} onSent={onSent} onStickerSearch={onStickerSearch} attach={attach} extras={extras} voice={CAN_RECORD ? voice : null} />
                       </>
                     )}
                   </BottomBar>
@@ -510,7 +514,7 @@ function ChatSheet({ dialogId, content, visible, onClose, onForwarded, onSent, o
   const common = { visible, onClose };
   switch (content.kind) {
     case 'forward':
-      return <ForwardSheet {...common} msgIds={content.msgIds} defaultMerge={content.defaultMerge} onSent={onForwarded} />;
+      return <ForwardSheet {...common} dialogId={dialogId} msgIds={content.msgIds} multi={content.multi} defaultMerge={content.defaultMerge} onSent={onForwarded} />;
     case 'todoSet':
       return <TodoSetSheet {...common} msg={content.msg} />;
     case 'todoDetail':
@@ -537,7 +541,7 @@ function ChatSheet({ dialogId, content, visible, onClose, onForwarded, onSent, o
 }
 
 /**
- * 输入栏位置：多选时换成多选栏（App 是图标按钮，Web 保持原样）。输入栏只是藏起来，草稿、回复状态都还在。
+ * 输入栏位置：多选时换成多选栏（App 是图标按钮，Web 是旧版网页的操作条）。输入栏只是藏起来，草稿、回复状态都还在。
  * 多选时系统返回键先退出多选
  */
 function BottomBar({ selection, onForward, onMerge, onFavorite, children }: {
@@ -612,7 +616,7 @@ function MentionJump({ count, onPress }: { count: number; onPress: () => void })
 }
 
 const styles = StyleSheet.create((theme) => ({
-  root: { flex: 1, backgroundColor: theme.colors.bg },
+  root: { flex: 1, backgroundColor: theme.colors[rowTraits.listBg] },
   day: {
     ...theme.typography.caption,
     color: theme.colors.text3,
