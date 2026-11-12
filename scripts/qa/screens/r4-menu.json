@@ -1,0 +1,1078 @@
+{
+  "screens": [
+    {
+      "name": "wide-5805-menu-other",
+      "viewport": [
+        1280,
+        860
+      ],
+      "old": {
+        "path": "/manage/messenger",
+        "state": "state-old-admin.json",
+        "steps": [
+          {
+            "click": "li[data-id=\"5805\"]"
+          },
+          {
+            "waitFor": ".dialog-item"
+          },
+          {
+            "wait": 1500
+          },
+          {
+            "rightClick": ".dialog-item:not(.self) >> nth=-1 >> .dialog-content"
+          },
+          {
+            "waitFor": ".dialog-wrapper-operate"
+          },
+          {
+            "wait": 800
+          }
+        ]
+      },
+      "new": {
+        "path": "/messenger/5805",
+        "state": "state-admin.json",
+        "steps": [
+          {
+            "waitFor": "[data-testid=msg-row]"
+          },
+          {
+            "wait": 800
+          },
+          {
+            "rightClick": "[data-testid=msg-row] >> nth=-1 >> [data-testid=msg-content]"
+          },
+          {
+            "waitFor": "[data-testid=msg-menu]"
+          },
+          {
+            "wait": 800
+          }
+        ]
+      },
+      "clip": {
+        "old": ".dialog-msgs",
+        "new": "[data-testid=msg-list]"
+      },
+      "elements": [
+        {
+          "name": "菜单面板",
+          "old": ".dialog-wrapper-operate",
+          "new": "[data-testid=msg-menu] >> xpath=..",
+          "props": [
+            "background-color",
+            "border-radius",
+            "padding",
+            "box-shadow"
+          ],
+          "ignore": [
+            "left",
+            "top"
+          ]
+        },
+        {
+          "name": "操作区",
+          "old": ".operate-action",
+          "new": "[data-testid=msg-menu] > div:first-child",
+          "props": [
+            "padding"
+          ],
+          "ignore": [
+            "width",
+            "height",
+            "left",
+            "top"
+          ]
+        },
+        {
+          "name": "菜单项1",
+          "old": ".operate-action > li >> nth=0",
+          "new": "[data-testid=msg-menu] > div:first-child > div >> nth=0",
+          "props": [],
+          "text": true,
+          "ignore": [
+            "left",
+            "top"
+          ]
+        },
+        {
+          "name": "菜单项1图标",
+          "old": ".operate-action > li >> nth=0 >> i",
+          "new": "[data-testid=msg-menu] > div:first-child > div >> nth=0 >> svg",
+          "props": [],
+          "ignore": [
+            "left",
+            "top"
+          ]
+        },
+        {
+          "name": "菜单项1文字",
+          "old": ".operate-action > li >> nth=0 >> span",
+          "new": "[data-testid=msg-menu] > div:first-child > div >> nth=0 >> div",
+          "props": [
+            "font-size",
+            "font-weight",
+            "line-height",
+            "color"
+          ],
+          "text": true,
+          "ignore": [
+            "width",
+            "height",
+            "left",
+            "top"
+          ]
+        },
+        {
+          "name": "菜单项2",
+          "old": ".operate-action > li >> nth=1",
+          "new": "[data-testid=msg-menu] > div:first-child > div >> nth=1",
+          "props": [],
+          "text": true,
+          "ignore": [
+            "left",
+            "top"
+          ]
+        },
+        {
+          "name": "菜单项4(选择复制)",
+          "old": ".operate-action > li >> nth=3",
+          "new": "[data-testid=msg-menu] > div:first-child > div >> nth=3",
+          "props": [],
+          "text": true,
+          "ignore": [
+            "left",
+            "top"
+          ]
+        },
+        {
+          "name": "菜单项8",
+          "old": ".operate-action > li >> nth=7",
+          "new": "[data-testid=msg-menu] > div:first-child > div >> nth=7",
+          "props": [],
+          "text": true,
+          "ignore": [
+            "left",
+            "top"
+          ]
+        },
+        {
+          "name": "菜单最后项",
+          "old": ".operate-action > li >> nth=-1",
+          "new": "[data-testid=msg-menu] > div:first-child > div >> nth=-1",
+          "props": [],
+          "text": true,
+          "ignore": [
+            "left",
+            "top"
+          ]
+        },
+        {
+          "name": "表情行",
+          "old": ".operate-emoji",
+          "new": "[data-testid=msg-menu-emoji]",
+          "props": [
+            "background-color",
+            "border-radius"
+          ],
+          "ignore": [
+            "left",
+            "top",
+            "padding"
+          ]
+        },
+        {
+          "name": "表情行内层",
+          "old": ".operate-emoji",
+          "new": "[data-testid=msg-menu-emoji] > div > div",
+          "props": [
+            "padding"
+          ],
+          "ignore": [
+            "width",
+            "left",
+            "top"
+          ]
+        },
+        {
+          "name": "表情行内容",
+          "old": ".operate-emoji",
+          "new": "[data-testid=msg-menu-emoji]",
+          "props": [],
+          "text": true,
+          "ignore": [
+            "width",
+            "height",
+            "left",
+            "top"
+          ]
+        },
+        {
+          "name": "表情项1",
+          "old": ".operate-emoji > li.no-dark-content >> nth=0",
+          "new": "[data-testid=msg-menu-emoji] button >> nth=0",
+          "props": [],
+          "ignore": [
+            "left",
+            "top"
+          ]
+        },
+        {
+          "name": "表情项1字号",
+          "old": ".operate-emoji > li.no-dark-content >> nth=0",
+          "new": "[data-testid=msg-menu-emoji] button >> nth=0 >> div",
+          "props": [
+            "font-size",
+            "line-height",
+            "color"
+          ],
+          "text": true,
+          "ignore": [
+            "width",
+            "height",
+            "left",
+            "top"
+          ]
+        },
+        {
+          "name": "表情项9",
+          "old": ".operate-emoji > li.no-dark-content >> nth=8",
+          "new": "[data-testid=msg-menu-emoji] button >> nth=8",
+          "props": [],
+          "text": true,
+          "ignore": [
+            "left",
+            "top"
+          ]
+        },
+        {
+          "name": "更多按钮",
+          "old": ".operate-emoji .more-emoji",
+          "new": "[data-testid=msg-menu-emoji] button:has(svg)",
+          "props": [],
+          "ignore": [
+            "left",
+            "top"
+          ]
+        },
+        {
+          "name": "更多图标",
+          "old": ".more-emoji i",
+          "new": "[data-testid=msg-menu-emoji] button:has(svg) svg",
+          "props": [],
+          "ignore": [
+            "left",
+            "top"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "wide-5805-menu-self",
+      "viewport": [
+        1280,
+        860
+      ],
+      "old": {
+        "path": "/manage/messenger",
+        "state": "state-old-admin.json",
+        "steps": [
+          {
+            "click": "li[data-id=\"5805\"]"
+          },
+          {
+            "waitFor": ".dialog-item"
+          },
+          {
+            "wait": 1500
+          },
+          {
+            "rightClick": ".dialog-item.self >> nth=-1 >> .dialog-content"
+          },
+          {
+            "waitFor": ".dialog-wrapper-operate"
+          },
+          {
+            "wait": 800
+          }
+        ]
+      },
+      "new": {
+        "path": "/messenger/5805",
+        "state": "state-admin.json",
+        "steps": [
+          {
+            "waitFor": "[data-testid=msg-row]"
+          },
+          {
+            "wait": 800
+          },
+          {
+            "rightClick": "[data-testid=msg-row-own] >> nth=-1 >> [data-testid=msg-content]"
+          },
+          {
+            "waitFor": "[data-testid=msg-menu]"
+          },
+          {
+            "wait": 800
+          }
+        ]
+      },
+      "clip": {
+        "old": ".dialog-msgs",
+        "new": "[data-testid=msg-list]"
+      },
+      "elements": [
+        {
+          "name": "菜单面板",
+          "old": ".dialog-wrapper-operate",
+          "new": "[data-testid=msg-menu] >> xpath=..",
+          "props": [
+            "background-color",
+            "border-radius",
+            "padding",
+            "box-shadow"
+          ],
+          "ignore": [
+            "left",
+            "top"
+          ]
+        },
+        {
+          "name": "操作区",
+          "old": ".operate-action",
+          "new": "[data-testid=msg-menu] > div:first-child",
+          "props": [
+            "padding"
+          ],
+          "ignore": [
+            "width",
+            "height",
+            "left",
+            "top"
+          ]
+        },
+        {
+          "name": "菜单项1",
+          "old": ".operate-action > li >> nth=0",
+          "new": "[data-testid=msg-menu] > div:first-child > div >> nth=0",
+          "props": [],
+          "text": true,
+          "ignore": [
+            "left",
+            "top"
+          ]
+        },
+        {
+          "name": "菜单项1图标",
+          "old": ".operate-action > li >> nth=0 >> i",
+          "new": "[data-testid=msg-menu] > div:first-child > div >> nth=0 >> svg",
+          "props": [],
+          "ignore": [
+            "left",
+            "top"
+          ]
+        },
+        {
+          "name": "菜单项1文字",
+          "old": ".operate-action > li >> nth=0 >> span",
+          "new": "[data-testid=msg-menu] > div:first-child > div >> nth=0 >> div",
+          "props": [
+            "font-size",
+            "font-weight",
+            "line-height",
+            "color"
+          ],
+          "text": true,
+          "ignore": [
+            "width",
+            "height",
+            "left",
+            "top"
+          ]
+        },
+        {
+          "name": "菜单项2",
+          "old": ".operate-action > li >> nth=1",
+          "new": "[data-testid=msg-menu] > div:first-child > div >> nth=1",
+          "props": [],
+          "text": true,
+          "ignore": [
+            "left",
+            "top"
+          ]
+        },
+        {
+          "name": "菜单项4(选择复制)",
+          "old": ".operate-action > li >> nth=4",
+          "new": "[data-testid=msg-menu] > div:first-child > div >> nth=4",
+          "props": [],
+          "text": true,
+          "ignore": [
+            "left",
+            "top"
+          ]
+        },
+        {
+          "name": "菜单项8",
+          "old": ".operate-action > li >> nth=7",
+          "new": "[data-testid=msg-menu] > div:first-child > div >> nth=7",
+          "props": [],
+          "text": true,
+          "ignore": [
+            "left",
+            "top"
+          ]
+        },
+        {
+          "name": "菜单最后项",
+          "old": ".operate-action > li >> nth=-1",
+          "new": "[data-testid=msg-menu] > div:first-child > div >> nth=-1",
+          "props": [],
+          "text": true,
+          "ignore": [
+            "left",
+            "top"
+          ]
+        },
+        {
+          "name": "表情行",
+          "old": ".operate-emoji",
+          "new": "[data-testid=msg-menu-emoji]",
+          "props": [
+            "background-color",
+            "border-radius"
+          ],
+          "ignore": [
+            "left",
+            "top",
+            "padding"
+          ]
+        },
+        {
+          "name": "表情行内层",
+          "old": ".operate-emoji",
+          "new": "[data-testid=msg-menu-emoji] > div > div",
+          "props": [
+            "padding"
+          ],
+          "ignore": [
+            "width",
+            "left",
+            "top"
+          ]
+        },
+        {
+          "name": "表情行内容",
+          "old": ".operate-emoji",
+          "new": "[data-testid=msg-menu-emoji]",
+          "props": [],
+          "text": true,
+          "ignore": [
+            "width",
+            "height",
+            "left",
+            "top"
+          ]
+        },
+        {
+          "name": "表情项1",
+          "old": ".operate-emoji > li.no-dark-content >> nth=0",
+          "new": "[data-testid=msg-menu-emoji] button >> nth=0",
+          "props": [],
+          "ignore": [
+            "left",
+            "top"
+          ]
+        },
+        {
+          "name": "表情项1字号",
+          "old": ".operate-emoji > li.no-dark-content >> nth=0",
+          "new": "[data-testid=msg-menu-emoji] button >> nth=0 >> div",
+          "props": [
+            "font-size",
+            "line-height",
+            "color"
+          ],
+          "text": true,
+          "ignore": [
+            "width",
+            "height",
+            "left",
+            "top"
+          ]
+        },
+        {
+          "name": "表情项9",
+          "old": ".operate-emoji > li.no-dark-content >> nth=8",
+          "new": "[data-testid=msg-menu-emoji] button >> nth=8",
+          "props": [],
+          "text": true,
+          "ignore": [
+            "left",
+            "top"
+          ]
+        },
+        {
+          "name": "更多按钮",
+          "old": ".operate-emoji .more-emoji",
+          "new": "[data-testid=msg-menu-emoji] button:has(svg)",
+          "props": [],
+          "ignore": [
+            "left",
+            "top"
+          ]
+        },
+        {
+          "name": "更多图标",
+          "old": ".more-emoji i",
+          "new": "[data-testid=msg-menu-emoji] button:has(svg) svg",
+          "props": [],
+          "ignore": [
+            "left",
+            "top"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "narrow-5805-menu-other",
+      "viewport": [
+        390,
+        844
+      ],
+      "mobile": true,
+      "old": {
+        "path": "/manage/messenger",
+        "state": "state-old-admin.json",
+        "steps": [
+          {
+            "click": "li[data-id=\"5805\"]"
+          },
+          {
+            "waitFor": ".dialog-item"
+          },
+          {
+            "wait": 1500
+          },
+          {
+            "rightClick": ".dialog-item:not(.self) >> nth=-1 >> .dialog-content"
+          },
+          {
+            "waitFor": ".dialog-wrapper-operate"
+          },
+          {
+            "wait": 800
+          }
+        ]
+      },
+      "new": {
+        "path": "/messenger/5805",
+        "state": "state-admin.json",
+        "steps": [
+          {
+            "waitFor": "[data-testid=msg-row]"
+          },
+          {
+            "wait": 800
+          },
+          {
+            "rightClick": "[data-testid=msg-row] >> nth=-1 >> [data-testid=msg-content]"
+          },
+          {
+            "waitFor": "[data-testid=msg-menu]"
+          },
+          {
+            "wait": 800
+          }
+        ]
+      },
+      "clip": {
+        "old": ".dialog-msgs",
+        "new": "[data-testid=msg-list]"
+      },
+      "elements": [
+        {
+          "name": "菜单面板",
+          "old": ".dialog-wrapper-operate",
+          "new": "[data-testid=msg-menu] >> xpath=..",
+          "props": [
+            "background-color",
+            "border-radius",
+            "padding",
+            "box-shadow"
+          ],
+          "ignore": [
+            "left",
+            "top"
+          ]
+        },
+        {
+          "name": "操作区",
+          "old": ".operate-action",
+          "new": "[data-testid=msg-menu] > div:first-child",
+          "props": [
+            "padding"
+          ],
+          "ignore": [
+            "width",
+            "height",
+            "left",
+            "top"
+          ]
+        },
+        {
+          "name": "菜单项1",
+          "old": ".operate-action > li >> nth=0",
+          "new": "[data-testid=msg-menu] > div:first-child > div >> nth=0",
+          "props": [],
+          "text": true,
+          "ignore": [
+            "left",
+            "top"
+          ]
+        },
+        {
+          "name": "菜单项1图标",
+          "old": ".operate-action > li >> nth=0 >> i",
+          "new": "[data-testid=msg-menu] > div:first-child > div >> nth=0 >> svg",
+          "props": [],
+          "ignore": [
+            "left",
+            "top"
+          ]
+        },
+        {
+          "name": "菜单项1文字",
+          "old": ".operate-action > li >> nth=0 >> span",
+          "new": "[data-testid=msg-menu] > div:first-child > div >> nth=0 >> div",
+          "props": [
+            "font-size",
+            "font-weight",
+            "line-height",
+            "color"
+          ],
+          "text": true,
+          "ignore": [
+            "width",
+            "height",
+            "left",
+            "top"
+          ]
+        },
+        {
+          "name": "菜单项2",
+          "old": ".operate-action > li >> nth=1",
+          "new": "[data-testid=msg-menu] > div:first-child > div >> nth=1",
+          "props": [],
+          "text": true,
+          "ignore": [
+            "left",
+            "top"
+          ]
+        },
+        {
+          "name": "菜单项4(选择复制)",
+          "old": ".operate-action > li >> nth=3",
+          "new": "[data-testid=msg-menu] > div:first-child > div >> nth=3",
+          "props": [],
+          "text": true,
+          "ignore": [
+            "left",
+            "top"
+          ]
+        },
+        {
+          "name": "菜单项8",
+          "old": ".operate-action > li >> nth=7",
+          "new": "[data-testid=msg-menu] > div:first-child > div >> nth=7",
+          "props": [],
+          "text": true,
+          "ignore": [
+            "left",
+            "top"
+          ]
+        },
+        {
+          "name": "菜单最后项",
+          "old": ".operate-action > li >> nth=-1",
+          "new": "[data-testid=msg-menu] > div:first-child > div >> nth=-1",
+          "props": [],
+          "text": true,
+          "ignore": [
+            "left",
+            "top"
+          ]
+        },
+        {
+          "name": "表情行",
+          "old": ".operate-emoji",
+          "new": "[data-testid=msg-menu-emoji]",
+          "props": [
+            "background-color",
+            "border-radius"
+          ],
+          "ignore": [
+            "left",
+            "top",
+            "padding"
+          ]
+        },
+        {
+          "name": "表情行内层",
+          "old": ".operate-emoji",
+          "new": "[data-testid=msg-menu-emoji] > div > div",
+          "props": [
+            "padding"
+          ],
+          "ignore": [
+            "width",
+            "left",
+            "top"
+          ]
+        },
+        {
+          "name": "表情行内容",
+          "old": ".operate-emoji",
+          "new": "[data-testid=msg-menu-emoji]",
+          "props": [],
+          "text": true,
+          "ignore": [
+            "width",
+            "height",
+            "left",
+            "top"
+          ]
+        },
+        {
+          "name": "表情项1",
+          "old": ".operate-emoji > li.no-dark-content >> nth=0",
+          "new": "[data-testid=msg-menu-emoji] button >> nth=0",
+          "props": [],
+          "ignore": [
+            "left",
+            "top"
+          ]
+        },
+        {
+          "name": "表情项1字号",
+          "old": ".operate-emoji > li.no-dark-content >> nth=0",
+          "new": "[data-testid=msg-menu-emoji] button >> nth=0 >> div",
+          "props": [
+            "font-size",
+            "line-height",
+            "color"
+          ],
+          "text": true,
+          "ignore": [
+            "width",
+            "height",
+            "left",
+            "top"
+          ]
+        },
+        {
+          "name": "表情项9",
+          "old": ".operate-emoji > li.no-dark-content >> nth=8",
+          "new": "[data-testid=msg-menu-emoji] button >> nth=8",
+          "props": [],
+          "text": true,
+          "ignore": [
+            "left",
+            "top"
+          ]
+        },
+        {
+          "name": "更多按钮",
+          "old": ".operate-emoji .more-emoji",
+          "new": "[data-testid=msg-menu-emoji] button:has(svg)",
+          "props": [],
+          "ignore": [
+            "left",
+            "top"
+          ]
+        },
+        {
+          "name": "更多图标",
+          "old": ".more-emoji i",
+          "new": "[data-testid=msg-menu-emoji] button:has(svg) svg",
+          "props": [],
+          "ignore": [
+            "left",
+            "top"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "narrow-5805-menu-self",
+      "viewport": [
+        390,
+        844
+      ],
+      "mobile": true,
+      "old": {
+        "path": "/manage/messenger",
+        "state": "state-old-admin.json",
+        "steps": [
+          {
+            "click": "li[data-id=\"5805\"]"
+          },
+          {
+            "waitFor": ".dialog-item"
+          },
+          {
+            "wait": 1500
+          },
+          {
+            "rightClick": ".dialog-item.self >> nth=-1 >> .dialog-content"
+          },
+          {
+            "waitFor": ".dialog-wrapper-operate"
+          },
+          {
+            "wait": 800
+          }
+        ]
+      },
+      "new": {
+        "path": "/messenger/5805",
+        "state": "state-admin.json",
+        "steps": [
+          {
+            "waitFor": "[data-testid=msg-row]"
+          },
+          {
+            "wait": 800
+          },
+          {
+            "rightClick": "[data-testid=msg-row-own] >> nth=-1 >> [data-testid=msg-content]"
+          },
+          {
+            "waitFor": "[data-testid=msg-menu]"
+          },
+          {
+            "wait": 800
+          }
+        ]
+      },
+      "clip": {
+        "old": ".dialog-msgs",
+        "new": "[data-testid=msg-list]"
+      },
+      "elements": [
+        {
+          "name": "菜单面板",
+          "old": ".dialog-wrapper-operate",
+          "new": "[data-testid=msg-menu] >> xpath=..",
+          "props": [
+            "background-color",
+            "border-radius",
+            "padding",
+            "box-shadow"
+          ],
+          "ignore": [
+            "left",
+            "top"
+          ]
+        },
+        {
+          "name": "操作区",
+          "old": ".operate-action",
+          "new": "[data-testid=msg-menu] > div:first-child",
+          "props": [
+            "padding"
+          ],
+          "ignore": [
+            "width",
+            "height",
+            "left",
+            "top"
+          ]
+        },
+        {
+          "name": "菜单项1",
+          "old": ".operate-action > li >> nth=0",
+          "new": "[data-testid=msg-menu] > div:first-child > div >> nth=0",
+          "props": [],
+          "text": true,
+          "ignore": [
+            "left",
+            "top"
+          ]
+        },
+        {
+          "name": "菜单项1图标",
+          "old": ".operate-action > li >> nth=0 >> i",
+          "new": "[data-testid=msg-menu] > div:first-child > div >> nth=0 >> svg",
+          "props": [],
+          "ignore": [
+            "left",
+            "top"
+          ]
+        },
+        {
+          "name": "菜单项1文字",
+          "old": ".operate-action > li >> nth=0 >> span",
+          "new": "[data-testid=msg-menu] > div:first-child > div >> nth=0 >> div",
+          "props": [
+            "font-size",
+            "font-weight",
+            "line-height",
+            "color"
+          ],
+          "text": true,
+          "ignore": [
+            "width",
+            "height",
+            "left",
+            "top"
+          ]
+        },
+        {
+          "name": "菜单项2",
+          "old": ".operate-action > li >> nth=1",
+          "new": "[data-testid=msg-menu] > div:first-child > div >> nth=1",
+          "props": [],
+          "text": true,
+          "ignore": [
+            "left",
+            "top"
+          ]
+        },
+        {
+          "name": "菜单项4(选择复制)",
+          "old": ".operate-action > li >> nth=4",
+          "new": "[data-testid=msg-menu] > div:first-child > div >> nth=4",
+          "props": [],
+          "text": true,
+          "ignore": [
+            "left",
+            "top"
+          ]
+        },
+        {
+          "name": "菜单项8",
+          "old": ".operate-action > li >> nth=7",
+          "new": "[data-testid=msg-menu] > div:first-child > div >> nth=7",
+          "props": [],
+          "text": true,
+          "ignore": [
+            "left",
+            "top"
+          ]
+        },
+        {
+          "name": "菜单最后项",
+          "old": ".operate-action > li >> nth=-1",
+          "new": "[data-testid=msg-menu] > div:first-child > div >> nth=-1",
+          "props": [],
+          "text": true,
+          "ignore": [
+            "left",
+            "top"
+          ]
+        },
+        {
+          "name": "表情行",
+          "old": ".operate-emoji",
+          "new": "[data-testid=msg-menu-emoji]",
+          "props": [
+            "background-color",
+            "border-radius"
+          ],
+          "ignore": [
+            "left",
+            "top",
+            "padding"
+          ]
+        },
+        {
+          "name": "表情行内层",
+          "old": ".operate-emoji",
+          "new": "[data-testid=msg-menu-emoji] > div > div",
+          "props": [
+            "padding"
+          ],
+          "ignore": [
+            "width",
+            "left",
+            "top"
+          ]
+        },
+        {
+          "name": "表情行内容",
+          "old": ".operate-emoji",
+          "new": "[data-testid=msg-menu-emoji]",
+          "props": [],
+          "text": true,
+          "ignore": [
+            "width",
+            "height",
+            "left",
+            "top"
+          ]
+        },
+        {
+          "name": "表情项1",
+          "old": ".operate-emoji > li.no-dark-content >> nth=0",
+          "new": "[data-testid=msg-menu-emoji] button >> nth=0",
+          "props": [],
+          "ignore": [
+            "left",
+            "top"
+          ]
+        },
+        {
+          "name": "表情项1字号",
+          "old": ".operate-emoji > li.no-dark-content >> nth=0",
+          "new": "[data-testid=msg-menu-emoji] button >> nth=0 >> div",
+          "props": [
+            "font-size",
+            "line-height",
+            "color"
+          ],
+          "text": true,
+          "ignore": [
+            "width",
+            "height",
+            "left",
+            "top"
+          ]
+        },
+        {
+          "name": "表情项9",
+          "old": ".operate-emoji > li.no-dark-content >> nth=8",
+          "new": "[data-testid=msg-menu-emoji] button >> nth=8",
+          "props": [],
+          "text": true,
+          "ignore": [
+            "left",
+            "top"
+          ]
+        },
+        {
+          "name": "更多按钮",
+          "old": ".operate-emoji .more-emoji",
+          "new": "[data-testid=msg-menu-emoji] button:has(svg)",
+          "props": [],
+          "ignore": [
+            "left",
+            "top"
+          ]
+        },
+        {
+          "name": "更多图标",
+          "old": ".more-emoji i",
+          "new": "[data-testid=msg-menu-emoji] button:has(svg) svg",
+          "props": [],
+          "ignore": [
+            "left",
+            "top"
+          ]
+        }
+      ]
+    }
+  ]
+}

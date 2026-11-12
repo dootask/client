@@ -1,0 +1,949 @@
+{
+  "screens": [
+    {
+      "name": "wide-5805-header",
+      "viewport": [1280, 860],
+      "old": {
+        "path": "/manage/messenger",
+        "state": "state-old-admin.json",
+        "steps": [{ "click": "li[data-id=\"5805\"]" }, { "waitFor": ".dialog-item" }, { "wait": 1500 }]
+      },
+      "new": {
+        "path": "/messenger/5805",
+        "state": "state-admin.json",
+        "steps": [{ "waitFor": "[data-testid=msg-row]" }]
+      },
+      "clip": { "old": ".dialog-nav", "new": "[data-testid=chat-header]" },
+      "elements": [
+        {
+          "name": "头部内层",
+          "old": ".nav-wrapper",
+          "new": "[data-testid=chat-header]",
+          "props": ["padding"],
+          "ignore": ["width"]
+        },
+        {
+          "name": "群头像",
+          "old": ".dialog-nav .common-dialog-avatar",
+          "new": "[data-testid=chat-header] svg >> xpath=..",
+          "props": ["background-color"],
+          "ignore": ["border-radius"]
+        },
+        {
+          "name": "群名",
+          "old": ".main-title h2",
+          "new": "[data-testid=chat-title]",
+          "props": ["font-size", "font-weight", "line-height", "color"],
+          "text": true
+        },
+        {
+          "name": "人数",
+          "old": ".main-title em",
+          "new": "[data-testid=chat-people]",
+          "props": ["font-size", "font-weight", "line-height", "color", "margin-left"],
+          "text": true,
+          "ignore": ["width"]
+        },
+        {
+          "name": "标签",
+          "old": ".ivu-tag",
+          "new": "[data-testid=chat-header] >> text=部门 >> xpath=..",
+          "props": ["background-color", "border-radius", "padding", "border-top-width", "border-top-color", "margin-left"],
+          "ignore": ["left"]
+        },
+        {
+          "name": "标签文字",
+          "old": ".ivu-tag .ivu-tag-text",
+          "new": "[data-testid=chat-header] >> text=部门",
+          "props": ["font-size", "font-weight", "color"],
+          "text": true,
+          "ignore": ["width", "height", "line-height", "left", "top"]
+        },
+        {
+          "name": "…按钮",
+          "old": ".dialog-menu-icon",
+          "new": "[data-testid=chat-header] svg:has(circle:nth-of-type(3))",
+          "props": ["color|stroke"],
+          "ignore": ["left"]
+        },
+        {
+          "name": "分类·消息",
+          "old": ".title-types li.msg",
+          "new": "[data-testid=chat-type-msg]",
+          "props": ["background-color", "border-radius", "padding"],
+          "text": true
+        },
+        {
+          "name": "分类·消息·文字",
+          "old": ".title-types li.msg span",
+          "new": "[data-testid=chat-type-msg] div[dir=auto]",
+          "props": ["font-size", "font-weight", "line-height", "color"],
+          "text": true
+        },
+        {
+          "name": "分类·待办",
+          "old": ".title-types li.todo",
+          "new": "[data-testid=chat-type-todo]",
+          "props": ["background-color", "border-radius", "padding"],
+          "text": true
+        },
+        {
+          "name": "分类·待办·文字",
+          "old": ".title-types li.todo span",
+          "new": "[data-testid=chat-type-todo] div[dir=auto] >> nth=0",
+          "props": ["font-size", "font-weight", "line-height", "color"],
+          "text": true
+        },
+        {
+          "name": "分类·标注",
+          "old": ".title-types li.tag",
+          "new": "[data-testid=chat-type-tag]",
+          "props": ["background-color", "border-radius", "padding"],
+          "text": true
+        },
+        {
+          "name": "分类·图片",
+          "old": ".title-types li.image",
+          "new": "[data-testid=chat-type-image]",
+          "props": ["background-color", "border-radius", "padding"],
+          "text": true
+        },
+        {
+          "name": "分类·文件",
+          "old": ".title-types li.file",
+          "new": "[data-testid=chat-type-file]",
+          "props": ["background-color", "border-radius", "padding"],
+          "text": true
+        },
+        {
+          "name": "分类·链接",
+          "old": ".title-types li.link",
+          "new": "[data-testid=chat-type-link]",
+          "props": ["background-color", "border-radius", "padding"],
+          "text": true
+        }
+      ]
+    },
+    {
+      "name": "wide-5805-top",
+      "viewport": [1280, 860],
+      "old": {
+        "path": "/manage/messenger",
+        "state": "state-old-admin.json",
+        "steps": [{ "click": "li[data-id=\"5805\"]" }, { "waitFor": ".dialog-top-message-warp" }, { "wait": 1200 }]
+      },
+      "new": {
+        "path": "/messenger/5805",
+        "state": "state-admin.json",
+        "steps": [{ "waitFor": "[data-testid=chat-top]" }]
+      },
+      "clip": { "old": ".dialog-top-message-warp", "new": "[data-testid=chat-top]" },
+      "elements": [
+        {
+          "name": "置顶卡",
+          "old": ".dialog-top-message-warp",
+          "new": "[data-testid=chat-top]",
+          "props": ["background-color", "border-radius", "padding", "margin", "border-top-width", "border-top-color", "box-shadow"],
+          "ignore": ["width", "left"]
+        },
+        {
+          "name": "图钉",
+          "old": ".dialog-top-message-font i",
+          "new": "[data-testid=chat-top] svg >> xpath=..",
+          "props": ["background-color", "padding"],
+          "ignore": ["border-radius"]
+        },
+        {
+          "name": "置顶文字",
+          "old": ".dialog-top-message-content .content",
+          "new": "[data-testid=chat-top] div[dir=auto] >> nth=0",
+          "props": ["font-size", "line-height", "color"],
+          "ignore": ["width", "left"]
+        },
+        {
+          "name": "置顶人行",
+          "old": ".dialog-top-message-content .personnel",
+          "new": "[data-testid=chat-top] div[dir=auto] >> nth=1",
+          "props": ["font-size", "line-height", "color"],
+          "ignore": ["width", "left"]
+        },
+        {
+          "name": "定位按钮",
+          "old": ".dialog-top-message-btn .doo-icon >> nth=0",
+          "new": "[data-testid=chat-top] svg >> nth=1 >> xpath=..",
+          "props": ["border-radius", "padding"],
+          "ignore": ["left", "top"]
+        }
+      ]
+    },
+    {
+      "name": "wide-5805-msgs",
+      "viewport": [1280, 860],
+      "old": {
+        "path": "/manage/messenger",
+        "state": "state-old-admin.json",
+        "steps": [{ "click": "li[data-id=\"5805\"]" }, { "waitFor": ".dialog-item" }, { "wait": 1500 }]
+      },
+      "new": {
+        "path": "/messenger/5805",
+        "state": "state-admin.json",
+        "steps": [{ "waitFor": "[data-testid=msg-row]" }]
+      },
+      "clip": { "old": ".dialog-msgs", "new": "[data-testid=msg-row] >> xpath=ancestor::div[5]" },
+      "elements": [
+        {
+          "name": "对方气泡",
+          "old": ".dialog-item >> nth=-6 >> .dialog-head",
+          "new": ":is([data-testid=msg-row],[data-testid=msg-row-own]) >> nth=-6 >> [data-testid=msg-content] >> xpath=..",
+          "props": ["background-color", "border-radius", "padding"],
+          "text": true,
+          "ignore": ["top"]
+        },
+        {
+          "name": "对方头像",
+          "old": ".dialog-item >> nth=-6 >> .dialog-avatar img",
+          "new": ":is([data-testid=msg-row],[data-testid=msg-row-own]) >> nth=-6 >> img >> nth=0",
+          "props": [],
+          "ignore": ["top"]
+        },
+        {
+          "name": "对方名称",
+          "old": ".dialog-item >> nth=-6 >> .dialog-username .avatar-name",
+          "new": ":is([data-testid=msg-row],[data-testid=msg-row-own]) >> nth=-6 >> [data-testid=msg-name]",
+          "props": ["font-size", "color", "opacity"],
+          "text": true,
+          "ignore": ["width", "height", "line-height", "top"]
+        },
+        {
+          "name": "对方名称外边距",
+          "old": ".dialog-item >> nth=-6 >> .dialog-username",
+          "new": ":is([data-testid=msg-row],[data-testid=msg-row-own]) >> nth=-6 >> [data-testid=msg-name]",
+          "props": ["margin-bottom"],
+          "ignore": ["width", "height", "left", "top"]
+        },
+        {
+          "name": "对方宽度限制",
+          "old": ".dialog-item >> nth=-6 >> .dialog-view",
+          "new": ":is([data-testid=msg-row],[data-testid=msg-row-own]) >> nth=-6 >> [data-testid=msg-name] >> xpath=..",
+          "props": ["max-width"],
+          "ignore": ["width", "height", "left", "top"]
+        },
+        {
+          "name": "自己气泡",
+          "old": ".dialog-item >> nth=-4 >> .dialog-head",
+          "new": ":is([data-testid=msg-row],[data-testid=msg-row-own]) >> nth=-4 >> [data-testid=msg-content] >> xpath=..",
+          "props": ["background-color", "border-radius", "padding"],
+          "text": true,
+          "ignore": ["width", "left", "top"]
+        },
+        {
+          "name": "自己气泡内层",
+          "old": ".dialog-item >> nth=-4 >> .content-text",
+          "new": ":is([data-testid=msg-row],[data-testid=msg-row-own]) >> nth=-4 >> [data-testid=msg-content]",
+          "props": ["padding"],
+          "ignore": ["width", "height", "left", "top"]
+        },
+        {
+          "name": "自己气泡正文",
+          "old": ".dialog-item >> nth=-4 >> .content-text pre p",
+          "new": ":is([data-testid=msg-row],[data-testid=msg-row-own]) >> nth=-4 >> [data-testid=msg-content] span >> nth=0",
+          "props": ["font-size", "font-weight", "line-height", "color"],
+          "text": true,
+          "ignore": ["width", "height", "left", "top"]
+        },
+        {
+          "name": "自己宽度限制",
+          "old": ".dialog-item >> nth=-4 >> .dialog-view",
+          "new": ":is([data-testid=msg-row],[data-testid=msg-row-own]) >> nth=-4 >> [data-testid=msg-name] >> xpath=..",
+          "props": ["max-width", "margin-right"],
+          "ignore": ["width", "height", "left", "top"]
+        },
+        {
+          "name": "引用块",
+          "old": ".dialog-item >> nth=-3 >> .dialog-reply",
+          "new": ":is([data-testid=msg-row],[data-testid=msg-row-own]) >> nth=-3 >> [data-testid=msg-reply]",
+          "props": ["padding", "margin-bottom"],
+          "ignore": ["width", "left", "top"]
+        },
+        {
+          "name": "引用人名",
+          "old": ".dialog-item >> nth=-3 >> .dialog-reply .reply-avatar .avatar-name",
+          "new": ":is([data-testid=msg-row],[data-testid=msg-row-own]) >> nth=-3 >> [data-testid=msg-reply] > div >> nth=1",
+          "props": ["font-size", "font-weight", "color"],
+          "text": true,
+          "ignore": ["width", "height", "line-height", "left", "top"]
+        },
+        {
+          "name": "引用正文",
+          "old": ".dialog-item >> nth=-3 >> .dialog-reply .reply-desc",
+          "new": ":is([data-testid=msg-row],[data-testid=msg-row-own]) >> nth=-3 >> [data-testid=msg-reply] > div >> nth=2",
+          "props": ["font-size", "line-height", "color"],
+          "text": true,
+          "ignore": ["width", "height", "left", "top"]
+        },
+        {
+          "name": "编辑标记",
+          "old": ".dialog-item >> nth=-2 >> .dialog-foot .modify i",
+          "new": ":is([data-testid=msg-row],[data-testid=msg-row-own]) >> nth=-2 >> [data-testid=msg-foot] svg >> nth=0",
+          "props": ["color|stroke"],
+          "ignore": ["left", "top"]
+        },
+        {
+          "name": "自己提及",
+          "old": ".dialog-item >> nth=-1 >> .content-text .mention",
+          "new": ":is([data-testid=msg-row],[data-testid=msg-row-own]) >> nth=-1 >> [data-testid=msg-content] span >> nth=1",
+          "props": ["font-size", "font-weight", "line-height", "color"],
+          "text": true,
+          "ignore": ["width", "left", "top"]
+        },
+        {
+          "name": "时间",
+          "old": ".dialog-item >> nth=-4 >> .dialog-foot .time",
+          "new": ":is([data-testid=msg-row],[data-testid=msg-row-own]) >> nth=-4 >> [data-testid=msg-time]",
+          "props": ["font-size", "line-height", "color"],
+          "text": true,
+          "ignore": ["width", "left", "top"]
+        },
+        {
+          "name": "已读圈",
+          "old": ".dialog-item >> nth=-4 >> .dialog-foot .percent .common-circle",
+          "new": ":is([data-testid=msg-row],[data-testid=msg-row-own]) >> nth=-4 >> [data-testid=msg-foot] > div:last-child",
+          "props": [],
+          "ignore": ["left", "top"]
+        },
+        {
+          "name": "回应胶囊",
+          "old": ".dialog-item >> nth=-5 >> .dialog-emoji li:has(.emoji-symbol) >> nth=0",
+          "new": ":is([data-testid=msg-row],[data-testid=msg-row-own]) >> nth=-5 >> [data-testid=msg-reaction] >> nth=0",
+          "props": ["background-color", "padding", "margin"],
+          "ignore": ["border-radius", "left", "top"]
+        },
+        {
+          "name": "回应表情",
+          "old": ".dialog-item >> nth=-5 >> .emoji-symbol",
+          "new": ":is([data-testid=msg-row],[data-testid=msg-row-own]) >> nth=-5 >> [data-testid=msg-reaction] >> nth=0 >> div[dir=auto] >> nth=0",
+          "props": ["font-size", "line-height"],
+          "text": true,
+          "ignore": ["height", "left", "top"]
+        },
+        {
+          "name": "回应人名",
+          "old": ".dialog-item >> nth=-5 >> .dialog-emoji li:has(.emoji-symbol) >> nth=0 >> .avatar-name",
+          "new": ":is([data-testid=msg-row],[data-testid=msg-row-own]) >> nth=-5 >> [data-testid=msg-reaction] >> nth=0 >> div[dir=auto] >> nth=1",
+          "props": ["font-size", "color"],
+          "text": true,
+          "ignore": ["width", "height", "line-height", "left", "top"]
+        },
+        {
+          "name": "对方引用块",
+          "old": ".dialog-item >> nth=-8 >> .dialog-reply",
+          "new": ":is([data-testid=msg-row],[data-testid=msg-row-own]) >> nth=-8 >> [data-testid=msg-reply]",
+          "props": ["padding", "margin-bottom"],
+          "ignore": ["width", "top"]
+        },
+        {
+          "name": "对方引用人名",
+          "old": ".dialog-item >> nth=-8 >> .dialog-reply .reply-avatar .avatar-name",
+          "new": ":is([data-testid=msg-row],[data-testid=msg-row-own]) >> nth=-8 >> [data-testid=msg-reply] > div >> nth=1",
+          "props": ["font-size", "font-weight", "color"],
+          "text": true,
+          "ignore": ["width", "height", "line-height", "left", "top"]
+        },
+        {
+          "name": "对方引用正文",
+          "old": ".dialog-item >> nth=-8 >> .dialog-reply .reply-desc",
+          "new": ":is([data-testid=msg-row],[data-testid=msg-row-own]) >> nth=-8 >> [data-testid=msg-reply] > div >> nth=2",
+          "props": ["font-size", "line-height", "color"],
+          "text": true,
+          "ignore": ["width", "height", "left", "top"]
+        },
+        {
+          "name": "对方提及",
+          "old": ".dialog-item >> nth=-8 >> .content-text .mention",
+          "new": ":is([data-testid=msg-row],[data-testid=msg-row-own]) >> nth=-8 >> [data-testid=msg-content] span >> nth=0",
+          "props": ["font-size", "font-weight", "line-height", "color"],
+          "ignore": ["width", "left", "top"]
+        }
+      ]
+    },
+    {
+      "name": "wide-2889-header",
+      "viewport": [1280, 860],
+      "old": {
+        "path": "/manage/messenger",
+        "state": "state-old-admin.json",
+        "steps": [{ "click": "li[data-id=\"2889\"]" }, { "waitFor": ".dialog-item" }, { "wait": 1500 }]
+      },
+      "new": {
+        "path": "/messenger/2889",
+        "state": "state-admin.json",
+        "steps": [{ "waitFor": "[data-testid=msg-row]" }]
+      },
+      "clip": { "old": ".dialog-nav", "new": "[data-testid=chat-header]" },
+      "elements": [
+        {
+          "name": "群名",
+          "old": ".main-title h2",
+          "new": "[data-testid=chat-title]",
+          "props": ["font-size", "font-weight", "line-height", "color"],
+          "text": true
+        },
+        {
+          "name": "人数",
+          "old": ".main-title em",
+          "new": "[data-testid=chat-people]",
+          "props": ["font-size", "font-weight", "line-height", "color", "margin-left"],
+          "text": true,
+          "ignore": ["width", "left"]
+        },
+        {
+          "name": "标签",
+          "old": ".ivu-tag",
+          "new": "[data-testid=chat-header] >> text=全员 >> xpath=..",
+          "props": ["background-color", "border-radius", "padding", "border-top-width", "border-top-color", "margin-left"],
+          "ignore": ["left"]
+        },
+        {
+          "name": "标签文字",
+          "old": ".ivu-tag .ivu-tag-text",
+          "new": "[data-testid=chat-header] >> text=全员",
+          "props": ["font-size", "font-weight", "color"],
+          "text": true,
+          "ignore": ["width", "height", "line-height", "left", "top"]
+        },
+        {
+          "name": "分类·待办",
+          "old": ".title-types li.todo",
+          "new": "[data-testid=chat-type-todo]",
+          "props": ["background-color", "border-radius", "padding"],
+          "text": true
+        },
+        {
+          "name": "待办徽标",
+          "old": ".title-types .type-count",
+          "new": "[data-testid=chat-type-todo] > div:last-child",
+          "props": ["background-color", "border-radius", "padding", "margin-left"],
+          "text": true
+        },
+        {
+          "name": "待办徽标文字",
+          "old": ".title-types .type-count",
+          "new": "[data-testid=chat-type-todo] > div:last-child > div",
+          "props": ["font-size", "font-weight", "color"],
+          "text": true,
+          "ignore": ["width", "height", "line-height", "left", "top"]
+        }
+      ]
+    },
+    {
+      "name": "wide-2889-msgs",
+      "viewport": [1280, 860],
+      "old": {
+        "path": "/manage/messenger",
+        "state": "state-old-admin.json",
+        "steps": [{ "click": "li[data-id=\"2889\"]" }, { "waitFor": ".dialog-item" }, { "wait": 1500 }]
+      },
+      "new": {
+        "path": "/messenger/2889",
+        "state": "state-admin.json",
+        "steps": [{ "waitFor": "[data-testid=msg-row]" }]
+      },
+      "clip": { "old": ".dialog-msgs", "new": "[data-testid=msg-row] >> xpath=ancestor::div[5]" },
+      "elements": [
+        {
+          "name": "系统条",
+          "old": ".dialog-todo >> nth=-1",
+          "new": "[data-testid=msg-system] >> nth=1",
+          "props": ["background-color", "border-radius", "padding"],
+          "ignore": ["width", "left", "top"]
+        },
+        {
+          "name": "系统文字",
+          "old": ".dialog-todo >> nth=-1 >> .no-dark-content",
+          "new": "[data-testid=msg-system] >> nth=1 >> div[dir=auto] >> nth=0",
+          "props": ["font-size", "font-weight", "line-height", "color"],
+          "ignore": ["width", "height", "left", "top"]
+        },
+        {
+          "name": "@我胶囊",
+          "old": ".dialog-item >> nth=-1 >> .content-text .mention.me",
+          "new": ":is([data-testid=msg-row],[data-testid=msg-row-own]) >> nth=-1 >> [data-testid=msg-content] span >> nth=0",
+          "props": ["font-size", "font-weight", "line-height", "color", "background-color", "border-radius", "padding"],
+          "text": true,
+          "ignore": ["left", "top"]
+        },
+        {
+          "name": "回应胶囊·别人点过",
+          "old": ".dialog-item >> nth=-2 >> .dialog-emoji li:has(.emoji-symbol) >> nth=0",
+          "new": ":is([data-testid=msg-row],[data-testid=msg-row-own]) >> nth=-2 >> [data-testid=msg-reaction] >> nth=0",
+          "props": ["background-color", "padding", "margin"],
+          "text": true,
+          "ignore": ["border-radius", "width", "left", "top"]
+        },
+        {
+          "name": "回应胶囊·自己点过",
+          "old": ".dialog-item >> nth=-2 >> .dialog-emoji li:has(.emoji-symbol) >> nth=1",
+          "new": ":is([data-testid=msg-row],[data-testid=msg-row-own]) >> nth=-2 >> [data-testid=msg-reaction] >> nth=1",
+          "props": ["background-color", "padding", "margin"],
+          "text": true,
+          "ignore": ["border-radius", "width", "left", "top"]
+        },
+        {
+          "name": "回应名·别人",
+          "old": ".dialog-item >> nth=-2 >> .dialog-emoji li:has(.emoji-symbol) >> nth=0 >> .avatar-name",
+          "new": ":is([data-testid=msg-row],[data-testid=msg-row-own]) >> nth=-2 >> [data-testid=msg-reaction] >> nth=0 >> div[dir=auto] >> nth=1",
+          "props": ["font-size", "color"],
+          "text": true,
+          "ignore": ["width", "height", "line-height", "left", "top"]
+        },
+        {
+          "name": "回应名·自己",
+          "old": ".dialog-item >> nth=-2 >> .dialog-emoji li:has(.emoji-symbol) >> nth=1 >> .avatar-name",
+          "new": ":is([data-testid=msg-row],[data-testid=msg-row-own]) >> nth=-2 >> [data-testid=msg-reaction] >> nth=1 >> div[dir=auto] >> nth=1",
+          "props": ["font-size", "color"],
+          "text": true,
+          "ignore": ["width", "height", "line-height", "left", "top"]
+        }
+      ]
+    },
+    {
+      "name": "wide-2889-todo",
+      "viewport": [1280, 860],
+      "old": {
+        "path": "/manage/messenger",
+        "state": "state-old-admin.json",
+        "steps": [
+          { "click": "li[data-id=\"2889\"]" },
+          { "waitFor": ".dialog-item" },
+          { "click": ".title-types li.todo" },
+          { "waitFor": ".dialog-todo-strip" },
+          { "wait": 1500 }
+        ]
+      },
+      "new": {
+        "path": "/messenger/2889",
+        "state": "state-admin.json",
+        "steps": [
+          { "waitFor": "[data-testid=msg-row]" },
+          { "click": "[data-testid=chat-type-todo]" },
+          { "waitFor": "text=我有1条未完成" },
+          { "wait": 1500 }
+        ]
+      },
+      "clip": { "old": ".dialog-todo-strip", "new": "text=我有1条未完成 >> xpath=.." },
+      "elements": [
+        {
+          "name": "待办条",
+          "old": ".dialog-todo-strip",
+          "new": "text=我有1条未完成 >> xpath=..",
+          "props": ["background-color", "padding", "border-bottom-width", "border-bottom-color"],
+          "ignore": ["width"]
+        },
+        {
+          "name": "待办条标签",
+          "old": ".todo-strip-label",
+          "new": "text=我有1条未完成",
+          "props": ["font-size", "font-weight", "line-height", "color"],
+          "text": true,
+          "ignore": ["width"]
+        },
+        {
+          "name": "待办胶囊",
+          "old": ".dialog-todo-strip ul li",
+          "new": "text=我有1条未完成 >> xpath=following-sibling::div//button",
+          "props": ["background-color", "border-radius", "padding"],
+          "ignore": []
+        },
+        {
+          "name": "待办胶囊文字",
+          "old": ".dialog-todo-strip ul li",
+          "new": "text=我有1条未完成 >> xpath=following-sibling::div//button/div[1]",
+          "props": ["font-size", "line-height", "color"],
+          "ignore": ["width", "height", "left", "top"]
+        }
+      ]
+    },
+    {
+      "name": "wide-915-header",
+      "viewport": [1280, 860],
+      "old": {
+        "path": "/manage/messenger",
+        "state": "state-old-admin.json",
+        "steps": [{ "click": "li[data-id=\"915\"]" }, { "waitFor": ".dialog-item" }, { "wait": 1500 }]
+      },
+      "new": {
+        "path": "/messenger/915",
+        "state": "state-admin.json",
+        "steps": [{ "waitFor": "[data-testid=msg-row]" }]
+      },
+      "clip": { "old": ".dialog-nav", "new": "[data-testid=chat-header]" },
+      "elements": [
+        {
+          "name": "单聊名",
+          "old": ".main-title h2",
+          "new": "[data-testid=chat-title]",
+          "props": ["font-size", "font-weight", "line-height", "color"],
+          "text": true
+        },
+        {
+          "name": "分类·消息",
+          "old": ".title-types li.msg",
+          "new": "[data-testid=chat-type-msg]",
+          "props": ["background-color", "border-radius", "padding"],
+          "text": true
+        }
+      ]
+    },
+    {
+      "name": "wide-915-msgs",
+      "viewport": [1280, 860],
+      "old": {
+        "path": "/manage/messenger",
+        "state": "state-old-admin.json",
+        "steps": [{ "click": "li[data-id=\"915\"]" }, { "waitFor": ".dialog-item" }, { "wait": 1500 }]
+      },
+      "new": {
+        "path": "/messenger/915",
+        "state": "state-admin.json",
+        "steps": [{ "waitFor": "[data-testid=msg-row]" }]
+      },
+      "clip": { "old": ".dialog-msgs", "new": "[data-testid=msg-row] >> xpath=ancestor::div[5]" },
+      "elements": [
+        {
+          "name": "自己气泡",
+          "old": ".dialog-item.self:has-text(\"503154\") >> .dialog-head",
+          "new": "[data-testid=msg-row-own]:has-text(\"503154\") >> [data-testid=msg-content] >> xpath=..",
+          "props": ["background-color", "border-radius", "padding"],
+          "text": true,
+          "ignore": ["width", "left", "top"]
+        },
+        {
+          "name": "单聊已读勾",
+          "old": ".dialog-item.self:has-text(\"503154\") >> .dialog-foot .doo-icon.done",
+          "new": "[data-testid=msg-row-own]:has-text(\"503154\") >> [data-testid=msg-foot] svg >> nth=0",
+          "props": ["color|stroke"],
+          "ignore": ["left", "top"]
+        },
+        {
+          "name": "长消息气泡",
+          "old": ".dialog-item.self:has-text(\"this is a long message\") >> .dialog-head",
+          "new": "[data-testid=msg-row-own]:has-text(\"this is a long message\") >> [data-testid=msg-content] >> xpath=..",
+          "props": ["background-color", "border-radius", "padding"],
+          "ignore": ["left", "top"]
+        }
+      ]
+    },
+    {
+      "name": "narrow-5805-header",
+      "viewport": [390, 844],
+      "mobile": true,
+      "old": {
+        "path": "/manage/messenger",
+        "state": "state-old-admin.json",
+        "steps": [{ "click": "li[data-id=\"5805\"]" }, { "waitFor": ".dialog-item" }, { "wait": 1500 }]
+      },
+      "new": {
+        "path": "/messenger/5805",
+        "state": "state-admin.json",
+        "steps": [{ "waitFor": "[data-testid=msg-row]" }]
+      },
+      "clip": { "old": ".dialog-nav", "new": "[data-testid=chat-header]" },
+      "elements": [
+        {
+          "name": "大标题",
+          "old": ".main-title h2",
+          "new": "[data-testid=chat-title]",
+          "props": ["font-size", "font-weight", "line-height", "color"],
+          "text": true,
+          "ignore": ["width", "left"]
+        },
+        {
+          "name": "人数",
+          "old": ".main-title em",
+          "new": "[data-testid=chat-people]",
+          "props": ["font-size", "font-weight", "line-height", "color"],
+          "text": true,
+          "ignore": ["width", "left"]
+        },
+        {
+          "name": "标签",
+          "old": ".ivu-tag",
+          "new": "[data-testid=chat-header] >> text=部门 >> xpath=..",
+          "props": ["background-color", "border-radius", "padding", "border-top-width", "border-top-color"],
+          "ignore": ["left"]
+        },
+        {
+          "name": "标签文字",
+          "old": ".ivu-tag .ivu-tag-text",
+          "new": "[data-testid=chat-header] >> text=部门",
+          "props": ["font-size", "font-weight", "color"],
+          "text": true,
+          "ignore": ["width", "height", "line-height", "left", "top"]
+        },
+        {
+          "name": "返回按钮",
+          "old": ".dialog-back .doo-icon",
+          "new": "[data-testid=chat-header] [aria-label=返回] svg",
+          "props": ["color|stroke"]
+        },
+        {
+          "name": "…按钮",
+          "old": ".dialog-menu-icon",
+          "new": "[data-testid=chat-header] svg:has(circle:nth-of-type(3))",
+          "props": ["color|stroke"]
+        },
+        {
+          "name": "分类·消息",
+          "old": ".title-types li.msg",
+          "new": "[data-testid=chat-type-msg]",
+          "props": ["background-color", "border-radius", "padding"],
+          "text": true
+        },
+        {
+          "name": "分类·消息·文字",
+          "old": ".title-types li.msg span",
+          "new": "[data-testid=chat-type-msg] div[dir=auto]",
+          "props": ["font-size", "font-weight", "line-height", "color"],
+          "text": true
+        },
+        {
+          "name": "分类·待办",
+          "old": ".title-types li.todo",
+          "new": "[data-testid=chat-type-todo]",
+          "props": ["background-color", "border-radius", "padding"],
+          "text": true
+        }
+      ]
+    },
+    {
+      "name": "narrow-5805-top",
+      "viewport": [390, 844],
+      "mobile": true,
+      "old": {
+        "path": "/manage/messenger",
+        "state": "state-old-admin.json",
+        "steps": [{ "click": "li[data-id=\"5805\"]" }, { "waitFor": ".dialog-top-message-warp" }, { "wait": 1200 }]
+      },
+      "new": {
+        "path": "/messenger/5805",
+        "state": "state-admin.json",
+        "steps": [{ "waitFor": "[data-testid=chat-top]" }]
+      },
+      "clip": { "old": ".dialog-top-message-warp", "new": "[data-testid=chat-top]" },
+      "elements": [
+        {
+          "name": "置顶卡",
+          "old": ".dialog-top-message-warp",
+          "new": "[data-testid=chat-top]",
+          "props": ["background-color", "border-radius", "padding", "margin", "border-top-width", "border-top-color", "box-shadow"]
+        },
+        {
+          "name": "图钉",
+          "old": ".dialog-top-message-font i",
+          "new": "[data-testid=chat-top] svg >> xpath=..",
+          "props": ["background-color", "padding"],
+          "ignore": ["border-radius"]
+        },
+        {
+          "name": "置顶文字",
+          "old": ".dialog-top-message-content .content",
+          "new": "[data-testid=chat-top] div[dir=auto] >> nth=0",
+          "props": ["font-size", "line-height", "color"],
+          "ignore": ["width", "left"]
+        }
+      ]
+    },
+    {
+      "name": "narrow-5805-msgs",
+      "viewport": [390, 844],
+      "mobile": true,
+      "old": {
+        "path": "/manage/messenger",
+        "state": "state-old-admin.json",
+        "steps": [{ "click": "li[data-id=\"5805\"]" }, { "waitFor": ".dialog-item" }, { "wait": 1500 }]
+      },
+      "new": {
+        "path": "/messenger/5805",
+        "state": "state-admin.json",
+        "steps": [{ "waitFor": "[data-testid=msg-row]" }]
+      },
+      "clip": { "old": ".dialog-msgs", "new": "[data-testid=msg-row] >> xpath=ancestor::div[5]" },
+      "elements": [
+        {
+          "name": "对方气泡",
+          "old": ".dialog-item >> nth=-6 >> .dialog-head",
+          "new": ":is([data-testid=msg-row],[data-testid=msg-row-own]) >> nth=-6 >> [data-testid=msg-content] >> xpath=..",
+          "props": ["background-color", "border-radius", "padding"],
+          "text": true,
+          "ignore": ["top"]
+        },
+        {
+          "name": "对方正文",
+          "old": ".dialog-item >> nth=-6 >> .content-text pre p",
+          "new": ":is([data-testid=msg-row],[data-testid=msg-row-own]) >> nth=-6 >> [data-testid=msg-content] span >> nth=0",
+          "props": ["font-size", "line-height", "color"],
+          "text": true,
+          "ignore": ["width", "height", "left", "top"]
+        },
+        {
+          "name": "自己气泡",
+          "old": ".dialog-item >> nth=-4 >> .dialog-head",
+          "new": ":is([data-testid=msg-row],[data-testid=msg-row-own]) >> nth=-4 >> [data-testid=msg-content] >> xpath=..",
+          "props": ["background-color", "border-radius", "padding"],
+          "text": true,
+          "ignore": ["width", "left", "top"]
+        },
+        {
+          "name": "自己正文",
+          "old": ".dialog-item >> nth=-4 >> .content-text pre p",
+          "new": ":is([data-testid=msg-row],[data-testid=msg-row-own]) >> nth=-4 >> [data-testid=msg-content] span >> nth=0",
+          "props": ["font-size", "line-height", "color"],
+          "text": true,
+          "ignore": ["width", "height", "left", "top"]
+        },
+        {
+          "name": "窄屏短消息视宽",
+          "old": ".dialog-item >> nth=-6 >> .dialog-view",
+          "new": ":is([data-testid=msg-row],[data-testid=msg-row-own]) >> nth=-6 >> [data-testid=msg-name] >> xpath=..",
+          "props": [],
+          "ignore": ["height", "left", "top"]
+        },
+        {
+          "name": "窄屏引用回复气泡",
+          "old": ".dialog-item >> nth=-3 >> .dialog-head",
+          "new": ":is([data-testid=msg-row],[data-testid=msg-row-own]) >> nth=-3 >> [data-testid=msg-content] >> xpath=..",
+          "props": ["background-color", "border-radius", "padding"],
+          "ignore": ["left", "top"]
+        },
+        {
+          "name": "时间",
+          "old": ".dialog-item >> nth=-4 >> .dialog-foot .time",
+          "new": ":is([data-testid=msg-row],[data-testid=msg-row-own]) >> nth=-4 >> [data-testid=msg-time]",
+          "props": ["font-size", "line-height", "color"],
+          "text": true,
+          "ignore": ["width", "left", "top"]
+        }
+      ]
+    },
+    {
+      "name": "narrow-2889-header",
+      "viewport": [390, 844],
+      "mobile": true,
+      "old": {
+        "path": "/manage/messenger",
+        "state": "state-old-admin.json",
+        "steps": [{ "click": "li[data-id=\"2889\"]" }, { "waitFor": ".dialog-item" }, { "wait": 1500 }]
+      },
+      "new": {
+        "path": "/messenger/2889",
+        "state": "state-admin.json",
+        "steps": [{ "waitFor": "[data-testid=msg-row]" }]
+      },
+      "clip": { "old": ".dialog-nav", "new": "[data-testid=chat-header]" },
+      "elements": [
+        {
+          "name": "大标题",
+          "old": ".main-title h2",
+          "new": "[data-testid=chat-title]",
+          "props": ["font-size", "font-weight", "line-height", "color"],
+          "text": true,
+          "ignore": ["width", "left"]
+        },
+        {
+          "name": "标签",
+          "old": ".ivu-tag",
+          "new": "[data-testid=chat-header] >> text=全员 >> xpath=..",
+          "props": ["background-color", "border-radius", "padding", "border-top-width", "border-top-color"],
+          "ignore": ["left"]
+        },
+        {
+          "name": "标签文字",
+          "old": ".ivu-tag .ivu-tag-text",
+          "new": "[data-testid=chat-header] >> text=全员",
+          "props": ["font-size", "font-weight", "color"],
+          "text": true,
+          "ignore": ["width", "height", "line-height", "left", "top"]
+        },
+        {
+          "name": "待办徽标",
+          "old": ".title-types .type-count",
+          "new": "[data-testid=chat-type-todo] > div:last-child",
+          "props": ["background-color", "border-radius", "padding", "margin-left"],
+          "text": true
+        }
+      ]
+    },
+    {
+      "name": "narrow-915-header",
+      "viewport": [390, 844],
+      "mobile": true,
+      "old": {
+        "path": "/manage/messenger",
+        "state": "state-old-admin.json",
+        "steps": [{ "click": "li[data-id=\"915\"]" }, { "waitFor": ".dialog-item" }, { "wait": 1500 }]
+      },
+      "new": {
+        "path": "/messenger/915",
+        "state": "state-admin.json",
+        "steps": [{ "waitFor": "[data-testid=msg-row]" }]
+      },
+      "clip": { "old": ".dialog-nav", "new": "[data-testid=chat-header]" },
+      "elements": [
+        {
+          "name": "单聊名",
+          "old": ".main-title h2",
+          "new": "[data-testid=chat-title]",
+          "props": ["font-size", "font-weight", "line-height", "color"],
+          "text": true,
+          "ignore": ["width", "left"]
+        },
+        {
+          "name": "返回按钮",
+          "old": ".dialog-back .doo-icon",
+          "new": "[data-testid=chat-header] [aria-label=返回] svg",
+          "props": ["color|stroke"]
+        }
+      ]
+    },
+    {
+      "name": "narrow-915-msgs",
+      "viewport": [390, 844],
+      "mobile": true,
+      "old": {
+        "path": "/manage/messenger",
+        "state": "state-old-admin.json",
+        "steps": [{ "click": "li[data-id=\"915\"]" }, { "waitFor": ".dialog-item" }, { "wait": 1500 }]
+      },
+      "new": {
+        "path": "/messenger/915",
+        "state": "state-admin.json",
+        "steps": [{ "waitFor": "[data-testid=msg-row]" }]
+      },
+      "clip": { "old": ".dialog-msgs", "new": "[data-testid=msg-row] >> xpath=ancestor::div[5]" },
+      "elements": [
+        {
+          "name": "自己气泡",
+          "old": ".dialog-item.self:has-text(\"503154\") >> .dialog-head",
+          "new": "[data-testid=msg-row-own]:has-text(\"503154\") >> [data-testid=msg-content] >> xpath=..",
+          "props": ["background-color", "border-radius", "padding"],
+          "text": true,
+          "ignore": ["width", "left", "top"]
+        },
+        {
+          "name": "单聊已读勾",
+          "old": ".dialog-item.self:has-text(\"503154\") >> .dialog-foot .doo-icon.done",
+          "new": "[data-testid=msg-row-own]:has-text(\"503154\") >> [data-testid=msg-foot] svg >> nth=0",
+          "props": ["color|stroke"],
+          "ignore": ["left", "top"]
+        },
+        {
+          "name": "长消息气泡",
+          "old": ".dialog-item.self:has-text(\"this is a long message\") >> .dialog-head",
+          "new": "[data-testid=msg-row-own]:has-text(\"this is a long message\") >> [data-testid=msg-content] >> xpath=..",
+          "props": ["background-color", "border-radius", "padding"],
+          "ignore": ["left", "top"]
+        }
+      ]
+    }
+  ]
+}

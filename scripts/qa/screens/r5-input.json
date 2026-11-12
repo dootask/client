@@ -1,0 +1,1116 @@
+{
+  "screens": [
+    {
+      "name": "r5-wide-default",
+      "viewport": [
+        1280,
+        860
+      ],
+      "old": {
+        "path": "/manage/messenger",
+        "state": "state-old-admin.json",
+        "settle": 5200,
+        "steps": [
+          {
+            "click": "li[data-id=\"5805\"]"
+          },
+          {
+            "wait": 3800
+          }
+        ]
+      },
+      "new": {
+        "path": "/messenger/5805",
+        "state": "state-admin.json",
+        "settle": 5600,
+        "steps": []
+      },
+      "elements": [
+        {
+          "name": "输入区外框",
+          "old": ".dialog-footer",
+          "new": "[data-testid=composer]",
+          "props": [
+            "background-color",
+            "border-radius",
+            "padding",
+            "margin"
+          ]
+        },
+        {
+          "name": "输入框容器",
+          "old": ".chat-input-wrapper",
+          "new": "[data-testid=composer-wrapper]",
+          "props": [
+            "background-color",
+            "border-radius",
+            "padding",
+            "margin"
+          ]
+        },
+        {
+          "name": "编辑器",
+          "old": ".ql-editor",
+          "new": "[data-testid=composer] textarea",
+          "props": [
+            "font-size",
+            "line-height",
+            "color",
+            "background-color",
+            "border-radius",
+            "padding",
+            "margin"
+          ]
+        },
+        {
+          "name": "工具栏",
+          "old": "ul.chat-toolbar",
+          "new": "[data-testid=composer-toolbar]",
+          "props": []
+        },
+        {
+          "name": "表情按钮",
+          "old": "ul.chat-toolbar > li >> nth=0",
+          "new": "[data-testid=composer-toolbar] button[aria-label=\"表情\"]",
+          "props": []
+        },
+        {
+          "name": "成员按钮",
+          "old": "ul.chat-toolbar > li >> nth=1",
+          "new": "[data-testid=composer-toolbar] button[aria-label=\"选择成员\"]",
+          "props": []
+        },
+        {
+          "name": "任务按钮",
+          "old": "ul.chat-toolbar > li >> nth=2",
+          "new": "[data-testid=composer-toolbar] button[aria-label=\"选择任务\"]",
+          "props": []
+        },
+        {
+          "name": "展开按钮",
+          "old": "ul.chat-toolbar > li >> nth=3",
+          "new": "[data-testid=composer-toolbar] button[aria-label=\"展开\"]",
+          "props": []
+        },
+        {
+          "name": "发送按钮",
+          "old": ".chat-send",
+          "new": "[data-testid=composer-toolbar] button[aria-label=\"长按录音\"]",
+          "props": []
+        }
+      ]
+    },
+    {
+      "name": "r5-wide-emoji",
+      "viewport": [
+        1280,
+        860
+      ],
+      "old": {
+        "path": "/manage/messenger",
+        "state": "state-old-admin.json",
+        "settle": 5200,
+        "steps": [
+          {
+            "click": "li[data-id=\"5805\"]"
+          },
+          {
+            "wait": 3800
+          },
+          {
+            "click": "ul.chat-toolbar > li >> nth=0"
+          },
+          {
+            "wait": 1300
+          }
+        ]
+      },
+      "new": {
+        "path": "/messenger/5805",
+        "state": "state-admin.json",
+        "settle": 5600,
+        "steps": [
+          {
+            "click": "[data-testid=composer-toolbar] button[aria-label=\"表情\"]"
+          },
+          {
+            "wait": 1300
+          }
+        ]
+      },
+      "elements": [
+        {
+          "name": "表情面板",
+          "old": ".chat-emoji-wrapper:visible",
+          "new": "[data-testid=emoji-panel]",
+          "props": [
+            "background-color",
+            "border-radius",
+            "padding"
+          ]
+        },
+        {
+          "name": "分类导航1",
+          "old": ".chat-emoji-wrapper:visible .chat-emoji-nav > div >> nth=0",
+          "new": "[data-testid=emoji-panel] button[aria-label=\"p\"]",
+          "props": []
+        },
+        {
+          "name": "表情格子1",
+          "old": ".chat-emoji-wrapper:visible ul.emoji > li >> nth=0",
+          "new": "[data-testid=emoji-panel] button[aria-label=\"😀\"]",
+          "props": []
+        },
+        {
+          "name": "表情字形1",
+          "old": ".chat-emoji-wrapper:visible ul.emoji > li > span >> nth=0",
+          "new": "[data-testid=emoji-panel] button[aria-label=\"😀\"] div",
+          "props": [
+            "font-size"
+          ],
+          "ignore": [
+            "width",
+            "height",
+            "left",
+            "top"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "r5-wide-more",
+      "viewport": [
+        1280,
+        860
+      ],
+      "old": {
+        "path": "/manage/messenger",
+        "state": "state-old-admin.json",
+        "settle": 5200,
+        "steps": [
+          {
+            "click": "li[data-id=\"5805\"]"
+          },
+          {
+            "wait": 3800
+          },
+          {
+            "click": "ul.chat-toolbar > li >> nth=3"
+          },
+          {
+            "wait": 1100
+          }
+        ]
+      },
+      "new": {
+        "path": "/messenger/5805",
+        "state": "state-admin.json",
+        "settle": 5600,
+        "steps": [
+          {
+            "click": "[data-testid=composer-toolbar] button[aria-label=\"展开\"]"
+          },
+          {
+            "wait": 1100
+          }
+        ]
+      },
+      "elements": [
+        {
+          "name": "更多菜单容器",
+          "old": ".chat-input-more-popover:not([aria-hidden=\"true\"])",
+          "new": "div:has(> [data-testid=composer-more])",
+          "props": [
+            "background-color",
+            "border-radius",
+            "padding"
+          ]
+        },
+        {
+          "name": "菜单项-发送图片",
+          "old": ".chat-input-popover-item:has-text(\"发送图片\")",
+          "new": "[role=menuitem]:has-text(\"发送图片\")",
+          "props": []
+        },
+        {
+          "name": "菜单项-上传文件",
+          "old": ".chat-input-popover-item:has-text(\"上传文件\")",
+          "new": "[role=menuitem]:has-text(\"上传文件\")",
+          "props": []
+        },
+        {
+          "name": "菜单项-全屏输入",
+          "old": ".chat-input-popover-item:has-text(\"全屏输入\")",
+          "new": "[role=menuitem]:has-text(\"全屏输入\")",
+          "props": []
+        },
+        {
+          "name": "菜单项文字-发送图片",
+          "old": ".chat-input-popover-item:has-text(\"发送图片\")",
+          "new": "[role=menuitem]:has-text(\"发送图片\") div[dir=auto]",
+          "props": [
+            "font-size",
+            "color"
+          ]
+        },
+        {
+          "name": "菜单项文字-上传文件",
+          "old": ".chat-input-popover-item:has-text(\"上传文件\")",
+          "new": "[role=menuitem]:has-text(\"上传文件\") div[dir=auto]",
+          "props": [
+            "font-size",
+            "color"
+          ]
+        },
+        {
+          "name": "菜单项文字-全屏输入",
+          "old": ".chat-input-popover-item:has-text(\"全屏输入\")",
+          "new": "[role=menuitem]:has-text(\"全屏输入\") div[dir=auto]",
+          "props": [
+            "font-size",
+            "color"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "r5-wide-at",
+      "viewport": [
+        1280,
+        860
+      ],
+      "old": {
+        "path": "/manage/messenger",
+        "state": "state-old-admin.json",
+        "settle": 5200,
+        "steps": [
+          {
+            "click": "li[data-id=\"5805\"]"
+          },
+          {
+            "wait": 3800
+          },
+          {
+            "click": "ul.chat-toolbar > li >> nth=1"
+          },
+          {
+            "wait": 1400
+          }
+        ]
+      },
+      "new": {
+        "path": "/messenger/5805",
+        "state": "state-admin.json",
+        "settle": 5600,
+        "steps": [
+          {
+            "click": "[data-testid=composer-toolbar] button[aria-label=\"选择成员\"]"
+          },
+          {
+            "wait": 1400
+          }
+        ]
+      },
+      "elements": [
+        {
+          "name": "成员浮层",
+          "old": ".ql-mention-list-container.user-mention",
+          "new": "div[class*=unistyles_14g8ywooc5v]",
+          "props": []
+        }
+      ]
+    },
+    {
+      "name": "r5-wide-hash",
+      "viewport": [
+        1280,
+        860
+      ],
+      "old": {
+        "path": "/manage/messenger",
+        "state": "state-old-admin.json",
+        "settle": 5200,
+        "steps": [
+          {
+            "click": "li[data-id=\"5805\"]"
+          },
+          {
+            "wait": 3800
+          },
+          {
+            "click": ".ql-editor"
+          },
+          {
+            "press": "#"
+          },
+          {
+            "wait": 1400
+          }
+        ]
+      },
+      "new": {
+        "path": "/messenger/5805",
+        "state": "state-admin.json",
+        "settle": 5600,
+        "steps": [
+          {
+            "click": "[data-testid=composer-toolbar] button[aria-label=\"选择任务\"]"
+          },
+          {
+            "wait": 1400
+          }
+        ]
+      },
+      "elements": [
+        {
+          "name": "任务浮层",
+          "old": ".ql-mention-list-container.task-mention",
+          "new": "div[class*=unistyles_14g8ywooc5v]",
+          "props": []
+        }
+      ]
+    },
+    {
+      "name": "r5-wide-reply",
+      "viewport": [
+        1280,
+        860
+      ],
+      "old": {
+        "path": "/manage/messenger",
+        "state": "state-old-admin.json",
+        "settle": 5200,
+        "steps": [
+          {
+            "click": "li[data-id=\"5805\"]"
+          },
+          {
+            "wait": 3800
+          },
+          {
+            "rightClick": ".dialog-item:not(.self):has-text('cpu占用高') .dialog-content"
+          },
+          {
+            "wait": 900
+          },
+          {
+            "click": ".dialog-wrapper-operate >> text=\"回复\""
+          },
+          {
+            "wait": 1100
+          }
+        ]
+      },
+      "new": {
+        "path": "/messenger/5805",
+        "state": "state-admin.json",
+        "settle": 5600,
+        "steps": [
+          {
+            "rightClick": "[data-testid=msg-row]:has-text('cpu占用高') [data-testid=msg-content]"
+          },
+          {
+            "wait": 900
+          },
+          {
+            "click": "[data-testid=msg-menu] >> text=\"回复\""
+          },
+          {
+            "wait": 1100
+          }
+        ]
+      },
+      "elements": [
+        {
+          "name": "引用条",
+          "old": ".chat-quote",
+          "new": "[data-testid=composer-quote]",
+          "props": [
+            "padding",
+            "background-color",
+            "border-radius"
+          ]
+        },
+        {
+          "name": "引用名字",
+          "old": ".chat-quote .avatar-name",
+          "new": "[data-testid=composer-quote] > div >> nth=1",
+          "props": [
+            "font-size",
+            "color",
+            "font-weight"
+          ],
+          "text": true
+        },
+        {
+          "name": "引用正文",
+          "old": ".chat-quote .quote-desc",
+          "new": "[data-testid=composer-quote] > div >> nth=2",
+          "props": [
+            "font-size",
+            "color"
+          ]
+        },
+        {
+          "name": "关闭按钮",
+          "old": ".chat-quote .quote-close",
+          "new": "[data-testid=composer-quote] button",
+          "props": []
+        }
+      ]
+    },
+    {
+      "name": "r5-wide-edit",
+      "viewport": [
+        1280,
+        860
+      ],
+      "old": {
+        "path": "/manage/messenger",
+        "state": "state-old-admin.json",
+        "settle": 5200,
+        "steps": [
+          {
+            "click": "li[data-id=\"5805\"]"
+          },
+          {
+            "wait": 3800
+          },
+          {
+            "eval": "(()=>{const a=[...document.querySelectorAll('.dialog-item.self')];const r=a[a.length-1];r.scrollIntoView({block:'center'});r.setAttribute('data-qa-edit','1');})()"
+          },
+          {
+            "wait": 700
+          },
+          {
+            "rightClick": ".dialog-item[data-qa-edit] .dialog-content"
+          },
+          {
+            "wait": 900
+          },
+          {
+            "click": ".dialog-wrapper-operate >> text=\"编辑\""
+          },
+          {
+            "wait": 1100
+          }
+        ]
+      },
+      "new": {
+        "path": "/messenger/5805",
+        "state": "state-admin.json",
+        "settle": 5600,
+        "steps": [
+          {
+            "eval": "(()=>{const a=[...document.querySelectorAll('[data-testid=msg-row-own]')];const r=a[a.length-1];r.scrollIntoView({block:'center'});r.setAttribute('data-qa-edit','1');})()"
+          },
+          {
+            "wait": 700
+          },
+          {
+            "rightClick": "[data-qa-edit] [data-testid=msg-content]"
+          },
+          {
+            "wait": 900
+          },
+          {
+            "click": "[data-testid=msg-menu] >> text=\"编辑\""
+          },
+          {
+            "wait": 1100
+          }
+        ]
+      },
+      "elements": [
+        {
+          "name": "编辑条",
+          "old": ".chat-quote",
+          "new": "[data-testid=composer-quote]",
+          "props": [
+            "padding",
+            "background-color",
+            "border-radius"
+          ]
+        },
+        {
+          "name": "编辑标签",
+          "old": ".chat-quote .quote-label",
+          "new": "[data-testid=composer-quote] > div >> nth=1",
+          "props": [
+            "font-size",
+            "color",
+            "font-weight"
+          ],
+          "text": true
+        },
+        {
+          "name": "编辑正文",
+          "old": ".chat-quote .quote-desc",
+          "new": "[data-testid=composer-quote] > div >> nth=2",
+          "props": [
+            "font-size",
+            "color"
+          ]
+        },
+        {
+          "name": "关闭按钮",
+          "old": ".chat-quote .quote-close",
+          "new": "[data-testid=composer-quote] button",
+          "props": []
+        }
+      ]
+    },
+    {
+      "name": "r5-narrow-default",
+      "viewport": [
+        390,
+        844
+      ],
+      "mobile": true,
+      "old": {
+        "path": "/manage/messenger",
+        "state": "state-old-admin.json",
+        "settle": 5200,
+        "steps": [
+          {
+            "click": "li[data-id=\"5805\"]"
+          },
+          {
+            "wait": 3800
+          }
+        ]
+      },
+      "new": {
+        "path": "/messenger/5805",
+        "state": "state-admin.json",
+        "settle": 5600,
+        "steps": []
+      },
+      "elements": [
+        {
+          "name": "输入区外框",
+          "old": ".dialog-footer",
+          "new": "[data-testid=composer]",
+          "props": [
+            "background-color",
+            "border-radius",
+            "padding",
+            "margin"
+          ]
+        },
+        {
+          "name": "输入框容器",
+          "old": ".chat-input-wrapper",
+          "new": "[data-testid=composer-wrapper]",
+          "props": [
+            "background-color",
+            "border-radius",
+            "padding",
+            "margin"
+          ]
+        },
+        {
+          "name": "编辑器",
+          "old": ".ql-editor",
+          "new": "[data-testid=composer] textarea",
+          "props": [
+            "font-size",
+            "line-height",
+            "color",
+            "background-color",
+            "border-radius",
+            "padding",
+            "margin"
+          ]
+        },
+        {
+          "name": "工具栏",
+          "old": "ul.chat-toolbar",
+          "new": "[data-testid=composer-toolbar]",
+          "props": []
+        },
+        {
+          "name": "表情按钮",
+          "old": "ul.chat-toolbar > li >> nth=0",
+          "new": "[data-testid=composer-toolbar] button[aria-label=\"表情\"]",
+          "props": []
+        },
+        {
+          "name": "成员按钮",
+          "old": "ul.chat-toolbar > li >> nth=1",
+          "new": "[data-testid=composer-toolbar] button[aria-label=\"选择成员\"]",
+          "props": []
+        },
+        {
+          "name": "任务按钮",
+          "old": "ul.chat-toolbar > li >> nth=2",
+          "new": "[data-testid=composer-toolbar] button[aria-label=\"选择任务\"]",
+          "props": []
+        },
+        {
+          "name": "展开按钮",
+          "old": "ul.chat-toolbar > li >> nth=3",
+          "new": "[data-testid=composer-toolbar] button[aria-label=\"展开\"]",
+          "props": []
+        },
+        {
+          "name": "发送按钮",
+          "old": ".chat-send",
+          "new": "[data-testid=composer-toolbar] button[aria-label=\"长按录音\"]",
+          "props": []
+        }
+      ]
+    },
+    {
+      "name": "r5-narrow-emoji",
+      "viewport": [
+        390,
+        844
+      ],
+      "mobile": true,
+      "old": {
+        "path": "/manage/messenger",
+        "state": "state-old-admin.json",
+        "settle": 5200,
+        "steps": [
+          {
+            "click": "li[data-id=\"5805\"]"
+          },
+          {
+            "wait": 3800
+          },
+          {
+            "click": "ul.chat-toolbar > li >> nth=0"
+          },
+          {
+            "wait": 1300
+          }
+        ]
+      },
+      "new": {
+        "path": "/messenger/5805",
+        "state": "state-admin.json",
+        "settle": 5600,
+        "steps": [
+          {
+            "click": "[data-testid=composer-toolbar] button[aria-label=\"表情\"]"
+          },
+          {
+            "wait": 1300
+          }
+        ]
+      },
+      "elements": [
+        {
+          "name": "表情面板",
+          "old": ".chat-emoji-wrapper:visible",
+          "new": "[data-testid=emoji-panel]",
+          "props": [
+            "background-color",
+            "border-radius",
+            "padding"
+          ]
+        },
+        {
+          "name": "分类导航1",
+          "old": ".chat-emoji-wrapper:visible .chat-emoji-nav > div >> nth=0",
+          "new": "[data-testid=emoji-panel] button[aria-label=\"p\"]",
+          "props": []
+        },
+        {
+          "name": "表情格子1",
+          "old": ".chat-emoji-wrapper:visible ul.emoji > li >> nth=0",
+          "new": "[data-testid=emoji-panel] button[aria-label=\"😀\"]",
+          "props": []
+        },
+        {
+          "name": "表情字形1",
+          "old": ".chat-emoji-wrapper:visible ul.emoji > li > span >> nth=0",
+          "new": "[data-testid=emoji-panel] button[aria-label=\"😀\"] div",
+          "props": [
+            "font-size"
+          ],
+          "ignore": [
+            "width",
+            "height",
+            "left",
+            "top"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "r5-narrow-more",
+      "viewport": [
+        390,
+        844
+      ],
+      "mobile": true,
+      "old": {
+        "path": "/manage/messenger",
+        "state": "state-old-admin.json",
+        "settle": 5200,
+        "steps": [
+          {
+            "click": "li[data-id=\"5805\"]"
+          },
+          {
+            "wait": 3800
+          },
+          {
+            "click": "ul.chat-toolbar > li >> nth=3"
+          },
+          {
+            "wait": 1100
+          }
+        ]
+      },
+      "new": {
+        "path": "/messenger/5805",
+        "state": "state-admin.json",
+        "settle": 5600,
+        "steps": [
+          {
+            "click": "[data-testid=composer-toolbar] button[aria-label=\"展开\"]"
+          },
+          {
+            "wait": 1100
+          }
+        ]
+      },
+      "elements": [
+        {
+          "name": "更多菜单容器",
+          "old": ".chat-input-more-popover:not([aria-hidden=\"true\"])",
+          "new": "div:has(> [data-testid=composer-more])",
+          "props": [
+            "background-color",
+            "border-radius",
+            "padding"
+          ]
+        },
+        {
+          "name": "菜单项-发送图片",
+          "old": ".chat-input-popover-item:has-text(\"发送图片\")",
+          "new": "[role=menuitem]:has-text(\"发送图片\")",
+          "props": []
+        },
+        {
+          "name": "菜单项-全屏输入",
+          "old": ".chat-input-popover-item:has-text(\"全屏输入\")",
+          "new": "[role=menuitem]:has-text(\"全屏输入\")",
+          "props": []
+        },
+        {
+          "name": "菜单项文字-发送图片",
+          "old": ".chat-input-popover-item:has-text(\"发送图片\")",
+          "new": "[role=menuitem]:has-text(\"发送图片\") div[dir=auto]",
+          "props": [
+            "font-size",
+            "color"
+          ]
+        },
+        {
+          "name": "菜单项文字-全屏输入",
+          "old": ".chat-input-popover-item:has-text(\"全屏输入\")",
+          "new": "[role=menuitem]:has-text(\"全屏输入\") div[dir=auto]",
+          "props": [
+            "font-size",
+            "color"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "r5-narrow-at",
+      "viewport": [
+        390,
+        844
+      ],
+      "mobile": true,
+      "old": {
+        "path": "/manage/messenger",
+        "state": "state-old-admin.json",
+        "settle": 5200,
+        "steps": [
+          {
+            "click": "li[data-id=\"5805\"]"
+          },
+          {
+            "wait": 3800
+          },
+          {
+            "click": "ul.chat-toolbar > li >> nth=1"
+          },
+          {
+            "wait": 1400
+          }
+        ]
+      },
+      "new": {
+        "path": "/messenger/5805",
+        "state": "state-admin.json",
+        "settle": 5600,
+        "steps": [
+          {
+            "click": "[data-testid=composer-toolbar] button[aria-label=\"选择成员\"]"
+          },
+          {
+            "wait": 1400
+          }
+        ]
+      },
+      "elements": [
+        {
+          "name": "成员浮层",
+          "old": ".ql-mention-list-container.user-mention",
+          "new": "div[class*=unistyles_14g8ywooc5v]",
+          "props": []
+        }
+      ]
+    },
+    {
+      "name": "r5-narrow-hash",
+      "viewport": [
+        390,
+        844
+      ],
+      "mobile": true,
+      "old": {
+        "path": "/manage/messenger",
+        "state": "state-old-admin.json",
+        "settle": 5200,
+        "steps": [
+          {
+            "click": "li[data-id=\"5805\"]"
+          },
+          {
+            "wait": 3800
+          },
+          {
+            "click": ".ql-editor"
+          },
+          {
+            "press": "#"
+          },
+          {
+            "wait": 1400
+          }
+        ]
+      },
+      "new": {
+        "path": "/messenger/5805",
+        "state": "state-admin.json",
+        "settle": 5600,
+        "steps": [
+          {
+            "click": "[data-testid=composer-toolbar] button[aria-label=\"选择任务\"]"
+          },
+          {
+            "wait": 1400
+          }
+        ]
+      },
+      "elements": [
+        {
+          "name": "任务浮层",
+          "old": ".ql-mention-list-container.task-mention",
+          "new": "div[class*=unistyles_14g8ywooc5v]",
+          "props": []
+        }
+      ]
+    },
+    {
+      "name": "r5-narrow-reply",
+      "viewport": [
+        390,
+        844
+      ],
+      "mobile": true,
+      "old": {
+        "path": "/manage/messenger",
+        "state": "state-old-admin.json",
+        "settle": 5200,
+        "steps": [
+          {
+            "click": "li[data-id=\"5805\"]"
+          },
+          {
+            "wait": 3800
+          },
+          {
+            "rightClick": ".dialog-item:not(.self):has-text('cpu占用高') .dialog-content"
+          },
+          {
+            "wait": 900
+          },
+          {
+            "click": ".dialog-wrapper-operate >> text=\"回复\""
+          },
+          {
+            "wait": 1100
+          }
+        ]
+      },
+      "new": {
+        "path": "/messenger/5805",
+        "state": "state-admin.json",
+        "settle": 5600,
+        "steps": [
+          {
+            "rightClick": "[data-testid=msg-row]:has-text('cpu占用高') [data-testid=msg-content]"
+          },
+          {
+            "wait": 900
+          },
+          {
+            "click": "[data-testid=msg-menu] >> text=\"回复\""
+          },
+          {
+            "wait": 1100
+          }
+        ]
+      },
+      "elements": [
+        {
+          "name": "引用条",
+          "old": ".chat-quote",
+          "new": "[data-testid=composer-quote]",
+          "props": [
+            "padding",
+            "background-color",
+            "border-radius"
+          ]
+        },
+        {
+          "name": "引用名字",
+          "old": ".chat-quote .avatar-name",
+          "new": "[data-testid=composer-quote] > div >> nth=1",
+          "props": [
+            "font-size",
+            "color",
+            "font-weight"
+          ],
+          "text": true
+        },
+        {
+          "name": "引用正文",
+          "old": ".chat-quote .quote-desc",
+          "new": "[data-testid=composer-quote] > div >> nth=2",
+          "props": [
+            "font-size",
+            "color"
+          ]
+        },
+        {
+          "name": "关闭按钮",
+          "old": ".chat-quote .quote-close",
+          "new": "[data-testid=composer-quote] button",
+          "props": []
+        }
+      ]
+    },
+    {
+      "name": "r5-narrow-edit",
+      "viewport": [
+        390,
+        844
+      ],
+      "mobile": true,
+      "old": {
+        "path": "/manage/messenger",
+        "state": "state-old-admin.json",
+        "settle": 5200,
+        "steps": [
+          {
+            "click": "li[data-id=\"5805\"]"
+          },
+          {
+            "wait": 3800
+          },
+          {
+            "eval": "(()=>{const a=[...document.querySelectorAll('.dialog-item.self')];const r=a[a.length-1];r.scrollIntoView({block:'center'});r.setAttribute('data-qa-edit','1');})()"
+          },
+          {
+            "wait": 700
+          },
+          {
+            "rightClick": ".dialog-item[data-qa-edit] .dialog-content"
+          },
+          {
+            "wait": 900
+          },
+          {
+            "click": ".dialog-wrapper-operate >> text=\"编辑\""
+          },
+          {
+            "wait": 1100
+          }
+        ]
+      },
+      "new": {
+        "path": "/messenger/5805",
+        "state": "state-admin.json",
+        "settle": 5600,
+        "steps": [
+          {
+            "eval": "(()=>{const a=[...document.querySelectorAll('[data-testid=msg-row-own]')];const r=a[a.length-1];r.scrollIntoView({block:'center'});r.setAttribute('data-qa-edit','1');})()"
+          },
+          {
+            "wait": 700
+          },
+          {
+            "rightClick": "[data-qa-edit] [data-testid=msg-content]"
+          },
+          {
+            "wait": 900
+          },
+          {
+            "click": "[data-testid=msg-menu] >> text=\"编辑\""
+          },
+          {
+            "wait": 1100
+          }
+        ]
+      },
+      "elements": [
+        {
+          "name": "编辑条",
+          "old": ".chat-quote",
+          "new": "[data-testid=composer-quote]",
+          "props": [
+            "padding",
+            "background-color",
+            "border-radius"
+          ]
+        },
+        {
+          "name": "编辑标签",
+          "old": ".chat-quote .quote-label",
+          "new": "[data-testid=composer-quote] > div >> nth=1",
+          "props": [
+            "font-size",
+            "color",
+            "font-weight"
+          ],
+          "text": true
+        },
+        {
+          "name": "编辑正文",
+          "old": ".chat-quote .quote-desc",
+          "new": "[data-testid=composer-quote] > div >> nth=2",
+          "props": [
+            "font-size",
+            "color"
+          ]
+        },
+        {
+          "name": "关闭按钮",
+          "old": ".chat-quote .quote-close",
+          "new": "[data-testid=composer-quote] button",
+          "props": []
+        }
+      ]
+    }
+  ]
+}

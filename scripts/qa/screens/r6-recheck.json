@@ -1,0 +1,641 @@
+{
+  "_note": "R6 复验（2026-11-12）新增对比配置。layout 屏使用新版当前构建的 hashed class 选择器（unistyles_*）；构建更新后需按 DOM 重新定位。",
+  "screens": [
+    {
+      "name": "r6re-wide-layout-1280",
+      "viewport": [
+        1280,
+        860
+      ],
+      "old": {
+        "path": "/manage/messenger",
+        "state": "state-old-admin.json",
+        "settle": 5200,
+        "steps": [
+          {
+            "click": "li[data-id=\"5805\"]"
+          },
+          {
+            "waitFor": ".dialog-item"
+          },
+          {
+            "wait": 3000
+          }
+        ]
+      },
+      "new": {
+        "path": "/messenger/5805",
+        "state": "state-admin.json",
+        "settle": 6000,
+        "steps": [
+          {
+            "waitFor": "[data-testid=msg-row]"
+          },
+          {
+            "wait": 1000
+          }
+        ]
+      },
+      "elements": [
+        {
+          "name": "左菜单",
+          "old": ".manage-box-menu",
+          "new": "div[class*=\"unistyles_26pkb7vxtja\"]",
+          "props": [
+            "background-color",
+            "border-radius",
+            "border-right-width"
+          ]
+        },
+        {
+          "name": "会话列表",
+          "old": ".messenger-select",
+          "new": "div[class*=\"unistyles_uq42rrt5mf\"]",
+          "props": [
+            "background-color"
+          ]
+        },
+        {
+          "name": "1px竖线",
+          "old": ".messenger-line",
+          "new": "div[class*=\"unistyles_lblnlfmucr\"]",
+          "props": [
+            "background-color"
+          ]
+        },
+        {
+          "name": "聊天列",
+          "old": ".messenger-msg",
+          "new": "div[class*=\"unistyles_dre0868ac3\"]",
+          "props": [
+            "background-color"
+          ]
+        },
+        {
+          "name": "输入区外框",
+          "old": ".dialog-footer",
+          "new": "div[class*=\"unistyles_qm9y753by8\"]",
+          "props": [
+            "background-color"
+          ]
+        },
+        {
+          "name": "输入框容器",
+          "old": ".chat-input-wrapper",
+          "new": "div[class*=\"unistyles_sgdegzmbpa\"]",
+          "props": [
+            "background-color",
+            "border-radius",
+            "padding"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "r6re-wide-layout-1600",
+      "viewport": [
+        1600,
+        860
+      ],
+      "old": {
+        "path": "/manage/messenger",
+        "state": "state-old-admin.json",
+        "settle": 5200,
+        "steps": [
+          {
+            "click": "li[data-id=\"5805\"]"
+          },
+          {
+            "waitFor": ".dialog-item"
+          },
+          {
+            "wait": 3000
+          }
+        ]
+      },
+      "new": {
+        "path": "/messenger/5805",
+        "state": "state-admin.json",
+        "settle": 6000,
+        "steps": [
+          {
+            "waitFor": "[data-testid=msg-row]"
+          },
+          {
+            "wait": 1000
+          }
+        ]
+      },
+      "elements": [
+        {
+          "name": "左菜单",
+          "old": ".manage-box-menu",
+          "new": "div[class*=\"unistyles_26pkb7vxtja\"]",
+          "props": [
+            "background-color",
+            "border-right-width"
+          ]
+        },
+        {
+          "name": "会话列表",
+          "old": ".messenger-select",
+          "new": "div[class*=\"unistyles_uq42rrt5mf\"]",
+          "props": []
+        },
+        {
+          "name": "1px竖线",
+          "old": ".messenger-line",
+          "new": "div[class*=\"unistyles_lblnlfmucr\"]",
+          "props": [
+            "background-color"
+          ]
+        },
+        {
+          "name": "聊天列",
+          "old": ".messenger-msg",
+          "new": "div[class*=\"unistyles_dre0868ac3\"]",
+          "props": []
+        },
+        {
+          "name": "输入区外框",
+          "old": ".dialog-footer",
+          "new": "div[class*=\"unistyles_qm9y753by8\"]",
+          "props": []
+        },
+        {
+          "name": "输入框容器",
+          "old": ".chat-input-wrapper",
+          "new": "div[class*=\"unistyles_sgdegzmbpa\"]",
+          "props": [
+            "background-color",
+            "border-radius"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "r6re-wide-capsules",
+      "viewport": [
+        1280,
+        860
+      ],
+      "old": {
+        "path": "/manage/messenger",
+        "state": "state-old-admin.json",
+        "settle": 5200,
+        "steps": [
+          {
+            "click": "li:has-text(\"机器人管理\")"
+          },
+          {
+            "wait": 3500
+          }
+        ]
+      },
+      "new": {
+        "path": "/messenger/6331",
+        "state": "state-admin.json",
+        "settle": 6000,
+        "steps": [
+          {
+            "waitFor": "[data-testid=msg-row]"
+          },
+          {
+            "wait": 1000
+          }
+        ]
+      },
+      "elements": [
+        {
+          "name": "帮助指令胶囊",
+          "old": ".chat-bottom-menu li >> nth=0",
+          "new": "div[class*=\"unistyles_iiqh182bad\"] > button >> nth=0",
+          "props": [
+            "background-color",
+            "border-radius",
+            "padding"
+          ]
+        },
+        {
+          "name": "API接口文档胶囊",
+          "old": ".chat-bottom-menu li >> nth=1",
+          "new": "div[class*=\"unistyles_iiqh182bad\"] > button >> nth=1",
+          "props": [
+            "background-color",
+            "border-radius",
+            "padding"
+          ]
+        },
+        {
+          "name": "我的机器人胶囊",
+          "old": ".chat-bottom-menu li >> nth=2",
+          "new": "div[class*=\"unistyles_iiqh182bad\"] > button >> nth=2",
+          "props": [
+            "background-color",
+            "border-radius",
+            "padding"
+          ]
+        },
+        {
+          "name": "帮助指令文字",
+          "old": ".bottom-menu-desc >> nth=0",
+          "new": "div[class*=\"unistyles_iiqh182bad\"] > button >> nth=0 >> div >> nth=0",
+          "props": [
+            "font-size",
+            "line-height",
+            "color"
+          ],
+          "text": true
+        },
+        {
+          "name": "输入框容器",
+          "old": ".chat-input-wrapper",
+          "new": "div[class*=\"unistyles_sgdegzmbpa\"]",
+          "props": [
+            "background-color",
+            "border-radius"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "r6re-narrow-capsules",
+      "viewport": [
+        390,
+        844
+      ],
+      "mobile": true,
+      "old": {
+        "path": "/manage/messenger",
+        "state": "state-old-admin.json",
+        "settle": 5200,
+        "steps": [
+          {
+            "click": "li:has-text(\"机器人管理\")"
+          },
+          {
+            "wait": 3500
+          }
+        ]
+      },
+      "new": {
+        "path": "/messenger/6331",
+        "state": "state-admin.json",
+        "settle": 6000,
+        "steps": [
+          {
+            "waitFor": "[data-testid=msg-row]"
+          },
+          {
+            "wait": 1000
+          }
+        ]
+      },
+      "elements": [
+        {
+          "name": "帮助指令胶囊",
+          "old": ".chat-bottom-menu li >> nth=0",
+          "new": "button[class*=\"unistyles_djf8r4imxj\"] >> nth=0",
+          "props": [
+            "background-color",
+            "border-radius",
+            "padding"
+          ]
+        },
+        {
+          "name": "API接口文档胶囊",
+          "old": ".chat-bottom-menu li >> nth=1",
+          "new": "button[class*=\"unistyles_djf8r4imxj\"] >> nth=1",
+          "props": [
+            "background-color",
+            "border-radius",
+            "padding"
+          ]
+        },
+        {
+          "name": "我的机器人胶囊",
+          "old": ".chat-bottom-menu li >> nth=2",
+          "new": "button[class*=\"unistyles_djf8r4imxj\"] >> nth=2",
+          "props": [
+            "background-color",
+            "border-radius",
+            "padding"
+          ]
+        },
+        {
+          "name": "帮助指令文字",
+          "old": ".bottom-menu-desc >> nth=0",
+          "new": "button[class*=\"unistyles_djf8r4imxj\"] >> nth=0 >> div >> nth=0",
+          "props": [
+            "font-size",
+            "line-height",
+            "color"
+          ],
+          "text": true
+        },
+        {
+          "name": "输入框容器",
+          "old": ".chat-input-wrapper",
+          "new": "div[class*=\"unistyles_1uvtwbnkbw3\"]",
+          "props": [
+            "background-color",
+            "border-radius"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "r6re-wide-confirm",
+      "viewport": [
+        1280,
+        860
+      ],
+      "old": {
+        "path": "/manage/messenger",
+        "state": "state-old-admin.json",
+        "settle": 5200,
+        "steps": [
+          {
+            "click": "li[data-id=\"5805\"]"
+          },
+          {
+            "waitFor": ".dialog-item"
+          },
+          {
+            "wait": 3000
+          },
+          {
+            "rightClick": ".dialog-item:not(.self) >> nth=-1 >> .dialog-content"
+          },
+          {
+            "waitFor": ".dialog-wrapper-operate"
+          },
+          {
+            "wait": 700
+          },
+          {
+            "click": ".dialog-wrapper-operate .operate-action li:has-text(\"转发\")"
+          },
+          {
+            "waitFor": ".common-user-select-modal"
+          },
+          {
+            "wait": 1500
+          },
+          {
+            "click": ".usp-center .usp-row >> nth=0"
+          },
+          {
+            "wait": 900
+          },
+          {
+            "click": ".usp-acts .doo-button.is-primary"
+          },
+          {
+            "waitFor": ".forwarder-message-modal .doo-modal-card"
+          },
+          {
+            "wait": 1200
+          }
+        ]
+      },
+      "new": {
+        "path": "/messenger/5805",
+        "state": "state-admin.json",
+        "settle": 6000,
+        "steps": [
+          {
+            "waitFor": "[data-testid=msg-row]"
+          },
+          {
+            "wait": 1000
+          },
+          {
+            "rightClick": "[data-testid=msg-row] >> nth=-1 >> [data-testid=msg-content]"
+          },
+          {
+            "waitFor": "[data-testid=msg-menu]"
+          },
+          {
+            "wait": 700
+          },
+          {
+            "click": "[data-testid=msg-menu] [role=menuitem]:has-text(\"转发\")"
+          },
+          {
+            "waitFor": "[data-testid=dialog-picker]"
+          },
+          {
+            "wait": 1500
+          },
+          {
+            "click": "[data-testid=dialog-picker] >> [role=checkbox] >> nth=0"
+          },
+          {
+            "wait": 900
+          },
+          {
+            "click": "button[aria-label=确定]"
+          },
+          {
+            "waitFor": "h1:text-is(\"确认转发\")"
+          },
+          {
+            "wait": 1200
+          }
+        ]
+      },
+      "elements": [
+        {
+          "name": "确认卡片",
+          "old": ".forwarder-message-modal .doo-modal-card",
+          "new": "h1:text-is(\"确认转发\") >> xpath=.. >> xpath=..",
+          "props": [
+            "background-color",
+            "border-radius"
+          ]
+        },
+        {
+          "name": "标题",
+          "old": ".doo-modal-title",
+          "new": "h1:text-is(\"确认转发\")",
+          "props": [
+            "font-size",
+            "font-weight",
+            "color"
+          ],
+          "text": true
+        },
+        {
+          "name": "留言框",
+          "old": ".leave-message textarea",
+          "new": "body >> textarea[placeholder=留言]",
+          "props": [
+            "font-size",
+            "line-height",
+            "background-color",
+            "border-radius",
+            "padding"
+          ]
+        },
+        {
+          "name": "确定按钮",
+          "old": ".doo-modal-footer .doo-button",
+          "new": "h1:text-is(\"确认转发\") >> xpath=.. >> xpath=.. >> button:has-text(\"确定\")",
+          "props": [
+            "background-color",
+            "border-radius",
+            "padding"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "r6re-narrow-confirm",
+      "viewport": [
+        390,
+        844
+      ],
+      "mobile": true,
+      "old": {
+        "path": "/manage/messenger",
+        "state": "state-old-admin.json",
+        "settle": 5200,
+        "steps": [
+          {
+            "click": "li[data-id=\"5805\"]"
+          },
+          {
+            "waitFor": ".dialog-item"
+          },
+          {
+            "wait": 3000
+          },
+          {
+            "rightClick": ".dialog-item:not(.self) >> nth=-1 >> .dialog-content"
+          },
+          {
+            "waitFor": ".dialog-wrapper-operate"
+          },
+          {
+            "wait": 700
+          },
+          {
+            "click": ".dialog-wrapper-operate .operate-action li:has-text(\"转发\")"
+          },
+          {
+            "waitFor": ".common-user-select-modal"
+          },
+          {
+            "wait": 1500
+          },
+          {
+            "click": ".usp-center .usp-row >> nth=0"
+          },
+          {
+            "wait": 900
+          },
+          {
+            "click": ".usp-acts .usp-btn"
+          },
+          {
+            "waitFor": ".forwarder-message-modal .doo-modal-card"
+          },
+          {
+            "wait": 1200
+          }
+        ]
+      },
+      "new": {
+        "path": "/messenger/5805",
+        "state": "state-admin.json",
+        "settle": 6000,
+        "steps": [
+          {
+            "waitFor": "[data-testid=msg-row]"
+          },
+          {
+            "wait": 1000
+          },
+          {
+            "rightClick": "[data-testid=msg-row] >> nth=-1 >> [data-testid=msg-content]"
+          },
+          {
+            "waitFor": "[data-testid=msg-menu]"
+          },
+          {
+            "wait": 700
+          },
+          {
+            "force": "[data-testid=msg-menu] [role=menuitem]:has-text(\"转发\")"
+          },
+          {
+            "waitFor": "[data-testid=dialog-picker]"
+          },
+          {
+            "wait": 1500
+          },
+          {
+            "click": "[data-testid=dialog-picker] >> [role=checkbox] >> nth=0"
+          },
+          {
+            "wait": 900
+          },
+          {
+            "force": "[data-testid=dialog-picker] > div > div > div:nth-child(4) > button >> nth=-1"
+          },
+          {
+            "waitFor": "h1:text-is(\"确认转发\")"
+          },
+          {
+            "wait": 1200
+          }
+        ]
+      },
+      "elements": [
+        {
+          "name": "确认卡片",
+          "old": ".forwarder-message-modal .doo-modal-card",
+          "new": "h1:text-is(\"确认转发\") >> xpath=.. >> xpath=..",
+          "props": [
+            "background-color",
+            "border-radius"
+          ]
+        },
+        {
+          "name": "标题",
+          "old": ".doo-modal-title",
+          "new": "h1:text-is(\"确认转发\")",
+          "props": [
+            "font-size",
+            "font-weight",
+            "color"
+          ],
+          "text": true
+        },
+        {
+          "name": "留言框",
+          "old": ".leave-message textarea",
+          "new": "body >> textarea[placeholder=留言]",
+          "props": [
+            "font-size",
+            "line-height",
+            "background-color",
+            "border-radius",
+            "padding"
+          ]
+        },
+        {
+          "name": "确定按钮",
+          "old": ".doo-modal-footer .doo-button",
+          "new": "h1:text-is(\"确认转发\") >> xpath=.. >> xpath=.. >> button:has-text(\"确定\")",
+          "props": [
+            "background-color",
+            "border-radius",
+            "padding"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,515 @@
+{
+  "screens": [
+    {
+      "name": "r6-wide-multi",
+      "viewport": [1280, 860],
+      "old": {
+        "path": "/manage/messenger",
+        "state": "state-old-admin.json",
+        "settle": 5200,
+        "steps": [
+          { "click": "li[data-id=\"5805\"]" },
+          { "waitFor": ".dialog-item" },
+          { "wait": 3000 },
+          { "rightClick": ".dialog-item:not(.self) >> nth=-1 >> .dialog-content" },
+          { "waitFor": ".dialog-wrapper-operate" },
+          { "wait": 700 },
+          { "click": ".dialog-wrapper-operate .operate-action li:has-text(\"多选\")" },
+          { "waitFor": ".dialog-multi-select-bar" },
+          { "wait": 700 }
+        ]
+      },
+      "new": {
+        "path": "/messenger/5805",
+        "state": "state-admin.json",
+        "settle": 6000,
+        "steps": [
+          { "waitFor": "[data-testid=msg-row]" },
+          { "wait": 1000 },
+          { "rightClick": "[data-testid=msg-row] >> nth=-1 >> [data-testid=msg-content]" },
+          { "waitFor": "[data-testid=msg-menu]" },
+          { "wait": 700 },
+          { "click": "[data-testid=msg-menu] [role=menuitem]:has-text(\"多选\")" },
+          { "waitFor": "[data-testid=selection-bar]" },
+          { "wait": 700 }
+        ]
+      },
+      "elements": [
+        { "name": "多选条", "old": ".dialog-multi-select-bar", "new": "[data-testid=selection-bar]", "props": ["background-color", "padding"] },
+        { "name": "已选文案", "old": ".multi-select-info", "new": "[data-testid=selection-bar] > div:first-child", "props": ["font-size", "line-height", "color"], "text": true },
+        { "name": "转发按钮", "old": ".dialog-multi-select-bar .ivu-btn-primary", "new": "[data-testid=selection-bar] button[aria-label=转发]", "props": ["background-color", "border-radius", "padding"] },
+        { "name": "取消按钮", "old": ".dialog-multi-select-bar .ivu-btn-default", "new": "[data-testid=selection-bar] button[aria-label=取消]", "props": ["background-color", "border-radius", "padding"] },
+        { "name": "勾选框图标", "old": ".dialog-item.multi-select-mode:not(.self) .dialog-multi-check i.doo-icon", "new": "[role=checkbox] >> nth=0 >> svg", "props": ["color|stroke"] }
+      ]
+    },
+    {
+      "name": "r6-wide-picker",
+      "viewport": [1280, 860],
+      "old": {
+        "path": "/manage/messenger",
+        "state": "state-old-admin.json",
+        "settle": 5200,
+        "steps": [
+          { "click": "li[data-id=\"5805\"]" },
+          { "waitFor": ".dialog-item" },
+          { "wait": 3000 },
+          { "rightClick": ".dialog-item:not(.self) >> nth=-1 >> .dialog-content" },
+          { "waitFor": ".dialog-wrapper-operate" },
+          { "wait": 700 },
+          { "click": ".dialog-wrapper-operate .operate-action li:has-text(\"转发\")" },
+          { "waitFor": ".common-user-select-modal" },
+          { "wait": 1500 }
+        ]
+      },
+      "new": {
+        "path": "/messenger/5805",
+        "state": "state-admin.json",
+        "settle": 6000,
+        "steps": [
+          { "waitFor": "[data-testid=msg-row]" },
+          { "wait": 1000 },
+          { "rightClick": "[data-testid=msg-row] >> nth=-1 >> [data-testid=msg-content]" },
+          { "waitFor": "[data-testid=msg-menu]" },
+          { "wait": 700 },
+          { "click": "[data-testid=msg-menu] [role=menuitem]:has-text(\"转发\")" },
+          { "waitFor": "[data-testid=dialog-picker]" },
+          { "wait": 1500 }
+        ]
+      },
+      "elements": [
+        { "name": "选择器卡片", "old": ".common-user-select-modal .doo-modal-card", "new": "[data-testid=dialog-picker] > div > div", "props": ["background-color", "border-radius"] },
+        { "name": "标题", "old": ".usp-title", "new": "[data-testid=dialog-picker] > div > div > div:nth-child(1) > div:nth-child(1)", "props": ["font-size", "font-weight", "color"], "text": true },
+        { "name": "搜索框", "old": ".usp-search", "new": "[data-testid=dialog-picker] > div > div > div:nth-child(1) > div:nth-child(2)", "props": ["background-color", "border-radius", "padding"] },
+        { "name": "左列", "old": ".usp-side", "new": "[data-testid=dialog-picker] > div > div > div:nth-child(2) > div:nth-child(1)", "props": ["background-color", "border-radius", "padding"] },
+        { "name": "中列行", "old": ".usp-center .usp-row >> nth=0", "new": "[data-testid=dialog-picker] >> [role=checkbox] >> nth=0", "props": ["border-radius", "padding"] },
+        { "name": "行头像", "old": ".usp-center .usp-row >> nth=0 >> .el-avatar", "new": "[data-testid=dialog-picker] >> [role=checkbox] >> nth=0 >> div >> nth=0", "props": ["background-color", "border-radius"] },
+        { "name": "右列", "old": ".usp-right", "new": "[data-testid=dialog-picker] > div > div > div:nth-child(2) > div:nth-child(3)", "props": ["background-color", "border-radius", "padding"] },
+        { "name": "已选计数栏", "old": ".usp-rh", "new": "[data-testid=dialog-picker] > div > div > div:nth-child(2) > div:nth-child(3) > div:nth-child(1)", "props": ["padding"], "text": true },
+        { "name": "空态文案", "old": ".usp-rl .usp-empty", "new": "[data-testid=dialog-picker] >> text=勾选的成员会出现在这里", "props": ["font-size", "color"], "text": true },
+        { "name": "取消按钮", "old": ".usp-acts .doo-button.is-default", "new": "[data-testid=dialog-picker] > div > div > div:nth-child(3) button >> nth=0", "props": ["background-color", "border-radius", "padding"] },
+        { "name": "确定按钮(0选)", "old": ".usp-acts .doo-button.is-primary", "new": "[data-testid=dialog-picker] > div > div > div:nth-child(3) button >> nth=-1", "props": ["background-color", "border-radius", "padding", "opacity"] }
+      ]
+    },
+    {
+      "name": "r6-wide-picker-sel",
+      "viewport": [1280, 860],
+      "old": {
+        "path": "/manage/messenger",
+        "state": "state-old-admin.json",
+        "settle": 5200,
+        "steps": [
+          { "click": "li[data-id=\"5805\"]" },
+          { "waitFor": ".dialog-item" },
+          { "wait": 3000 },
+          { "rightClick": ".dialog-item:not(.self) >> nth=-1 >> .dialog-content" },
+          { "waitFor": ".dialog-wrapper-operate" },
+          { "wait": 700 },
+          { "click": ".dialog-wrapper-operate .operate-action li:has-text(\"转发\")" },
+          { "waitFor": ".common-user-select-modal" },
+          { "wait": 1500 },
+          { "click": ".usp-center .usp-row >> nth=0" },
+          { "wait": 900 }
+        ]
+      },
+      "new": {
+        "path": "/messenger/5805",
+        "state": "state-admin.json",
+        "settle": 6000,
+        "steps": [
+          { "waitFor": "[data-testid=msg-row]" },
+          { "wait": 1000 },
+          { "rightClick": "[data-testid=msg-row] >> nth=-1 >> [data-testid=msg-content]" },
+          { "waitFor": "[data-testid=msg-menu]" },
+          { "wait": 700 },
+          { "click": "[data-testid=msg-menu] [role=menuitem]:has-text(\"转发\")" },
+          { "waitFor": "[data-testid=dialog-picker]" },
+          { "wait": 1500 },
+          { "click": "[data-testid=dialog-picker] >> [role=checkbox] >> nth=0" },
+          { "wait": 900 }
+        ]
+      },
+      "elements": [
+        { "name": "已选计数栏", "old": ".usp-rh", "new": "[data-testid=dialog-picker] > div > div > div:nth-child(2) > div:nth-child(3) > div:nth-child(1)", "props": ["padding"], "text": true },
+        { "name": "清空", "old": ".usp-rh .usp-clear", "new": "[data-testid=dialog-picker] >> text=清空", "props": ["font-size", "color"], "text": true },
+        { "name": "已选条目", "old": ".usp-pr", "new": "[data-testid=dialog-picker] > div > div > div:nth-child(2) > div:nth-child(3) > div:nth-child(3) > div >> nth=0", "props": ["border-radius", "padding"] },
+        { "name": "已选条目头像", "old": ".usp-pr .el-avatar", "new": "[data-testid=dialog-picker] > div > div > div:nth-child(2) > div:nth-child(3) > div:nth-child(3) > div >> nth=0 >> div >> nth=0", "props": ["border-radius"] },
+        { "name": "选中行", "old": ".usp-center .usp-row.sel", "new": "[data-testid=dialog-picker] >> [role=checkbox] >> nth=0", "props": ["background-color", "border-radius"] },
+        { "name": "确定按钮(1选)", "old": ".usp-acts .doo-button.is-primary", "new": "[data-testid=dialog-picker] > div > div > div:nth-child(3) button >> nth=-1", "props": ["background-color", "border-radius", "padding", "opacity"] }
+      ]
+    },
+    {
+      "name": "r6-wide-confirm",
+      "viewport": [1280, 860],
+      "old": {
+        "path": "/manage/messenger",
+        "state": "state-old-admin.json",
+        "settle": 5200,
+        "steps": [
+          { "click": "li[data-id=\"5805\"]" },
+          { "waitFor": ".dialog-item" },
+          { "wait": 3000 },
+          { "rightClick": ".dialog-item:not(.self) >> nth=-1 >> .dialog-content" },
+          { "waitFor": ".dialog-wrapper-operate" },
+          { "wait": 700 },
+          { "click": ".dialog-wrapper-operate .operate-action li:has-text(\"转发\")" },
+          { "waitFor": ".common-user-select-modal" },
+          { "wait": 1500 },
+          { "click": ".usp-center .usp-row >> nth=0" },
+          { "wait": 900 },
+          { "click": ".usp-acts .doo-button.is-primary" },
+          { "waitFor": ".forwarder-message-modal .doo-modal-card" },
+          { "wait": 1200 }
+        ]
+      },
+      "new": {
+        "path": "/messenger/5805",
+        "state": "state-admin.json",
+        "settle": 6000,
+        "steps": [
+          { "waitFor": "[data-testid=msg-row]" },
+          { "wait": 1000 },
+          { "rightClick": "[data-testid=msg-row] >> nth=-1 >> [data-testid=msg-content]" },
+          { "waitFor": "[data-testid=msg-menu]" },
+          { "wait": 700 },
+          { "click": "[data-testid=msg-menu] [role=menuitem]:has-text(\"转发\")" },
+          { "waitFor": "[data-testid=dialog-picker]" },
+          { "wait": 1500 },
+          { "click": "[data-testid=dialog-picker] >> [role=checkbox] >> nth=0" },
+          { "wait": 900 },
+          { "click": "button[aria-label=确定]" },
+          { "waitFor": "h1:text-is(\"确认转发\")" },
+          { "wait": 1200 }
+        ]
+      },
+      "elements": [
+        { "name": "确认卡片", "old": ".forwarder-message-modal .doo-modal-card", "new": "h1:text-is(\"确认转发\") >> xpath=.. >> xpath=..", "props": ["background-color", "border-radius"] },
+        { "name": "标题", "old": ".doo-modal-title", "new": "h1:text-is(\"确认转发\")", "props": ["font-size", "font-weight", "color"], "text": true },
+        { "name": "消息预览", "old": ".dialog-item.reply-item", "new": "h1:text-is(\"确认转发\") >> xpath=.. >> xpath=.. >> text=cpu占用高一般都是查询导致 >> xpath=.. >> xpath=..", "props": ["background-color", "border-radius"] },
+        { "name": "留言框", "old": ".leave-message textarea", "new": "body >> textarea[placeholder=留言]", "props": ["font-size", "line-height", "background-color", "border-radius", "padding"] },
+        { "name": "确定(1)按钮", "old": ".doo-modal-footer .doo-button", "new": "h1:text-is(\"确认转发\") >> xpath=.. >> xpath=.. >> button:has-text(\"确定\")", "props": ["background-color", "border-radius", "padding"] }
+      ]
+    },
+    {
+      "name": "r6-wide-confirm-merged",
+      "viewport": [1280, 860],
+      "old": {
+        "path": "/manage/messenger",
+        "state": "state-old-admin.json",
+        "settle": 5200,
+        "steps": [
+          { "click": "li[data-id=\"5805\"]" },
+          { "waitFor": ".dialog-item" },
+          { "wait": 3000 },
+          { "rightClick": ".dialog-item:not(.self) >> nth=-1 >> .dialog-content" },
+          { "waitFor": ".dialog-wrapper-operate" },
+          { "wait": 700 },
+          { "click": ".dialog-wrapper-operate .operate-action li:has-text(\"多选\")" },
+          { "waitFor": ".dialog-multi-select-bar" },
+          { "wait": 700 },
+          { "click": ".dialog-item:has-text(\"QA 规格测试消息 01\") .dialog-multi-check" },
+          { "wait": 600 },
+          { "click": ".dialog-multi-select-bar .ivu-btn-primary" },
+          { "waitFor": ".common-user-select-modal" },
+          { "wait": 1600 },
+          { "click": ".usp-center .usp-row >> nth=0" },
+          { "wait": 900 },
+          { "click": ".usp-acts .doo-button.is-primary" },
+          { "waitFor": ".forwarder-message-modal .doo-modal-card" },
+          { "wait": 1200 },
+          { "click": ".forward-mode-select .ivu-radio-wrapper >> nth=1" },
+          { "wait": 1000 }
+        ]
+      },
+      "new": {
+        "path": "/messenger/5805",
+        "state": "state-admin.json",
+        "settle": 6000,
+        "steps": [
+          { "waitFor": "[data-testid=msg-row]" },
+          { "wait": 1000 },
+          { "rightClick": "[data-testid=msg-row] >> nth=-1 >> [data-testid=msg-content]" },
+          { "waitFor": "[data-testid=msg-menu]" },
+          { "wait": 700 },
+          { "click": "[data-testid=msg-menu] [role=menuitem]:has-text(\"多选\")" },
+          { "waitFor": "[data-testid=selection-bar]" },
+          { "wait": 700 },
+          { "click": "[role=checkbox]:has-text(\"QA 规格测试消息 01\")" },
+          { "wait": 600 },
+          { "click": "[data-testid=selection-bar] button[aria-label=转发]" },
+          { "waitFor": "[data-testid=dialog-picker]" },
+          { "wait": 1600 },
+          { "click": "[data-testid=dialog-picker] >> [role=checkbox] >> nth=0" },
+          { "wait": 900 },
+          { "click": "button[aria-label=确定]" },
+          { "waitFor": "h1:text-is(\"确认转发\")" },
+          { "wait": 1200 },
+          { "click": "text=合并转发" },
+          { "wait": 1000 }
+        ]
+      },
+      "elements": [
+        { "name": "确认卡片", "old": ".forwarder-message-modal .doo-modal-card", "new": "h1:text-is(\"确认转发\") >> xpath=.. >> xpath=..", "props": ["background-color", "border-radius"] },
+        { "name": "转发方式行", "old": ".forward-mode-select", "new": "h1:text-is(\"确认转发\") >> xpath=.. >> xpath=.. >> text=逐条转发 >> xpath=../..", "props": ["padding"], "text": true },
+        { "name": "聊天记录卡", "old": ".merge-forward-preview", "new": "h1:text-is(\"确认转发\") >> xpath=.. >> xpath=.. >> text=聊天记录 >> xpath=.. >> xpath=..", "props": ["background-color", "border-radius", "padding"] },
+        { "name": "记录标题", "old": ".merge-preview-title", "new": "h1:text-is(\"确认转发\") >> xpath=.. >> xpath=.. >> text=聊天记录 >> xpath=..", "props": ["font-size", "color"], "text": true },
+        { "name": "记录行1", "old": ".merge-preview-item >> nth=0", "new": "h1:text-is(\"确认转发\") >> xpath=.. >> xpath=.. >> text=cpu占用高一般都是查询导致 >> xpath=.. >> xpath=..", "props": [] },
+        { "name": "共N条消息", "old": ".merge-preview-count", "new": "h1:text-is(\"确认转发\") >> xpath=.. >> xpath=.. >> text=共2条消息", "props": ["font-size", "color"], "text": true },
+        { "name": "留言框", "old": ".leave-message textarea", "new": "body >> textarea[placeholder=留言]", "props": ["font-size", "line-height", "background-color", "border-radius", "padding"] }
+      ]
+    },
+    {
+      "name": "r6-narrow-multi",
+      "viewport": [390, 844],
+      "mobile": true,
+      "old": {
+        "path": "/manage/messenger",
+        "state": "state-old-admin.json",
+        "settle": 5200,
+        "steps": [
+          { "click": "li[data-id=\"5805\"]" },
+          { "waitFor": ".dialog-item" },
+          { "wait": 3000 },
+          { "rightClick": ".dialog-item:not(.self) >> nth=-1 >> .dialog-content" },
+          { "waitFor": ".dialog-wrapper-operate" },
+          { "wait": 700 },
+          { "click": ".dialog-wrapper-operate .operate-action li:has-text(\"多选\")" },
+          { "waitFor": ".dialog-multi-select-bar" },
+          { "wait": 700 }
+        ]
+      },
+      "new": {
+        "path": "/messenger/5805",
+        "state": "state-admin.json",
+        "settle": 6000,
+        "steps": [
+          { "waitFor": "[data-testid=msg-row]" },
+          { "wait": 1000 },
+          { "rightClick": "[data-testid=msg-row] >> nth=-1 >> [data-testid=msg-content]" },
+          { "waitFor": "[data-testid=msg-menu]" },
+          { "wait": 700 },
+          { "force": "[data-testid=msg-menu] [role=menuitem]:has-text(\"多选\")" },
+          { "waitFor": "[data-testid=selection-bar]" },
+          { "wait": 700 }
+        ]
+      },
+      "elements": [
+        { "name": "多选条", "old": ".dialog-multi-select-bar", "new": "[data-testid=selection-bar]", "props": ["background-color", "padding"] },
+        { "name": "已选文案", "old": ".multi-select-info", "new": "[data-testid=selection-bar] > div:first-child", "props": ["font-size", "line-height", "color"], "text": true },
+        { "name": "转发按钮", "old": ".dialog-multi-select-bar .ivu-btn-primary", "new": "[data-testid=selection-bar] button[aria-label=转发]", "props": ["background-color", "border-radius", "padding"] },
+        { "name": "取消按钮", "old": ".dialog-multi-select-bar .ivu-btn-default", "new": "[data-testid=selection-bar] button[aria-label=取消]", "props": ["background-color", "border-radius", "padding"] }
+      ]
+    },
+    {
+      "name": "r6-narrow-picker",
+      "viewport": [390, 844],
+      "mobile": true,
+      "old": {
+        "path": "/manage/messenger",
+        "state": "state-old-admin.json",
+        "settle": 5200,
+        "steps": [
+          { "click": "li[data-id=\"5805\"]" },
+          { "waitFor": ".dialog-item" },
+          { "wait": 3000 },
+          { "rightClick": ".dialog-item:not(.self) >> nth=-1 >> .dialog-content" },
+          { "waitFor": ".dialog-wrapper-operate" },
+          { "wait": 700 },
+          { "click": ".dialog-wrapper-operate .operate-action li:has-text(\"转发\")" },
+          { "waitFor": ".common-user-select-modal" },
+          { "wait": 1500 }
+        ]
+      },
+      "new": {
+        "path": "/messenger/5805",
+        "state": "state-admin.json",
+        "settle": 6000,
+        "steps": [
+          { "waitFor": "[data-testid=msg-row]" },
+          { "wait": 1000 },
+          { "rightClick": "[data-testid=msg-row] >> nth=-1 >> [data-testid=msg-content]" },
+          { "waitFor": "[data-testid=msg-menu]" },
+          { "wait": 700 },
+          { "force": "[data-testid=msg-menu] [role=menuitem]:has-text(\"转发\")" },
+          { "waitFor": "[data-testid=dialog-picker]" },
+          { "wait": 1500 }
+        ]
+      },
+      "elements": [
+        { "name": "顶栏", "old": ".usp-bar", "new": "[data-testid=dialog-picker] > div > div > div:nth-child(1)", "props": ["padding"] },
+        { "name": "顶栏标题", "old": ".usp-bar-title", "new": "[data-testid=dialog-picker] > div > div > div:nth-child(1) > h1", "props": ["font-size", "font-weight", "color"], "text": true },
+        { "name": "搜索框", "old": ".usp-search", "new": "[data-testid=dialog-picker] > div > div > div:nth-child(2)", "props": ["background-color", "border-radius", "padding"] },
+        { "name": "全部成员入口", "old": ".usp-entry >> nth=0", "new": "[data-testid=dialog-picker] > div > div > div:nth-child(3) > div > div > div > div:nth-child(1) > div > button:nth-child(1)", "props": ["border-radius", "padding"] },
+        { "name": "最近会话分组", "old": ".usp-grp", "new": "[data-testid=dialog-picker] >> text=最近会话 >> xpath=..", "props": ["font-size", "color"], "text": true },
+        { "name": "最近会话行", "old": ".usp-center .usp-row >> nth=0", "new": "[data-testid=dialog-picker] >> [role=checkbox] >> nth=0", "props": ["padding"], "text": true },
+        { "name": "底部条", "old": ".usp-foot", "new": "[data-testid=dialog-picker] > div > div > div:nth-child(4)", "props": ["padding"] },
+        { "name": "底部提示", "old": ".usp-stack-text", "new": "[data-testid=dialog-picker] >> text=最多可选50项", "props": ["font-size", "color"], "text": true },
+        { "name": "确定按钮(0选)", "old": ".usp-acts .usp-btn", "new": "[data-testid=dialog-picker] > div > div > div:nth-child(4) > button >> nth=-1", "props": ["background-color", "border-radius", "opacity"] }
+      ]
+    },
+    {
+      "name": "r6-narrow-picker-sel",
+      "viewport": [390, 844],
+      "mobile": true,
+      "old": {
+        "path": "/manage/messenger",
+        "state": "state-old-admin.json",
+        "settle": 5200,
+        "steps": [
+          { "click": "li[data-id=\"5805\"]" },
+          { "waitFor": ".dialog-item" },
+          { "wait": 3000 },
+          { "rightClick": ".dialog-item:not(.self) >> nth=-1 >> .dialog-content" },
+          { "waitFor": ".dialog-wrapper-operate" },
+          { "wait": 700 },
+          { "click": ".dialog-wrapper-operate .operate-action li:has-text(\"转发\")" },
+          { "waitFor": ".common-user-select-modal" },
+          { "wait": 1500 },
+          { "click": ".usp-center .usp-row >> nth=0" },
+          { "wait": 900 }
+        ]
+      },
+      "new": {
+        "path": "/messenger/5805",
+        "state": "state-admin.json",
+        "settle": 6000,
+        "steps": [
+          { "waitFor": "[data-testid=msg-row]" },
+          { "wait": 1000 },
+          { "rightClick": "[data-testid=msg-row] >> nth=-1 >> [data-testid=msg-content]" },
+          { "waitFor": "[data-testid=msg-menu]" },
+          { "wait": 700 },
+          { "force": "[data-testid=msg-menu] [role=menuitem]:has-text(\"转发\")" },
+          { "waitFor": "[data-testid=dialog-picker]" },
+          { "wait": 1500 },
+          { "click": "[data-testid=dialog-picker] >> [role=checkbox] >> nth=0" },
+          { "wait": 900 }
+        ]
+      },
+      "elements": [
+        { "name": "底部堆叠条", "old": ".usp-stack", "new": "[data-testid=dialog-picker] > div > div > div:nth-child(4) > button >> nth=0", "props": ["padding"] },
+        { "name": "已选文案", "old": ".usp-stack-text", "new": "[data-testid=dialog-picker] >> text=已选 1 / 50", "props": ["font-size", "color"], "text": true },
+        { "name": "选中行", "old": ".usp-center .usp-row.sel", "new": "[data-testid=dialog-picker] >> [role=checkbox] >> nth=0", "props": ["background-color", "border-radius"] },
+        { "name": "确定按钮(1选)", "old": ".usp-acts .usp-btn", "new": "[data-testid=dialog-picker] > div > div > div:nth-child(4) > button >> nth=-1", "props": ["background-color", "border-radius", "opacity"] }
+      ]
+    },
+    {
+      "name": "r6-narrow-confirm",
+      "viewport": [390, 844],
+      "mobile": true,
+      "old": {
+        "path": "/manage/messenger",
+        "state": "state-old-admin.json",
+        "settle": 5200,
+        "steps": [
+          { "click": "li[data-id=\"5805\"]" },
+          { "waitFor": ".dialog-item" },
+          { "wait": 3000 },
+          { "rightClick": ".dialog-item:not(.self) >> nth=-1 >> .dialog-content" },
+          { "waitFor": ".dialog-wrapper-operate" },
+          { "wait": 700 },
+          { "click": ".dialog-wrapper-operate .operate-action li:has-text(\"转发\")" },
+          { "waitFor": ".common-user-select-modal" },
+          { "wait": 1500 },
+          { "click": ".usp-center .usp-row >> nth=0" },
+          { "wait": 900 },
+          { "click": ".usp-acts .usp-btn" },
+          { "waitFor": ".forwarder-message-modal .doo-modal-card" },
+          { "wait": 1200 }
+        ]
+      },
+      "new": {
+        "path": "/messenger/5805",
+        "state": "state-admin.json",
+        "settle": 6000,
+        "steps": [
+          { "waitFor": "[data-testid=msg-row]" },
+          { "wait": 1000 },
+          { "rightClick": "[data-testid=msg-row] >> nth=-1 >> [data-testid=msg-content]" },
+          { "waitFor": "[data-testid=msg-menu]" },
+          { "wait": 700 },
+          { "force": "[data-testid=msg-menu] [role=menuitem]:has-text(\"转发\")" },
+          { "waitFor": "[data-testid=dialog-picker]" },
+          { "wait": 1500 },
+          { "click": "[data-testid=dialog-picker] >> [role=checkbox] >> nth=0" },
+          { "wait": 900 },
+          { "force": "[data-testid=dialog-picker] > div > div > div:nth-child(4) > button >> nth=-1" },
+          { "waitFor": "h1:text-is(\"确认转发\")" },
+          { "wait": 1200 }
+        ]
+      },
+      "elements": [
+        { "name": "确认卡片", "old": ".forwarder-message-modal .doo-modal-card", "new": "h1:text-is(\"确认转发\") >> xpath=.. >> xpath=..", "props": ["background-color", "border-radius"] },
+        { "name": "消息预览", "old": ".dialog-item.reply-item", "new": "h1:text-is(\"确认转发\") >> xpath=.. >> xpath=.. >> text=cpu占用高一般都是查询导致 >> xpath=.. >> xpath=..", "props": ["background-color", "border-radius"] },
+        { "name": "留言框", "old": ".leave-message textarea", "new": "body >> textarea[placeholder=留言]", "props": ["font-size", "line-height", "background-color", "border-radius", "padding"] },
+        { "name": "确定(1)按钮", "old": ".doo-modal-footer .doo-button", "new": "h1:text-is(\"确认转发\") >> xpath=.. >> xpath=.. >> button:has-text(\"确定\")", "props": ["background-color", "border-radius", "padding"] }
+      ]
+    },
+    {
+      "name": "r6-narrow-confirm-merged",
+      "viewport": [390, 844],
+      "mobile": true,
+      "old": {
+        "path": "/manage/messenger",
+        "state": "state-old-admin.json",
+        "settle": 5200,
+        "steps": [
+          { "click": "li[data-id=\"5805\"]" },
+          { "waitFor": ".dialog-item" },
+          { "wait": 3000 },
+          { "rightClick": ".dialog-item:not(.self) >> nth=-1 >> .dialog-content" },
+          { "waitFor": ".dialog-wrapper-operate" },
+          { "wait": 700 },
+          { "click": ".dialog-wrapper-operate .operate-action li:has-text(\"多选\")" },
+          { "waitFor": ".dialog-multi-select-bar" },
+          { "wait": 700 },
+          { "click": ".dialog-item:has-text(\"QA 规格测试消息 01\") .dialog-multi-check" },
+          { "wait": 600 },
+          { "click": ".dialog-multi-select-bar .ivu-btn-primary" },
+          { "waitFor": ".common-user-select-modal" },
+          { "wait": 1600 },
+          { "click": ".usp-center .usp-row >> nth=0" },
+          { "wait": 900 },
+          { "click": ".usp-acts .usp-btn" },
+          { "waitFor": ".forwarder-message-modal .doo-modal-card" },
+          { "wait": 1200 },
+          { "click": ".forward-mode-select .ivu-radio-wrapper >> nth=1" },
+          { "wait": 1000 }
+        ]
+      },
+      "new": {
+        "path": "/messenger/5805",
+        "state": "state-admin.json",
+        "settle": 6000,
+        "steps": [
+          { "waitFor": "[data-testid=msg-row]" },
+          { "wait": 1000 },
+          { "rightClick": "[data-testid=msg-row] >> nth=-1 >> [data-testid=msg-content]" },
+          { "waitFor": "[data-testid=msg-menu]" },
+          { "wait": 700 },
+          { "force": "[data-testid=msg-menu] [role=menuitem]:has-text(\"多选\")" },
+          { "waitFor": "[data-testid=selection-bar]" },
+          { "wait": 700 },
+          { "click": "[role=checkbox]:has-text(\"QA 规格测试消息 01\")" },
+          { "wait": 600 },
+          { "click": "[data-testid=selection-bar] button[aria-label=转发]" },
+          { "waitFor": "[data-testid=dialog-picker]" },
+          { "wait": 1600 },
+          { "click": "[data-testid=dialog-picker] >> [role=checkbox] >> nth=0" },
+          { "wait": 900 },
+          { "force": "[data-testid=dialog-picker] > div > div > div:nth-child(4) > button >> nth=-1" },
+          { "waitFor": "h1:text-is(\"确认转发\")" },
+          { "wait": 1200 },
+          { "click": "text=合并转发" },
+          { "wait": 1000 }
+        ]
+      },
+      "elements": [
+        { "name": "确认卡片", "old": ".forwarder-message-modal .doo-modal-card", "new": "h1:text-is(\"确认转发\") >> xpath=.. >> xpath=..", "props": ["background-color", "border-radius"] },
+        { "name": "聊天记录卡", "old": ".merge-forward-preview", "new": "h1:text-is(\"确认转发\") >> xpath=.. >> xpath=.. >> text=聊天记录 >> xpath=.. >> xpath=..", "props": ["background-color", "border-radius", "padding"] },
+        { "name": "记录行1", "old": ".merge-preview-item >> nth=0", "new": "h1:text-is(\"确认转发\") >> xpath=.. >> xpath=.. >> text=cpu占用高一般都是查询导致 >> xpath=.. >> xpath=..", "props": [] },
+        { "name": "共N条消息", "old": ".merge-preview-count", "new": "h1:text-is(\"确认转发\") >> xpath=.. >> xpath=.. >> text=共2条消息", "props": ["font-size", "color"], "text": true },
+        { "name": "留言框", "old": ".leave-message textarea", "new": "body >> textarea[placeholder=留言]", "props": ["font-size", "line-height", "background-color", "border-radius", "padding"] }
+      ]
+    }
+  ]
+}
