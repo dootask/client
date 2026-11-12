@@ -6,7 +6,7 @@ import { phpList, requestParsed } from './schema';
 
 /**
  * 群和会话设置的接口（主仓库 DialogController 的 group/*、config，ComplaintController）。
- * 改了群资料的接口返回最新的会话数据，调用方存进会话缓存
+ * 建群返回新会话，改群资料只回改了的字段，调用方合进会话缓存
  */
 
 const num = z.number();
@@ -37,11 +37,14 @@ export async function create(client: ApiClient, params: { userids: number[]; cha
   return { dialog: data, msg };
 }
 
+/** 改群资料只回改了的字段 */
+const editedSchema = z.looseObject({ id: num, name: str.optional(), avatar: str.optional() });
+
 /**
- * 改群名称或头像。全员群由系统管理员修改时 admin 为真（服务端按管理员身份校验）
+ * 改群名称或头像，返回改了的字段。全员群由系统管理员修改时 admin 为真（服务端按管理员身份校验）
  */
 export async function edit(client: ApiClient, dialogId: number, patch: { name?: string; avatar?: string }, admin = false) {
-  const { data, msg } = await requestParsed(client, 'dialog/group/edit', dialogSchema, {
+  const { data, msg } = await requestParsed(client, 'dialog/group/edit', editedSchema, {
     data: { dialog_id: dialogId, ...patch, ...(admin ? { admin: 1 } : {}) },
   });
   return { dialog: data, msg };
@@ -111,5 +114,6 @@ export async function savePrompt(client: ApiClient, dialogId: number, value: str
 /** 举报会话；imgs 是 system/imgupload 返回的地址 */
 export async function report(client: ApiClient, params: { dialog_id: number; type: number; reason: string; imgs: string[] }) {
   const { imgs, ...rest } = params;
-  await client.request('complaint/submit', { method: 'post', data: { ...rest, imgs: imgs.map((path) => ({ path })) } });
+  const { msg } = await client.request('complaint/submit', { method: 'post', data: { ...rest, imgs: imgs.map((path) => ({ path })) } });
+  return msg;
 }

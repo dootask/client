@@ -20,19 +20,26 @@ export interface MsgWindow {
   loading: 'latest' | 'earlier' | 'newer' | 'around' | null;
 }
 
-/**
- * 聊天页的分类筛选（同一时间只有正在看的会话有）：服务端按分类取的一段，从该分类最新一条起连续，按 id 倒序。
- * 筛选期间窗口照常收消息，变化同步过来
- */
-export interface MsgFilter {
+/** 服务端按条件取的一段消息（分类筛选、回复线程）：从最新一条起连续，按 id 倒序。期间窗口照常收消息，变化同步过来 */
+export interface MsgSlice {
   dialogId: number;
-  type: MsgFilterType;
   list: Msg[];
-  /** 往前翻的位置：取 id ≤ 它的一页，0 为到头。单独记，筛选里的消息被去掉也不丢 */
+  /** 往前翻的位置：取 id ≤ 它的一页，0 为到头。单独记，里面的消息被去掉也不丢 */
   earlier: number;
   /** 已取到第一页 */
   ready: boolean;
   loading: boolean;
+}
+
+/** 聊天页的分类筛选（同一时间只有正在看的会话有） */
+export interface MsgFilter extends MsgSlice {
+  type: MsgFilterType;
+}
+
+/** 回复线程（F7）：回复 msgId 这条的消息；root 是被回复的那条（取到之前为空） */
+export interface MsgThread extends MsgSlice {
+  msgId: number;
+  root: Msg | null;
 }
 
 /** 发送队列里的消息（R18）：成功前在聊天窗口最新一端显示 */
@@ -46,6 +53,8 @@ export interface OutboxItem {
   reply_id?: number;
   /** 不提醒对方 */
   silence?: boolean;
+  /** AI 机器人单聊里选过的模型 */
+  model_name?: string;
   /** 进队列的时间（毫秒） */
   queuedAt: number;
   /** sending：发送中或等网络恢复；failed：服务端拒绝或排队超过 24 小时，等用户重发或删除 */
@@ -92,10 +101,12 @@ export interface MessengerState {
   dialogs: Record<number, StoredDialog>;
   windows: Record<number, MsgWindow>;
   filter: MsgFilter | null;
+  thread: MsgThread | null;
   /** 正在看的会话，0 为没有 */
   openId: number;
   /** 草稿（R19），会话 id → HTML */
   drafts: Record<number, string>;
+  aiModels: Record<number, string>;
   outbox: OutboxItem[];
   uploads: UploadItem[];
   /** 本次运行发出的消息 id → 发送时的本地 id，聊天列表用它认行，发送中换成发出的消息时行不重挂 */
@@ -120,8 +131,10 @@ export const initialMessengerState = (): MessengerState => ({
   dialogs: {},
   windows: {},
   filter: null,
+  thread: null,
   openId: 0,
   drafts: {},
+  aiModels: {},
   outbox: [],
   uploads: [],
   sentKeys: {},

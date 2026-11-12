@@ -21,6 +21,7 @@ export const UserAvatar = memo(function UserAvatar({
   bot,
   size,
   online,
+  statusSize,
 }: {
   uri?: string | null;
   userid: number;
@@ -29,6 +30,7 @@ export const UserAvatar = memo(function UserAvatar({
   size: AvatarSize;
   /** 传了才画右下角的在线点（同旧版）：在线品牌色、离线橙色 */
   online?: boolean;
+  statusSize?: number;
 }) {
   const { theme } = useUnistyles();
   const colors = theme.palette.avatarUser;
@@ -48,7 +50,7 @@ export const UserAvatar = memo(function UserAvatar({
   return (
     <View>
       {avatar}
-      <View style={styles.dot(online)} />
+      <View style={styles.dot(online, statusSize ?? theme.size.dot)} />
     </View>
   );
 });
@@ -94,12 +96,12 @@ function ImageOr({ uri, size, color, children }: { uri?: string | null; size: nu
 const styles = StyleSheet.create((theme) => ({
   shape: (size: number) => ({ width: size, height: size, borderRadius: size / 2 }),
   fallback: (color: string) => ({ alignItems: 'center', justifyContent: 'center', backgroundColor: color }),
-  dot: (online: boolean) => ({
+  dot: (online: boolean, size: number) => ({
     position: 'absolute',
     right: 0,
     bottom: 0,
-    width: theme.size.dot,
-    height: theme.size.dot,
+    width: size,
+    height: size,
     borderRadius: theme.radius.pill,
     borderWidth: 1,
     borderColor: theme.colors.surface,

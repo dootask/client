@@ -1,4 +1,4 @@
-import { ListOrdered, type LucideIcon, Phone, VenetianMask, Vote } from 'lucide-react-native';
+import { ListOrdered, type LucideIcon, Phone, Sparkles, VenetianMask, Vote } from 'lucide-react-native';
 import { useMemo } from 'react';
 import { Linking } from 'react-native';
 
@@ -24,23 +24,25 @@ export interface Extra {
 /**
  * 按会话类型给出的入口：群聊有投票、接龙；和真人单聊有匿名消息，手机上还能打电话（先确认，服务端会在会话里留一条通知）
  */
-export function useExtras({ dialog, userId, openSheet }: { dialog: StoredDialog | undefined; userId: number; openSheet: (sheet: ExtraSheet) => void }): Extra[] {
+export function useExtras({ dialog, userId, openSheet, aiEnabled, openAi }: { dialog: StoredDialog | undefined; userId: number; openSheet: (sheet: ExtraSheet) => void; aiEnabled: boolean; openAi: () => void }): Extra[] {
   const t = useT();
   const callPeer = useCallPeer(dialog, userId);
   return useMemo(() => {
     if (!dialog) return [];
+    const ai: Extra[] = aiEnabled ? [{ key: 'ai', icon: Sparkles, label: t('messenger:ai.generate'), onPress: openAi }] : [];
     if (dialog.type === 'group') {
       return [
         { key: 'vote', icon: Vote, label: t('messenger:vote.title'), onPress: () => openSheet({ kind: 'vote' }) },
         { key: 'wordChain', icon: ListOrdered, label: t('messenger:wordChain.title'), onPress: () => openSheet({ kind: 'wordChain' }) },
+        ...ai,
       ];
     }
     const peer = dialog.dialog_user?.userid ?? 0;
-    if (dialog.type !== 'user' || dialog.bot || !peer) return [];
+    if (dialog.type !== 'user' || dialog.bot || !peer || peer === userId) return ai;
     // 顺序同旧版：打电话在匿名消息前面
     const anon: Extra = { key: 'anon', icon: VenetianMask, label: t('messenger:anon.entry'), onPress: () => openSheet({ kind: 'anon', userid: peer }) };
-    return callPeer ? [{ key: 'call', icon: Phone, label: t('messenger:call.entry'), onPress: callPeer }, anon] : [anon];
-  }, [dialog, callPeer, openSheet, t]);
+    return [...(callPeer ? [{ key: 'call', icon: Phone, label: t('messenger:call.entry'), onPress: callPeer }, anon] : [anon]), ...ai];
+  }, [dialog, userId, callPeer, openSheet, aiEnabled, openAi, t]);
 }
 
 /**

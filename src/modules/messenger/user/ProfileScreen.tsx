@@ -1,5 +1,5 @@
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
-import { ChevronLeft, Mail, MessageCircle, UsersRound, type LucideIcon } from 'lucide-react-native';
+import { Mail, MessageCircle, UsersRound, type LucideIcon } from 'lucide-react-native';
 import { useCallback, useState } from 'react';
 import { Linking, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -10,9 +10,7 @@ import { groupApi, usersApi } from '../../../sync/api';
 import type { UserTag } from '../../../sync/api/users';
 import { UserAvatar } from '../../../ui/Avatar';
 import { Icon } from '../../../ui/Icon';
-import { IconButton } from '../../../ui/IconButton';
 import { ListItem, ListSection } from '../../../ui/List';
-import { PageHeader } from '../../../ui/PageHeader';
 import { showToast } from '../../../ui/Toast';
 import { Touchable } from '../../../ui/Touchable';
 import { openMedia } from '../../media';
@@ -21,6 +19,9 @@ import { onlineText } from '../chat/format';
 import { useNow } from '../clock';
 import { useMessenger, useUser } from '../hooks';
 import { openDialogRoute } from '../DialogList';
+import { closeProfile } from './navigation';
+import { PhoneRow } from './PhoneRow';
+import { ProfileFrame } from './ProfileFrame';
 
 /** 资料里另外请求的部分：生日、简介、前几个标签、共同群组数、能否看其项目与任务 */
 interface ProfileMore {
@@ -44,7 +45,7 @@ async function loadMore(userid: number): Promise<ProfileMore> {
   };
 }
 
-/** 资料页路由（App）：/user/[userid] */
+/** 资料页路由：/user/[userid]（App 整页，网页居中卡片） */
 export function ProfileRoute() {
   const { userid } = useLocalSearchParams<{ userid: string }>();
   return <ProfileScreen userid={Number(userid) || 0} />;
@@ -83,13 +84,17 @@ export function ProfileScreen({ userid }: { userid: number }) {
   const failed = (err: unknown) => showToast(errorText(err));
   // 机器人的邮箱是系统内部地址，不展示也不联系
   const email = user && !user.bot ? (user.email ?? '') : '';
-  const actions: { icon: LucideIcon; label: string; run: () => void }[] = [];
+  const actions: { id: string; icon: LucideIcon; label: string; run: () => void }[] = [];
   if (user && !self) {
     actions.push(
-      { icon: MessageCircle, label: t('messenger:profile.chat'), run: () => messenger?.openUser(userid).then((id) => openDialogRoute(id)).catch(failed) },
-      { icon: UsersRound, label: t('messenger:profile.createGroup'), run: () => router.push({ pathname: '/group/create', params: { userids: String(userid) } }) },
+      { id: 'chat', icon: MessageCircle, label: t('messenger:profile.chat'), run: () => messenger?.openUser(userid).then((id) => {
+        // 先关掉资料页再打开会话，资料页下面的会话二级页（成员、信息抽屉）才能一并退掉
+        closeProfile();
+        openDialogRoute(id);
+      }).catch(failed) },
+      { id: 'create-group', icon: UsersRound, label: t('messenger:profile.createGroup'), run: () => router.push({ pathname: '/group/create', params: { userids: String(userid) } }) },
     );
-    if (email) actions.push({ icon: Mail, label: t('messenger:profile.sendEmail'), run: () => Linking.openURL(`mailto:${email}`).catch(() => {}) });
+    if (email) actions.push({ id: 'email', icon: Mail, label: t('messenger:profile.sendEmail'), run: () => Linking.openURL(`mailto:${email}`).catch(() => {}) });
   }
 
   const infos = user
@@ -104,11 +109,7 @@ export function ProfileScreen({ userid }: { userid: number }) {
   const openTags = () => router.push({ pathname: '/user/[userid]/tags', params: { userid } });
 
   return (
-    <View style={styles.page}>
-      <PageHeader
-        title={nameCovered ? (user?.nickname ?? '') : ''}
-        left={<IconButton icon={ChevronLeft} label={t('back')} onPress={() => (router.canGoBack() ? router.back() : router.navigate('/messenger'))} />}
-      />
+    <ProfileFrame title={nameCovered ? (user?.nickname ?? '') : ''}>
       <ScrollView
         scrollEventThrottle={16}
         onScroll={(event) => setNameCovered(nameBottom > 0 && event.nativeEvent.contentOffset.y >= nameBottom)}
@@ -123,7 +124,7 @@ export function ProfileScreen({ userid }: { userid: number }) {
             <View style={styles.avatarBlank} />
           )}
           {user ? (
-            <Text style={styles.name} numberOfLines={2} selectable onLayout={(event) => setNameBottom(event.nativeEvent.layout.y + event.nativeEvent.layout.height)}>
+            <Text testID="profile-name" style={styles.name} numberOfLines={2} selectable onLayout={(event) => setNameBottom(event.nativeEvent.layout.y + event.nativeEvent.layout.height)}>
               {user.nickname}
             </Text>
           ) : (
@@ -141,8 +142,8 @@ export function ProfileScreen({ userid }: { userid: number }) {
 
         {actions.length > 0 && (
           <View style={styles.actions}>
-            {actions.map(({ icon, label, run }) => (
-              <Touchable key={label} onPress={run} style={({ pressed }) => styles.action(pressed)}>
+            {actions.map(({ id, icon, label, run }) => (
+              <Touchable key={id} testID={`profile-${id}`} onPress={run} style={({ pressed }) => styles.action(pressed)}>
                 <Icon icon={icon} color={theme.colors.primaryText} size={theme.size.icon} />
                 <Text style={styles.actionLabel} numberOfLines={1}>
                   {label}
@@ -157,6 +158,7 @@ export function ProfileScreen({ userid }: { userid: number }) {
             {infos.map((item) => (
               <InfoRow key={item.label} {...item} />
             ))}
+            <PhoneRow key={userid} userid={userid} />
           </ListSection>
         ) : (
           <BlankSection />
@@ -182,6 +184,7 @@ export function ProfileScreen({ userid }: { userid: number }) {
               </Touchable>
             )}
             <ListItem
+              testID="profile-tags"
               label={t(more?.tagTotal === 0 ? 'messenger:profile.addTag' : 'messenger:profile.manageTags')}
               value={more?.tagTotal ? t('messenger:profile.count', { n: more.tagTotal }) : undefined}
               chevron
@@ -202,7 +205,7 @@ export function ProfileScreen({ userid }: { userid: number }) {
           </ListSection>
         )}
       </ScrollView>
-    </View>
+    </ProfileFrame>
   );
 }
 
@@ -260,7 +263,6 @@ function InfoRow({ label, value, url }: { label: string; value: string; url?: st
 }
 
 const styles = StyleSheet.create((theme) => ({
-  page: { flex: 1, backgroundColor: theme.colors.surface },
   body: { paddingTop: theme.spacing.xl },
   hero: { alignItems: 'center', gap: theme.spacing.sm, paddingHorizontal: theme.spacing.page * 2, paddingBottom: theme.spacing.xl },
   name: { ...theme.typography.title1, textAlign: 'center', color: theme.colors.text },

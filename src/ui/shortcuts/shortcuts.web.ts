@@ -6,6 +6,7 @@ import type { ShortcutOptions } from './types';
 interface Entry {
   combo: Combo;
   run: () => void;
+  inInput: boolean;
 }
 
 /** 已注册的快捷键，后注册的在后面；同一组合以最后注册的为准 */
@@ -20,16 +21,24 @@ function isEditable(target: EventTarget | null): boolean {
 
 function onKeyDown(event: KeyboardEvent) {
   // 输入法合成中的回车、方向键是在选字
-  if (event.isComposing || event.keyCode === 229) return;
+  if (event.isComposing || event.keyCode === 229 || event.defaultPrevented) return;
   // 弹出层、对话框打开时键盘归它们，页面上的快捷键暂停
   if (document.querySelector('[aria-modal="true"]')) return;
   for (let i = entries.length - 1; i >= 0; i--) {
     const entry = entries[i];
     if (!matchCombo(entry.combo, event)) continue;
-    // 正在输入框里打字时，不带 Ctrl / Alt / Command 的组合留给输入
-    if (isEditable(event.target) && !hasCommandModifier(entry.combo)) return;
-    event.preventDefault();
-    entry.run();
+    if (isEditable(event.target) && !hasCommandModifier(entry.combo) && !entry.inInput) return;
+    if (entry.inInput) {
+      if (event.repeat) return;
+      // 输入框会拦住冒泡，等它处理完取消回复、候选菜单后再决定是否执行。
+      setTimeout(() => {
+        if (event.defaultPrevented || !entries.includes(entry) || document.querySelector('[aria-modal="true"]')) return;
+        entry.run();
+      }, 0);
+    } else {
+      event.preventDefault();
+      entry.run();
+    }
     return;
   }
 }
@@ -48,12 +57,12 @@ function register(entry: Entry): () => void {
  * 注册键盘快捷键（Web / 桌面）。组件挂载期间有效，handler 总是用最新的，不会因为重渲染反复注册。
  * 写法见 combo.ts；同一组合以最后注册的为准；弹出层打开期间暂停；输入框里只响应带 Ctrl / Alt / Command 的组合
  */
-export function useShortcut(combo: string, handler: () => void, { enabled = true }: ShortcutOptions = {}): void {
+export function useShortcut(combo: string, handler: () => void, { enabled = true, inInput = false }: ShortcutOptions = {}): void {
   const run = useEffectEvent(handler);
   useEffect(() => {
     if (!enabled) return;
-    return register({ combo: parseCombo(combo, isMac()), run: () => run() });
-  }, [combo, enabled]);
+    return register({ combo: parseCombo(combo, isMac()), run: () => run(), inInput });
+  }, [combo, enabled, inInput]);
 }
 
 /** 快捷键的显示文字：Mac 上 `⇧⌘K`，其他系统 `Ctrl+Shift+K` */

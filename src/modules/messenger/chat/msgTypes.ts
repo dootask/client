@@ -2,17 +2,13 @@ import { FileText, Image, Link2, ListTodo, type LucideIcon, MessageSquare, Tag }
 import { useState } from 'react';
 
 import type { StoredDialog } from '../../../sync/messenger';
-import type { MsgFilterType } from '../../../sync/messenger/rules';
+import { availableMsgTypes, type MsgFilterType } from '../../../sync/messenger/rules';
 import { showToast } from '../../../ui/Toast';
 import { useErrorText } from '../../session';
 import { useMessenger, useMessengerState } from '../hooks';
 
 /** 分类条上的一项：null 是「消息」（不筛选） */
 export type MsgTypeFilter = MsgFilterType | null;
-
-/** 分类条的顺序（同旧版）：待办排在标注前面 */
-const TYPE_ORDER: MsgFilterType[] = ['todo', 'tag', 'image', 'file', 'link'];
-const HAS_TYPE: Record<MsgFilterType, keyof StoredDialog> = { todo: 'has_todo', tag: 'has_tag', image: 'has_image', file: 'has_file', link: 'has_link' };
 
 export const MSG_TYPE_ICONS: Record<MsgFilterType | 'msg', LucideIcon> = { msg: MessageSquare, todo: ListTodo, tag: Tag, image: Image, file: FileText, link: Link2 };
 export const MSG_TYPE_LABELS = {
@@ -39,7 +35,7 @@ export function useMsgTypes(dialog: StoredDialog) {
   const errorText = useErrorText();
   const filter = useMsgFilter(dialog.id);
   const todoNum = dialog.todo_num ?? 0;
-  const types = TYPE_ORDER.filter((type) => !!dialog[HAS_TYPE[type]] || type === filter || (type === 'todo' && todoNum > 0));
+  const types = availableMsgTypes(dialog, filter);
   const [selected, setSelected] = useState<MsgTypeFilter>(filter);
   const [prevFilter, setPrevFilter] = useState<MsgTypeFilter>(filter);
   if (filter !== prevFilter) {

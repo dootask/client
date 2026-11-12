@@ -2,16 +2,18 @@ import { AppState } from 'react-native';
 import { create } from 'zustand';
 
 import { fileIO } from '../../platform/files';
+import { setAppBadge } from '../../platform/push';
 import { createAiRuns, type AiRuns } from '../../sync/ai/runs';
 import { assistantApi, usersApi } from '../../sync/api';
-import { bindGroupApi, bindMessengerApi, bindMsgActionsApi, createGroupActions, createMessenger, createMsgActions, type GroupActions, type Messenger, type MsgActions } from '../../sync/messenger';
+import { bindGroupApi, bindMessengerApi, bindMsgActionsApi, createGroupActions, createMessenger, createMsgActions, type GroupActions, type Messenger, type MsgActions, unreadTotals } from '../../sync/messenger';
 import { kv, KV_KEYS, openAppCache, type StructuredCache } from '../../sync/storage';
 import { createMsgStreams, type MsgStreams } from '../../sync/stream/msgStreams';
 import { createUserDirectory, type UserDirectory } from '../../sync/users';
 import { api, onGone, socket, useSession, type SessionState } from '../session';
+import { startPushDevice } from './push';
 import { openSse } from './streamTransport';
 
-const KV_NAMES = ['sync', 'beyond', 'drafts', 'outbox'] as const;
+const KV_NAMES = ['sync', 'beyond', 'drafts', 'outbox', 'aiModels'] as const;
 
 /** 当前账号的消息数据层和用户目录，未登录为 null。界面通过 hooks 读，不直接用 */
 export const useMessengerInstance = create<{ messenger: Messenger | null; actions: MsgActions | null; group: GroupActions | null; users: UserDirectory | null; streams: MsgStreams | null; runs: AiRuns | null }>()(() => ({
@@ -102,11 +104,18 @@ function msgText(messenger: Messenger, msgId: number): string | undefined {
   return undefined;
 }
 
+/** 桌面角标数：所有可见会话的未读数之和（R9） */
+function appBadge(): number {
+  const messenger = useMessengerInstance.getState().messenger;
+  return messenger ? unreadTotals(Object.values(messenger.store.getState().dialogs)).badge : 0;
+}
+
 /** 启动消息服务：跟着登录状态启停，应用启动时调一次 */
 export function startMessengerService(): () => void {
   let owner = ownerOf(useSession.getState());
   switchTo(owner);
   const unsubs = [
+    startPushDevice(),
     useSession.subscribe((state) => {
       const next = ownerOf(state);
       if (next === owner) return;
@@ -129,6 +138,8 @@ export function startMessengerService(): () => void {
   let background = AppState.currentState !== 'active';
   const appState = AppState.addEventListener('change', (state) => {
     if (state !== 'active') {
+      // 切到后台时把未读总数同步到桌面角标（P5，R9）；未登录清零
+      if (!background) void setAppBadge(appBadge()).catch(() => {});
       background = true;
       return;
     }

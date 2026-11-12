@@ -1,5 +1,6 @@
 export { bindMessengerApi, createMessenger, type IncomingMessage, type Messenger, type MessengerApi } from './engine';
 export * from './rules';
+export { messageNotification, shouldNotify, type MessageNotification, type MessageNotificationInput, type NotificationContext } from './notify';
 export { createMessengerStore, type MessengerState, type MsgWindow, type OutboxItem, type StoredDialog, type UploadItem, type Translation } from './store';
 export { createMsgActions, type MsgActions, type MsgActionsApi, bindMsgActionsApi } from './actions';
 export { bindGroupApi, createGroupActions, type GroupActions, type GroupApi } from './groupActions';

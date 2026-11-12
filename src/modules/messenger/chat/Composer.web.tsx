@@ -4,7 +4,7 @@ import { Text, View } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { useT } from '../../../i18n';
-import type { MentionChar } from '../../../sync/messenger';
+import { isAiBotDialog, type MentionChar } from '../../../sync/messenger';
 import { msgPreview } from '../../../sync/messenger/preview';
 import { ChatInput } from '../../../ui/chat';
 import { Icon } from '../../../ui/Icon';
@@ -22,7 +22,7 @@ export type { ComposerHandle, ComposerMode, ComposerProps } from './useComposer'
 
 /** ⊕ 菜单里投票、接龙等入口的顺序（同旧版）：电话在图片前，匿名、接龙、投票在文件后 */
 const BEFORE_MEDIA = ['call'];
-const AFTER_FILE = ['anon', 'wordChain', 'vote'];
+const AFTER_FILE = ['anon', 'wordChain', 'vote', 'ai'];
 
 /**
  * 输入栏（Web，照旧版网页）：圆角输入框里左边是编辑区，右下是工具条（表情、@、#、⊕、绿色圆形的发送）。
@@ -48,7 +48,7 @@ export function Composer(props: ComposerProps) {
   const pick = (keys: string[]) => keys.flatMap((key) => byKey.get(key) ?? []).map(({ icon: itemIcon, label, onPress }) => ({ icon: itemIcon, label, onPress }));
   const moreItems: MoreItem[] = [
     ...pick(BEFORE_MEDIA),
-    { icon: ImageIcon, label: t('messenger:chat.sendImage'), onPress: () => attach.pick('media') },
+    ...(dialog && isAiBotDialog(dialog) ? [] : [{ icon: ImageIcon, label: t('messenger:chat.sendImage'), onPress: () => attach.pick('media') }]),
     { icon: FileText, label: t('messenger:chat.uploadFile'), onPress: () => attach.pick('file') },
     ...pick(AFTER_FILE),
     ...(mentionSession ? [{ icon: Maximize2, label: t('messenger:chat.fullInput'), onPress: () => openEditor() }] : []),

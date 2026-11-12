@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 import { toQuery, type ApiClient } from './client';
 import { phpList, requestParsed } from './schema';
+import { userBasicSchema } from './users';
 
 /**
  * 会话、消息接口（主仓库 DialogController）。
@@ -77,8 +78,15 @@ export const dialogSchema = z.looseObject({
   dialog_mute: str.nullish(),
   /** 单聊对方已停用或已删除：布尔、停用时间或 1，按真假判断 */
   is_disable: z.union([z.boolean(), num, str]).nullish(),
-  /** B7 机器人单聊的快捷消息（服务端按机器人给出，其余会话为空） */
-  quick_msgs: phpList(z.looseObject({ key: str, label: str })).nullish(),
+  /** B7 机器人单聊的快捷消息（服务端按机器人给出，其余会话为空）；AI 机器人的「~ai-model-select」带可选模型 */
+  quick_msgs: phpList(z.looseObject({
+    key: str,
+    label: str,
+    config: z.looseObject({
+      model: str.nullish(),
+      models: phpList(z.looseObject({ value: str, label: str })).nullish(),
+    }).nullish(),
+  })).nullish(),
 });
 export type Dialog = z.output<typeof dialogSchema>;
 
@@ -95,6 +103,8 @@ export const msgSchema = z.looseObject({
   mention: num.nullish(),
   dot: num.nullish(),
   reply_id: num.nullish(),
+  /** 回复它的消息数 */
+  reply_num: num.nullish(),
   link: num.nullish(),
   /** 标注人（0 为没标注） */
   tag: num.nullish(),
@@ -150,6 +160,12 @@ export type SearchItem = z.output<typeof searchItemSchema>;
 /** 搜索：先会话名，不够 20 个再补联系人，再补消息内容；dialogOnly 不补消息内容 */
 export async function search(client: ApiClient, key: string, { dialogOnly = false }: { dialogOnly?: boolean } = {}) {
   const { data } = await requestParsed(client, 'dialog/search', phpList(searchItemSchema), { data: dialogOnly ? { key, dialog_only: 1 } : { key } });
+  return data;
+}
+
+/** 会话内搜索消息（全文检索，新的在前，最多 50 条）；关键词为空时服务端返回空 */
+export async function searchMsgs(client: ApiClient, dialogId: number, key: string) {
+  const { data } = await requestParsed(client, 'search/message', phpList(msgSchema.extend({ user: userBasicSchema.nullish() })), { data: { dialog_id: dialogId, key, search_type: 'text', take: 50 } });
   return data;
 }
 
@@ -274,6 +290,8 @@ export interface SendTextParams {
   update_id?: number;
   /** 不提醒对方 */
   silence?: boolean;
+  /** AI 机器人单聊里选过的模型 */
+  model_name?: string;
 }
 
 /** 发送文本，返回服务器上的消息 */
@@ -287,6 +305,7 @@ export async function sendText(client: ApiClient, params: SendTextParams) {
       reply_id: params.reply_id,
       update_id: params.update_id,
       silence: params.silence ? 'yes' : undefined,
+      model_name: params.model_name || undefined,
     },
   });
   return data;
@@ -494,6 +513,12 @@ export async function mergeDetail(client: ApiClient, msgId: number) {
   return data.msgs;
 }
 
+/** 单条消息（已删除时报错） */
+export async function msgOne(client: ApiClient, msgId: number) {
+  const { data } = await requestParsed(client, 'dialog/msg/one', msgSchema, { data: { msg_id: msgId } });
+  return data;
+}
+
 /** 长文消息的全文：type 为 md 时是 Markdown，否则是编辑器 HTML */
 export async function msgDetail(client: ApiClient, msgId: number) {
   const schema = z.looseObject({ content: z.looseObject({ type: str, content: str }) });
@@ -527,4 +552,40 @@ const stickerSchema = z.looseObject({ list: z.array(z.looseObject({ name: z.stri
 export async function stickerSearch(client: ApiClient, key: string) {
   const { data } = await requestParsed(client, 'dialog/sticker/search', stickerSchema, { data: { key } });
   return data.list;
+}
+
+/** AI 机器人单聊的会话（话题）：新会话没有标题 */
+export const sessionSchema = z.looseObject({
+  id: num,
+  dialog_id: num,
+  title: str.nullish(),
+  created_at: str.nullish(),
+  /** 列表里才有：当前打开的会话为 1 */
+  is_open: num.nullish(),
+});
+export type DialogSession = z.output<typeof sessionSchema>;
+
+/** 开启新会话（服务端复用还没聊过的空会话），之后消息列表只有新会话的消息 */
+export async function sessionCreate(client: ApiClient, dialogId: number) {
+  const { data } = await requestParsed(client, 'dialog/session/create', sessionSchema, { data: { dialog_id: dialogId } });
+  return data;
+}
+
+const sessionPageSchema = z.looseObject({ current_page: num, last_page: num, data: phpList(sessionSchema) });
+
+/** 会话历史，按创建倒序分页 */
+export async function sessionList(client: ApiClient, params: { dialog_id: number; page: number; pagesize: number }) {
+  const { data } = await requestParsed(client, 'dialog/session/list', sessionPageSchema, { data: params });
+  return data;
+}
+
+/** 切到历史会话 */
+export async function sessionOpen(client: ApiClient, sessionId: number) {
+  const { data } = await requestParsed(client, 'dialog/session/open', sessionSchema, { data: { session_id: sessionId } });
+  return data;
+}
+
+export async function sessionRename(client: ApiClient, sessionId: number, title: string) {
+  const { data } = await requestParsed(client, 'dialog/session/rename', sessionSchema, { method: 'post', data: { session_id: sessionId, title } });
+  return data;
 }

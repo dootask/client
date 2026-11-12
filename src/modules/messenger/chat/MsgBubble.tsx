@@ -25,6 +25,7 @@ import { FileCard, isMediaBody, isStickerBody, LocalMedia, MediaBody, MessageBod
 import { msgExtra } from './msgExtra';
 import { type BubbleTone } from './RichText';
 import { Dimmed, FailedNote, OPENABLE, ReadMark, TodoMark, type Touch, Understanding, UploadProgress, pendingMsg, useName, useRowContext } from './rowParts';
+import { openProfile } from '../user/navigation';
 
 /**
  * 气泡外框：左右对齐、连续消息圆角收紧、底色；对方在群里时左侧是头像列（连续消息只在最后一条显示头像）。
@@ -72,7 +73,11 @@ export function MsgRow({ info, msg: stored }: { info: MessageRenderInfo<RowData>
   const forwardName = useName(forward?.userid ?? 0);
   const peerInGroup = ctx.group && !isOwn;
   const showName = peerInGroup && !chained(message, older) && !!name;
-  const leading = peerInGroup ? <UserAvatar uri={user?.userimg} userid={msg.userid} name={name} bot={!!user?.bot} size={32} /> : undefined;
+  const leading = peerInGroup ? (
+    <Touchable disabled={msg.userid <= 0} accessibilityRole="button" accessibilityLabel={name} onPress={() => openProfile(msg.userid)}>
+      <UserAvatar uri={user?.userimg} userid={msg.userid} name={name} bot={!!user?.bot} size={32} />
+    </Touchable>
+  ) : undefined;
   const replyNum = msgExtra(msg).reply_num ?? 0;
   const list = reactions(msg, ctx.body.userId);
 
@@ -106,12 +111,15 @@ export function MsgRow({ info, msg: stored }: { info: MessageRenderInfo<RowData>
     <View style={[styles.header, media && styles.mediaPad]}>
       {showName && <Text style={styles.senderName} numberOfLines={1}>{name}</Text>}
       {forward && (
-        <View style={styles.forward}>
+        <Touchable testID="msg-forward" disabled={forward.userid <= 0} accessibilityRole="button" onPress={(event) => {
+          event.stopPropagation();
+          openProfile(forward.userid);
+        }} style={styles.forward}>
           <Icon icon={Forward} color={tone.muted} size={14} />
           <Text style={[styles.caption, { color: tone.muted }]} numberOfLines={1}>
             {t('messenger:chat.forwardFrom', { name: forwardName })}
           </Text>
-        </View>
+        </Touchable>
       )}
       {reply && <ReplyQuote reply={reply} tone={tone} />}
     </View>
@@ -119,10 +127,15 @@ export function MsgRow({ info, msg: stored }: { info: MessageRenderInfo<RowData>
   const footer = hasFooter && (
     <View style={[styles.footer, media && styles.mediaPad]}>
       {replyNum > 0 && (
-        <View style={styles.replyNum}>
+        <Touchable
+          disabled={!ctx.onThread}
+          onPress={() => ctx.onThread?.(msg)}
+          accessibilityRole="button"
+          style={({ pressed }) => [styles.replyNum, pressed && styles.pressed]}
+        >
           <Icon icon={MessageSquareText} color={tone.accent} size={14} />
           <Text style={[styles.caption, { color: tone.accent }]}>{t('messenger:chat.replies', { n: replyNum })}</Text>
-        </View>
+        </Touchable>
       )}
       {list.length > 0 && (
         <View style={styles.reactions}>
@@ -202,7 +215,10 @@ function Meta({ msg, own, tone, onMedia }: { msg: Msg; own: boolean; tone: Bubbl
   const { tag, todo, modify, percentage } = msgExtra(msg);
   return (
     <View style={[styles.meta, onMedia && styles.metaOnMedia]}>
-      {!!tag && <Icon icon={Bookmark} color={color} size={12} />}
+      {!!tag && <Touchable testID="msg-tag-person" accessibilityRole="button" accessibilityLabel={t('messenger:action.tag')} hitSlop={theme.spacing.md} onPress={(event) => {
+        event.stopPropagation();
+        openProfile(tag);
+      }}><Icon icon={Bookmark} color={color} size={12} /></Touchable>}
       {!!todo && <TodoMark id={msg.id} color={color} />}
       {!!modify && <Icon icon={Pencil} color={color} size={12} />}
       <View style={styles.metaTime}>

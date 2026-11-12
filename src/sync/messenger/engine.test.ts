@@ -53,6 +53,7 @@ function fakeApi(over: Partial<MessengerApi> = {}): MessengerApi {
     beyond: vi.fn(async () => []),
     one: vi.fn(async (id: number) => dialog(id)),
     msgList: vi.fn(async () => ({ list: [], time: 0 })),
+    msgOne: vi.fn(async (id: number) => msg(id)),
     msgLatest: vi.fn(async () => []),
     msgRead: vi.fn(async () => []),
     msgUnread: vi.fn(async (id: number) => ({ id, unread: 0, unread_one: 0, mention: 0, mention_ids: [], user_at: '2026-11-08 10:00:01.000', user_ms: 2000 })),
@@ -289,6 +290,114 @@ describe('已读上报', () => {
     m.catchUp();
     await settle(100);
     expect(msgRead).toHaveBeenCalledTimes(2);
+    m.stop();
+  });
+});
+
+describe('AI 模型与会话切换', () => {
+  it('选择模型持久化，入队后切换模型不改变失败重试使用的模型；普通会话不携带 AI 模型', async () => {
+    const sendText = vi.fn().mockRejectedValueOnce(new ApiError('server', 0, '失败', null)).mockImplementation(async () => msg(300, { userid: ME }));
+    const api = fakeApi({ lists: vi.fn(async () => ({ current_page: 1, last_page: 1, data: [dialog(10, { bot: 1, email: 'ai-openai@bot.system' }), dialog(11)] })), sendText });
+    const { m, kv, s } = setup(api);
+    await m.start();
+    await settle();
+    m.selectAiModel(10, 'model-a');
+    expect(JSON.parse(kv.map.get('aiModels')!)).toEqual({ 10: 'model-a' });
+    const local = m.sendText({ dialog_id: 10, text: '问题' });
+    m.selectAiModel(10, 'model-b');
+    await settle(100);
+    expect(s().outbox[0]).toMatchObject({ model_name: 'model-a', state: 'failed' });
+    m.retrySend(local);
+    await settle(100);
+    expect(sendText.mock.calls.slice(0, 2).map(([params]) => params.model_name)).toEqual(['model-a', 'model-a']);
+    m.sendText({ dialog_id: 10, text: '新问题' });
+    m.selectAiModel(11, 'unused');
+    m.sendText({ dialog_id: 11, text: '普通消息' });
+    await settle(100);
+    expect(sendText.mock.calls[2]![0].model_name).toBe('model-b');
+    expect(sendText.mock.calls[3]![0].model_name).toBeUndefined();
+    m.stop();
+  });
+
+  it('启动恢复模型偏好，清理账号时移除偏好', async () => {
+    const { m, kv, s } = setup(fakeApi());
+    kv.set('aiModels', JSON.stringify({ 10: 'cached-model' }));
+    await m.start();
+    expect(s().aiModels).toEqual({ 10: 'cached-model' });
+    await m.clear();
+    expect(kv.get('aiModels')).toBeUndefined();
+  });
+
+  it('新会话立即清空窗口与缓存，切换前的分页响应不能回填', async () => {
+    let release!: (value: { list: Msg[]; time: number }) => void;
+    const msgList = vi.fn().mockResolvedValueOnce({ list: page([10, 9], 8), time: 1 })
+      .mockImplementationOnce(() => new Promise((resolve) => { release = resolve; }))
+      .mockResolvedValueOnce({ list: [], time: 2 });
+    const { m, cache, s } = setup(fakeApi({ msgList }));
+    await m.start();
+    await m.openDialog(10);
+    await settle();
+    const earlier = m.loadEarlier(10);
+    const switched = m.reloadDialog(10);
+    expect(s().windows[10]).toMatchObject({ list: [], synced: false });
+    await switched;
+    release({ list: page([8, 7], 0), time: 1 });
+    await earlier;
+    await settle();
+    expect(s().windows[10]).toMatchObject({ list: [], synced: true, loading: null });
+    expect([...cache.data.messages.keys()]).toEqual([]);
+    expect(s().dialogs[10]?.cached_msg_id ?? 0).toBe(0);
+    m.stop();
+  });
+
+  it('切换历史会话不合并旧消息，并只缓存新会话的消息', async () => {
+    const msgList = vi.fn().mockResolvedValueOnce({ list: page([20, 19], 0), time: 1 }).mockResolvedValueOnce({ list: page([5, 4], 0), time: 2 });
+    const { m, cache, s } = setup(fakeApi({ msgList }));
+    await m.start();
+    await m.openDialog(10);
+    await settle();
+    await m.reloadDialog(10);
+    await settle();
+    expect(s().windows[10]!.list.map((row) => row.id)).toEqual([5, 4]);
+    expect([...cache.data.messages.keys()].sort()).toEqual([4, 5]);
+    m.stop();
+  });
+
+  it('打开时迟到的缓存读取不能覆盖已经切换的会话', async () => {
+    let release!: (value: Msg[]) => void;
+    const { m, cache, s } = setup(fakeApi());
+    await m.start();
+    vi.spyOn(cache, 'query').mockReturnValueOnce(new Promise<Msg[]>((resolve) => { release = resolve; }));
+    const opening = m.openDialog(10);
+    await m.reloadDialog(10);
+    release([msg(90)]);
+    await opening;
+    expect(s().windows[10]!.list).toEqual([]);
+    m.stop();
+  });
+
+  it('切换等待已开始的缓存写入，旧会话的落盘结果不会留下', async () => {
+    const msgList = vi.fn().mockResolvedValueOnce({ list: page([20], 0), time: 1 }).mockResolvedValueOnce({ list: [], time: 2 });
+    const { m, cache, s } = setup(fakeApi({ msgList }));
+    await m.start();
+    await m.openDialog(10);
+    await settle();
+    let release!: () => void;
+    const put = cache.putMany.bind(cache);
+    vi.spyOn(cache, 'putMany').mockImplementationOnce(async (collection, rows) => {
+      await new Promise<void>((resolve) => { release = resolve; });
+      await put(collection, rows);
+    });
+    m.closeDialog(10);
+    await settle(0);
+    const switched = m.reloadDialog(10);
+    expect(s().windows[10]!.list).toEqual([]);
+    await settle(0);
+    expect(msgList).toHaveBeenCalledTimes(1);
+    release();
+    await switched;
+    await settle();
+    expect([...cache.data.messages.keys()]).toEqual([]);
     m.stop();
   });
 });
@@ -576,6 +685,58 @@ describe('分类筛选', () => {
   });
 });
 
+describe('回复线程', () => {
+  async function threaded(rootInWindow = true) {
+    const msgList = vi.fn(async ({ msg_id, prev_id }: { msg_id?: number; prev_id?: number }) => {
+      if (!msg_id) return { list: page(rootInWindow ? [5, 4, 3] : [9, 8], 0), time: 1 };
+      if (prev_id) return { list: [msg(6, { reply_id: 3, prev_id: 0 })], time: 1 };
+      return { list: [msg(12, { reply_id: 3, next_id: 0 }), msg(11, { reply_id: 3, prev_id: 6 })], time: 1 };
+    });
+    const msgOne = vi.fn(async (id: number) => msg(id, { reply_num: 3 }));
+    const ctx = setup(fakeApi({ msgList, msgOne }));
+    await ctx.m.start();
+    await ctx.m.openDialog(10);
+    await ctx.m.openThread(10, 3);
+    return { ...ctx, msgList, msgOne };
+  }
+
+  const ids = (list: Msg[]) => list.map((x) => x.id);
+
+  it('被回复那条窗口里有就直接用，回复按 msg_id 取，往前翻接着取', async () => {
+    const { m, s, msgList, msgOne } = await threaded();
+    expect(msgOne).not.toHaveBeenCalled();
+    expect(s().thread!.root!.id).toBe(3);
+    expect(msgList.mock.lastCall![0]).toMatchObject({ dialog_id: 10, msg_id: 3 });
+    expect(ids(s().thread!.list)).toEqual([12, 11]);
+    await m.loadThreadEarlier();
+    expect(msgList.mock.lastCall![0]).toMatchObject({ msg_id: 3, prev_id: 10 });
+    expect(ids(s().thread!.list)).toEqual([12, 11, 6]);
+    m.stop();
+  });
+
+  it('窗口里没有被回复那条时单独取', async () => {
+    const { m, s, msgOne } = await threaded(false);
+    expect(msgOne).toHaveBeenCalledWith(3);
+    expect(s().thread!.root).toMatchObject({ id: 3, reply_num: 3 });
+    m.stop();
+  });
+
+  it('新回复加进线程、回复数加一；删掉回复数减一；别的回复不进来', async () => {
+    const { m, socket, s } = await threaded(false);
+    socket.push('add', msg(20, { reply_id: 3 }));
+    socket.push('add', msg(21, { reply_id: 99 }));
+    socket.push('add', msg(22));
+    expect(ids(s().thread!.list)).toEqual([20, 12, 11]);
+    expect(s().thread!.root!.reply_num).toBe(4);
+    socket.push('delete', { dialog_id: 10, id: 20 });
+    expect(ids(s().thread!.list)).toEqual([12, 11]);
+    expect(s().thread!.root!.reply_num).toBe(3);
+    m.closeThread();
+    expect(s().thread).toBeNull();
+    m.stop();
+  });
+});
+
 it('表情切换规则与服务端一致', () => {
   expect(toggledEmoji([], 'a', 1)).toEqual([{ symbol: 'a', userids: [1] }]);
   expect(toggledEmoji([{ symbol: 'a', userids: [2] }], 'a', 1)).toEqual([{ symbol: 'a', userids: [1, 2] }]);
@@ -625,6 +786,22 @@ describe('消息操作', () => {
     const { m, s, actions } = await opened({ msgTag });
     expect(await actions.toggleTag(msg(90))).toBe(true);
     expect(s().windows[10]!.list.find((x) => x.id === 90)).toMatchObject({ tag: ME, msg: { text: 'm90' } });
+    m.stop();
+  });
+
+  it('待办原文不在窗口时按指定消息查询，不误取置顶消息', async () => {
+    const msgList = vi.fn(async () => ({ list: [msg(70), msg(69)], time: 1 }));
+    const msgTopInfo = vi.fn(async () => msg(50));
+    const { m, actions } = await opened({ msgList, msgTopInfo });
+    expect(await actions.topMsg(10, 90)).toMatchObject({ id: 90 });
+    expect(msgList).not.toHaveBeenCalled();
+    expect(await actions.topMsg(10, 70)).toMatchObject({ id: 70 });
+    expect(msgList).toHaveBeenCalledWith({ dialog_id: 10, position_id: 70, take: 2 });
+    expect(msgTopInfo).not.toHaveBeenCalled();
+    expect(await actions.topMsg(10, 60)).toBeNull();
+    m.patchDialog({ id: 10, top_msg_id: 50 });
+    expect(await actions.topMsg(10, 50)).toMatchObject({ id: 50 });
+    expect(msgTopInfo).toHaveBeenCalledWith(10);
     m.stop();
   });
 
@@ -696,6 +873,7 @@ describe('消息操作', () => {
     const { m, actions } = await opened({ msgTopInfo });
     expect((await actions.topMsg(10, 90))?.id).toBe(90);
     expect(msgTopInfo).not.toHaveBeenCalled();
+    m.patchDialog({ id: 10, top_msg_id: 5 });
     expect((await actions.topMsg(10, 5))?.id).toBe(5);
     m.stop();
   });

@@ -6,7 +6,7 @@ import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { initI18n } from '../i18n';
 import { MediaHost } from '../modules/media';
-import { startMessengerService } from '../modules/messenger';
+import { NotificationEffects, startMessengerService } from '../modules/messenger';
 import { entryHref, ProfilePrompt, refreshSession, useSession } from '../modules/session';
 import { restorePreferences } from '../modules/setting';
 import { BrowserDefaults } from '../ui/BrowserDefaults';
@@ -44,6 +44,8 @@ export default function RootLayout() {
             <ProfilePrompt />
             {/* 网页的图片、视频查看层（App 走 media-preview 页） */}
             <MediaHost />
+            {/* 新消息提醒：网页弹浏览器通知、标签页标题带未读数；App 前台弹顶部横幅（要画在页面上面，放在 Routes 之后） */}
+            <NotificationEffects />
             <LayerConfirmHost />
             <ToastHost />
             {/* 全页共用的悬停提示层（只在 Web 上有内容），放在最上面 */}
@@ -70,7 +72,7 @@ function Routes() {
         {/* 长文阅读（App 整页推入；网页在新标签页打开，同旧版 /single/file/msg）、公式查看（App） */}
         <Stack.Screen name="msg-detail/[msgId]" />
         <Stack.Screen name="math" />
-        {/* 用户资料、标签、共同群组、项目与任务，建群（App 整页推入，盖住 Tab；网页见各自的弹窗） */}
+        {/* 用户资料、标签、共同群组、项目与任务，建群（App 整页推入，盖住 Tab；网页资料和建群是居中弹窗） */}
         <Stack.Screen name="user/[userid]/index" />
         <Stack.Screen name="user/[userid]/tags" />
         <Stack.Screen name="user/[userid]/groups" />

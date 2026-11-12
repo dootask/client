@@ -31,13 +31,13 @@ export function ChatHeader({ dialogId, dialog, children }: { dialogId: number; d
           {!split && <BackButton dialogId={dialogId} />}
         </View>
         {dialog && (
-          <View style={styles.center}>
+          <Touchable style={styles.center} onPress={() => router.push({ pathname: '/messenger/info/[dialogId]', params: { dialogId } })}>
             <View style={styles.titleRow}>
               <Text style={styles.title} numberOfLines={1}>{dialog.name}</Text>
               <HeaderTags dialog={dialog} />
             </View>
             <Subtitle dialog={dialog} />
-          </View>
+          </Touchable>
         )}
         <View style={[styles.side, styles.sideRight]}>
           {dialog && <HeaderRight dialog={dialog} />}

@@ -167,15 +167,15 @@ export const DialogNav = memo(function DialogNav({ narrow }: { narrow: boolean }
 });
 
 /** 宽屏列表栏底部（同旧版 messenger-menu）：消息（带总未读，再点晃动未读）、联系人 */
-export function DialogBar() {
+export function DialogBar({ contacts = false }: { contacts?: boolean }) {
   const t = useT();
   const { theme } = useUnistyles();
   const counts = useCategoryCounts();
   return (
     <View testID="dialog-bar" style={styles.bar}>
       <View style={styles.barItem}>
-        <Touchable accessibilityRole="button" accessibilityLabel={t('messenger:tabMessages')} onPress={() => activate(useDialogListState.getState().category)} style={styles.barIcon}>
-          <Icon icon={MessagesSquare} size={theme.size.barIcon} color={theme.colors.primary} />
+        <Touchable accessibilityRole="button" accessibilityLabel={t('messenger:tabMessages')} onPress={() => contacts ? router.dismissTo('/messenger') : activate(useDialogListState.getState().category)} style={styles.barIcon}>
+          <Icon icon={MessagesSquare} size={theme.size.barIcon} color={contacts ? theme.colors.barIcon : theme.colors.primary} />
         </Touchable>
         {counts[''] > 0 && (
           <View style={styles.barNum} pointerEvents="none">
@@ -185,7 +185,7 @@ export function DialogBar() {
       </View>
       <View style={styles.barItem}>
         <Touchable accessibilityRole="button" accessibilityLabel={t('messenger:tabContacts')} onPress={() => router.navigate('/contacts')} style={({ hovered }) => styles.barIconIdle(hovered)}>
-          <Icon icon={User} size={theme.size.barIcon} color={theme.colors.barIcon} />
+          <Icon icon={User} size={theme.size.barIcon} color={contacts ? theme.colors.primary : theme.colors.barIcon} />
         </Touchable>
       </View>
     </View>

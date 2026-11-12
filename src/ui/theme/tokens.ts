@@ -8,7 +8,13 @@ import { monoFont, platformRadius, platformSize } from './platform';
  */
 
 const light = {
+  groupLabel: '#B7B1B1',
+  memberHover: 'rgba(144,147,153,0.1)',
+  memberAdd: '#8BCF70',
+  memberAddHover: '#A2D98D',
   bg: '#F2F3F5',
+  notifyImageFailed: '#D9D9D9',
+  notifyImageFailedFill: 'rgba(0,0,0,0.06)',
   surface: '#FFFFFF',
   surface2: '#F7F8FA',
   fill: '#F0F1F3',
@@ -159,6 +165,11 @@ const light = {
   webInput: '#F4F5F7',
   webFooterNarrow: '#F8F8F8',
   webQuickMsg: '#F0F1F3',
+  aiInline: { disabled: '#BBBBBB' },
+  aiHistory: { line: '#EEEEEE', current: '#666666', icon: '#999999', hover: 'rgba(144,147,153,0.1)' },
+  /** Web AI 执行过程（旧版网页 message-parts）：组标题、展开框描边和箭头、左侧竖线、行文字、名称、描述、完成 / 失败 / 跳过 / 待确认图标、详情底 */
+  aiProcess: { title: '#666666', toggleLine: 'rgba(0,0,0,0.18)', toggleIcon: '#888888', line: 'rgba(0,0,0,0.15)', text: '#888888', name: '#555555', desc: '#AAAAAA', done: '#84C56A', error: '#F56C6C', skipped: '#BBBBBB', confirming: '#FF9900', codeFill: 'rgba(0,0,0,0.05)' },
+  aiCompose: { output: '#F8F9FB', muted: '#666666', model: '#2F54EB', modelFill: 'rgba(47,84,235,0.08)', error: '#FF4D4F', placeholder: '#999999', placeholderFill: 'rgba(0,0,0,0.02)', apply: '#8BCF70', applyHover: '#A2D98D', spinner: '#52C41A' },
   webPlaceholder: '#CCCCCC',
   /** 表情面板分类栏底色、图标色 */
   emojiNav: '#F8F8F8',
@@ -238,12 +249,23 @@ const light = {
   /** 长文气泡底部「查看详情」上的分隔线 */
   longLine: 'rgba(227,227,227,0.42)',
   approveLine: '#E3E3E3',
+  contactsToggle: '#5F6368',
+  /** 举报截图上传框与类型行（旧版网页） */
+  reportUploadBorder: '#DDDEE1',
+  reportRowLine: '#F9F9F9',
+  reportRowPressed: '#FBFBFB',
 };
 
 export type Colors = typeof light;
 
 const dark: Colors = {
+  groupLabel: '#AEAEB2',
+  memberHover: 'rgba(144,147,153,0.16)',
+  memberAdd: '#8BCF70',
+  memberAddHover: '#A2D98D',
   bg: '#000000',
+  notifyImageFailed: '#D9D9D9',
+  notifyImageFailedFill: 'rgba(0,0,0,0.06)',
   surface: '#1C1C1E',
   surface2: '#2C2C2E',
   fill: '#2C2C2E',
@@ -352,6 +374,10 @@ const dark: Colors = {
   webInput: '#2C2C2E',
   webFooterNarrow: '#1C1C1E',
   webQuickMsg: '#2C2C2E',
+  aiInline: { disabled: '#7C7C80' },
+  aiHistory: { line: '#38383A', current: '#666666', icon: '#AEAEB2', hover: 'rgba(144,147,153,0.1)' },
+  aiProcess: { title: '#AEAEB2', toggleLine: 'rgba(255,255,255,0.18)', toggleIcon: '#8E8E93', line: 'rgba(255,255,255,0.15)', text: '#8E8E93', name: '#C7C7CC', desc: '#7C7C80', done: '#84C56A', error: '#FF6961', skipped: '#636366', confirming: '#FF9F0A', codeFill: 'rgba(255,255,255,0.06)' },
+  aiCompose: { output: '#2C2C2E', muted: '#AEAEB2', model: '#6B8FFF', modelFill: 'rgba(107,143,255,0.12)', error: '#FF6961', placeholder: '#7C7C80', placeholderFill: 'rgba(255,255,255,0.02)', apply: '#8BCF70', applyHover: '#A2D98D', spinner: '#52C41A' },
   webPlaceholder: '#636366',
   emojiNav: '#1C1C1E',
   emojiNavIcon: '#8E9AAB',
@@ -413,11 +439,21 @@ const dark: Colors = {
   findText: '#000000',
   longLine: 'rgba(255,255,255,0.12)',
   approveLine: 'rgba(255,255,255,0.12)',
+  contactsToggle: '#AEAEB2',
+  reportUploadBorder: '#3A3A3C',
+  reportRowLine: '#2C2C2E',
+  reportRowPressed: '#3A3A3C',
 };
 
 const font = (fontSize: number, lineHeight: number, fontWeight: TextStyle['fontWeight']) => ({ fontSize, lineHeight, fontWeight });
 
 const typography = {
+  groupField: font(14, 21, '400'),
+  groupValue: font(14, 34, '400'),
+  groupHeading: font(16, 22, '500'),
+  memberName: font(14, 22, '400'),
+  memberRole: font(12, 22, '400'),
+  phoneNumber: font(14, 22, '500'),
   title1: font(22, 28, '700'),
   title2: font(17, 22, '600'),
   body: font(16, 22, '400'),
@@ -426,6 +462,11 @@ const typography = {
   footnote: font(13, 18, '400'),
   caption: font(12, 16, '400'),
   caption2: font(11, 13, '500'),
+  /** 会话搜索与聊天内容 */
+  contentTitle: font(16, 22, '500'),
+  contentText: font(14, 20, '400'),
+  contentInfo: font(12, 16, '400'),
+  contentMatch: font(16, 22, '600'),
   /** 表情面板里的表情 */
   emoji: font(26, 32, '400'),
   /** Web 消息菜单表情条里的表情 */
@@ -433,6 +474,11 @@ const typography = {
   /** 代码块、行内代码 */
   code: { ...font(14, 20, '400'), fontFamily: monoFont },
   /** AI 回复里工具的参数和结果 */
+  /** Web AI 执行过程（旧版网页）：组标题、一行、展开后的详情 */
+  aiProcessTitle: font(13, 19.5, '400'),
+  aiProcessRow: font(13, 24, '400'),
+  aiProcessDetail: font(13, 20, '400'),
+  aiProcessCode: { ...font(13, 20, '400'), fontFamily: monoFont },
   aiCode: { ...font(12, 17, '400'), fontFamily: monoFont },
   /** 旧版会话列表（docs/ui-spec.md 1.6）：行标题、行内小字、窄屏大标题、窄屏顶部条标题 */
   listTitle: font(14, 24, '400'),
@@ -449,6 +495,9 @@ const typography = {
   emptyPill: font(14, 21, '400'),
   /** 会话列表顶部的提示条（旧版正文 14、行高 1.5） */
   notice: font(14, 21, '400'),
+  /** App 前台新消息横幅：会话名、摘要（旧版 .mobile-notification） */
+  notifyBannerTitle: font(14, 20, '700'),
+  notifyBannerBody: font(13, 18, '400'),
   /** App 聊天页置顶发送人、待办横条的加粗小字（旧版 App） */
   footnoteStrong: font(13, 18, '600'),
   /** App 分类条上待办数角标的数字（旧版 App） */
@@ -486,6 +535,9 @@ const typography = {
   webInput: font(14, 22, '400'),
   webInputNarrow: font(16, 22, '400'),
   webQuickMsg: font(13, 26, '400'),
+  aiInline: font(13, 27, '400'),
+  aiHistoryTitle: font(16, 22, '500'), aiHistoryRow: font(14, 20, '400'), aiHistoryTime: font(13, 20, '400'), aiHistoryTimeNarrow: font(14, 20, '400'), aiHistoryTag: font(12, 20, '400'),
+  aiComposeTitle: font(18, 25, '500'), aiComposeModel: font(12, 18, '600'), aiComposeQuestion: font(12, 16.8, '400'), aiComposePlaceholder: font(13, 22, '400'), aiComposeInput: font(14, 21, '400'), aiComposeApply: font(13, 24, '400'), aiComposeTime: font(12, 18, '400'), aiComposeSelect: font(14, 30, '400'),
   webQuote: font(13, 19, '400'),
   webQuoteName: font(13, 19, '500'),
   webEmoji: font(22, 40, '400'),
@@ -570,6 +622,10 @@ const typography = {
   voteOption: font(14, 34, '400'),
   cardSmall: font(12, 18, '400'),
   mergeCardTitle: font(13, 19.5, '500'),
+  contactsName: font(14, 21, '400'),
+  contactsTag: font(12, 18, '400'),
+  contactsLabel: font(14, 34, '400'),
+  contactsCount: font(12, 34, '400'),
 } satisfies Record<string, TextStyle>;
 
 /** 按下态：图标按钮降透明度，主按钮略降（docs/ui-spec.md 第 4 节）；不可用的按钮；旧版网页卡片里的次要字（位置地址）、已结束的会议 */
@@ -600,10 +656,24 @@ const radius = {
   chatType: 5,
   topCard: 10,
   todoChip: 13,
+  /** 旧版网页右侧抽屉（回复线程）：只有左侧圆角 */
+  drawer: 18,
+  /** App 前台新消息横幅（旧版 .mobile-notification） */
+  notifyBanner: 8,
+  /** 旧版网页用户资料卡（居中弹层） */
+  profileCard: 18,
   ...platformRadius,
 };
 
 const size = {
+  /** 建群：旧版 Web 表单和 App 创建弹层的独有尺寸 */
+  groupCreate: {
+    width: 520, narrowWidth: 370, label: 54, fieldGap: 24, labelGapNarrow: 6,
+    input: 32, inputPadX: 7, inputPadY: 4, border: 1, membersMin: 36,
+    avatar: 60, avatarIcon: 32, add: 28, addIcon: 18, removeIcon: 12,
+    avatarNative: 72, cameraIcon: 28, memberWidth: 56, memberList: 76,
+    removeNative: 18, removeBorderNative: 1.5, removeIconNative: 10, addBorderNative: 1.5,
+  },
   navBar: 52,
   rowSingle: 52,
   rowDouble: 64,
@@ -735,10 +805,31 @@ const size = {
   badgePadding: 6,
   /** 列表行、资料行里上下两行文字的间距 */
   listLineGap: 2,
-  /** 资料页：文字占位条、标签占位的高度 */
-  profile: { blankBar: 10, chipBlank: 28 },
+  /** 用户资料：占位条、标签占位；网页居中卡片宽、最高、窄屏左右留白（旧版 UserDetail 480×627，窄屏 370 左右各 10） */
+  profile: { blankBar: 10, chipBlank: 28, card: 480, cardMax: 627, cardInset: 10 },
+  contacts: { row: 52, rowNarrow: 58, label: 34, labelGap: 6, labelRight: 2, labelIndent: 28, rowIndent: 24, depthIndent: 14, nameGap: 12, tagRight: 12, countRight: 8, arrow: 12, arrowGap: 6, toggle: 40, toggleNarrow: 32, toggleIcon: 18, toggleRadius: 8, dot: 7.5, dotNarrow: 9, empty: 70 },
+  /** App 前台新消息横幅（旧版 .mobile-notification）：距顶、内边距、头像与文字间距、宽屏最大宽 */
+  notifyBanner: { top: 12, pad: 12, gap: 12, maxWidth: 320, narrowWidth: '94%' as const, bodyLines: 2 },
   /** 会话二级页的网页抽屉（旧版 .overlay-body）：宽 400，右上关闭 40×40 */
-  sidePage: { width: 400, close: 40, closeInset: 12, closeInsetNarrow: 8 },
+  sidePage: { width: 400, close: 40, closeInset: 12, closeInsetNarrow: 8, drawer: 500, drawerBar: 56 },
+  /** 会话搜索与聊天内容：标题、搜索条、文件卡、图片网格、空态 */
+  contentPages: { titleTop: 18, titleHeight: 52, searchWide: 68, searchNarrow: 52, searchPrefix: 32, searchIcon: 16, searchArrow: 30, searchArrowIcon: 18, fileInsetNarrow: 30, fileWidth: 220, fileHeight: 81, filePadX: 14, filePadY: 10, image: 120, imageGap: 8, imageColumns: 3, imageColumnsNarrow: 2, empty: 36 },
+  group: {
+    top: 10, fieldTop: 18, fieldX: 24, valueTop: 2, search: 32, searchIcon: 16, searchPad: 7, searchInset: 32,
+    row: 56, rowPad: 12, rowRadius: 6, rowGap: 8, rowInset: 12, action: 32, role: 20, rolePad: 6, roleRadius: 3,
+    button: 32, buttonPad: 15, buttonRadius: 4, footer: 24, modal: 520, editMax: 20,
+    gridColumns: 5, gridRows: 2, tile: 64, preview: 48, formGap: 16, formInput: 32, formRadius: 4, formLabel: 54, ownerSelect: 352,
+    menu: 102, menuRow: 36, menuPad: 20, nativeAvatar: 64, phoneLabel: 64, fieldXNarrow: 19, modalNarrow: 334, editModalNarrow: 370,
+  },
+  /** 举报表单（App / 网页）与匿名消息 layer 卡片，见规格第 8 / 9 节 */
+  report: {
+    width: 500, top: 18, padX: 24, padXNarrow: 30, labelBottom: 10, row: 46,
+    radio: 16, radioDot: 8, line: 1, reason: 94, reasonNative: 120,
+    thumb: 60, thumbNative: 76, addIcon: 32, addIconNative: 26,
+    remove: 22, removeIcon: 14, removeInset: 4,
+    buttonWidth: 81, button: 32, buttonIcon: 14,
+    anon: { height: 245, heightNarrow: 259, input: 103, inputNarrow: 110, text: 79, textNarrow: 82, titleBottom: 18, titleBottomNarrow: 14, footerTop: 20, footerTopNarrow: 20, sendWidth: 92 },
+  },
   /** 聊天机器人回复（旧版 App AiBody）：卡片、折叠组最小宽，组标题、按钮、状态行高，框内滚动的最大高，行内缩进 */
   ai: { minWidth: 240, groupHead: 36, button: 36, status: 24, scrollMax: 240, rowIndent: 22, rowPadY: 4, icon: 16, badgePadX: 6, badgePadY: 2 },
   /** 分类胶囊、列表顶部搜索框的高度 */
@@ -759,6 +850,7 @@ const size = {
   bubbleFarGap: 40,
   /** 视频消息中间的播放圆钮、语音消息的播放圆钮、语音进度条粗细、未读红点 */
   mediaPlay: 48,
+  notifyImageFailedIcon: 36,
   /** 回复引用右侧的缩略图 */
   quoteThumb: 36,
   voicePlay: 32,
@@ -885,6 +977,11 @@ const size = {
    * 工具条按钮、发送按钮和绿圆、回复条（左右内边距、竖线、关闭按钮）、⊕ 菜单（宽、内边距、项高、图标）、
    * 机器人快捷消息胶囊（高、左右内边距、间距、所在行上下内边距）
    */
+  aiInline: { width: 202.2, widthNarrow: 204.2, row: 27, padX: 15, padY: 6, maxHeight: 360, check: 14 },
+  aiHistory: { line: 1, width: 500, header: 56, padX: 24, listPad: 6, rowPad: 12, rowMargin: 6, tagPad: 6, tagRadius: 6, icon: 18, iconGap: 8, loading: 16, more: 36, moreIcon: 20, close: 40, closeInset: 8, renameWidth: 420 },
+  /** Web AI 执行过程（旧版网页 message-parts）：展开框、组头最小高、组头间距、列表左缩进（竖线位置和内边距）、最大高、行间距、行高、行内间距、状态图标、展开箭头、详情缩进和代码块 */
+  aiProcess: { toggle: 20, toggleRadius: 5, head: 26, headGap: 8, bodyTop: 6, bodyLeft: 9, bodyPadLeft: 14, bodyMax: 240, listGap: 4, row: 24, rowGap: 6, icon: 14, arrow: 13, detailTop: 4, detailBottom: 6, detailLeft: 20, codePadY: 8, codePadX: 10, codeRadius: 6, codeMax: 200, codeGap: 4 },
+  aiCompose: { width: 600, widthEmpty: 440, contentInset: 266, contentInsetShort: 136, shortWindow: 900, top: 35, headerTop: 22, headerX: 24, headerBottom: 12, headerPlusRight: 56, icon: 18, outputY: 12, outputX: 24, gap: 12, inputTop: 4, inputX: 16, inputBottom: 16, inputMax: 126, footer: 32, sendIcon: 16, apply: 26, applyPad: 8, radius: 4, chipY: 2, chipX: 8, placeholderY: 6, placeholderX: 10, spinner: 22, selectWidth: 203, selectRow: 30, selectX: 16, selectGroupX: 8, selectPadY: 5, selectMax: 360, timeGap: 4, image: 48, paragraphGap: 16, feedbackTop: 8, feedbackGap: 3, feedbackGapNarrow: 6, feedbackRadius: 6 },
   webComposer: {
     padX: 24, bottom: 16, padXNarrow: 10, padYNarrow: 8, radius: 10, padY: 8, padX2: 2, editorY: 4, editorX: 12, editorMax: 200,
     tool: 30, toolIcon: 22, send: 48, sendCircle: 36, sendIcon: 20,

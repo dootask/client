@@ -3,6 +3,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import { useUnistyles } from 'react-native-unistyles';
 
 import { useT } from '../../../i18n';
+import { letterGroups } from '../../../sync/users/list';
 import { haptics } from '../../../platform/haptics';
 import { showToast } from '../../../ui/Toast';
 import { useErrorText } from '../../session';
@@ -53,17 +54,24 @@ export function isMemberKey(key: PageKey | string): key is MemberKey {
  * 选会话的状态（App 弹层和 Web 选人弹窗共用）：已选、页面栈、搜索、部门项目和成员分页，以及当前页的行。
  * flat 为宽屏：来源平铺在左栏，点来源直接换页（栈只有一层），不逐级进入
  */
-export function usePicker({ title, max, root, flat }: { title: string; max: number; root: PageKey; flat: boolean }) {
+export interface MemberPickerOptions {
+  membersOnly?: boolean;
+  initial?: Picked[];
+  disabledIds?: readonly number[];
+}
+
+export function usePicker({ title, max, root, flat, membersOnly = false, initial = [], disabledIds = [] }: { title: string; max: number; root: PageKey; flat: boolean } & MemberPickerOptions) {
   const t = useT();
   const { theme } = useUnistyles();
   const errorText = useErrorText();
   const messenger = useMessenger();
-  const [selected, setSelected] = useState<Picked[]>([]);
+  const [selected, setSelected] = useState<Picked[]>(initial);
+  const disabledKeys = useMemo(() => new Set(disabledIds.map((id) => `u:${id}`)), [disabledIds]);
   // move：怎么到的当前页，刚打开不动，往里走从右滑入，返回从左滑入
   const [pages, setPages] = useState<{ stack: PageKey[]; move: 'open' | 'forward' | 'back' }>({ stack: [root], move: 'open' });
   const [key, setKey] = useState('');
   // 最近会话取打开时的会话缓存，选的时候不跟着新消息重排
-  const [recents] = useState(() => recentsOf(messenger?.store.getState().dialogs ?? {}));
+  const [recents] = useState(() => recentsOf(messenger?.store.getState().dialogs ?? {}).filter((item) => !membersOnly || !isGroup(item)));
   const [sources, setSources] = useState<PickSources | 'failed' | null>(null);
   const [members, setMembers] = useState<Record<string, MemberState>>({});
   const [results, setResults] = useState<Record<string, { users: PickUser[]; groups: PickGroup[] } | 'failed'>>({});
@@ -131,7 +139,7 @@ export function usePicker({ title, max, root, flat }: { title: string; max: numb
     if (!word || results[word]) return;
     let stale = false;
     const timer = setTimeout(() => {
-      Promise.all([searchUsers(word), searchGroups(word)]).then(
+      Promise.all([searchUsers(word), membersOnly ? Promise.resolve([]) : searchGroups(word)]).then(
         ([users, groups]) => !stale && setResults((current) => ({ ...current, [word]: { users, groups } })),
         () => !stale && setResults((current) => ({ ...current, [word]: 'failed' })),
       );
@@ -140,14 +148,17 @@ export function usePicker({ title, max, root, flat }: { title: string; max: numb
       stale = true;
       clearTimeout(timer);
     };
-  }, [word, results]);
+  }, [word, results, membersOnly]);
 
   const toggle = useCallback(
     (item: Picked) => {
       const current = selectedRef.current;
       const itemKey = pickKey(item);
+      if (disabledKeys.has(itemKey) || (membersOnly && isGroup(item))) return;
       if (current.some((one) => pickKey(one) === itemKey)) {
         setSelected(current.filter((one) => pickKey(one) !== itemKey));
+      } else if (max === 1) {
+        setSelected([item]);
       } else if (current.length >= max) {
         showToast(t('messenger:picker.overMax'));
         return;
@@ -156,7 +167,7 @@ export function usePicker({ title, max, root, flat }: { title: string; max: numb
       }
       haptics.selection();
     },
-    [max, t],
+    [max, t, disabledKeys, membersOnly],
   );
   const remove = useCallback((itemKey: string) => setSelected((current) => current.filter((item) => pickKey(item) !== itemKey)), []);
   const clear = useCallback(() => setSelected([]), []);
@@ -230,21 +241,9 @@ export function usePicker({ title, max, root, flat }: { title: string; max: numb
       const state = members[page] ?? EMPTY_MEMBERS;
       loading = state.loading;
       if (page === 'all') {
-        // 按拼音首字母分组，非字母开头的归到最后的「#」（同通讯录习惯）
-        const others: PickUser[] = [];
-        let letter = '';
-        state.list.forEach((user) => {
-          if (!/^[A-Z]$/.test(user.az)) {
-            others.push(user);
-            return;
-          }
-          if (user.az !== letter) {
-            letter = user.az;
-            rows.push({ type: 'header', id: `az-${letter}`, title: letter });
-          }
-          rows.push({ type: 'pick', id: `u-${user.userid}`, item: user });
-        });
-        if (others.length > 0) rows.push({ type: 'header', id: 'az-#', title: '#' }, ...pickRows(others, 'u-'));
+        for (const { letter, users } of letterGroups(state.list)) {
+          rows.push({ type: 'header', id: `az-${letter}`, title: letter }, ...pickRows(users, 'u-'));
+        }
         letters = true;
       } else {
         rows.push(...pickRows(state.list, 'u-'));
@@ -292,6 +291,7 @@ export function usePicker({ title, max, root, flat }: { title: string; max: numb
   return {
     selected,
     selectedKeys,
+    disabledKeys,
     toggle,
     remove,
     clear,

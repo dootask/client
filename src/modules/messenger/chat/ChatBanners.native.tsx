@@ -124,6 +124,10 @@ function TopBanner({ dialogId, msgId, pinnerId, onJump }: { dialogId: number; ms
   );
 }
 
+export function TodoStrip({ dialogId, todoNum, onJump }: { dialogId: number; todoNum: number; onJump: (msgId: number) => void }) {
+  return todoNum > 0 ? <TodoBanner dialogId={dialogId} count={todoNum} onJump={onJump} /> : null;
+}
+
 function TodoBanner({ dialogId, count, onJump }: { dialogId: number; count: number; onJump: (msgId: number) => void }) {
   const t = useT();
   const { theme } = useUnistyles();

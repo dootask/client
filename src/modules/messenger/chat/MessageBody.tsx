@@ -21,6 +21,7 @@ import { formatSeconds } from './format';
 import { fitSize, MEDIA_BOX, STICKER_BOX } from './media';
 import { RichBlocks, type BubbleTone } from './RichText';
 import { LongMore } from './LongMore';
+import { RetryImage } from './RetryImage';
 import { useVoiceProgress } from './voice';
 
 type Body<K extends MsgBody['kind']> = Extract<MsgBody, { kind: K }>;
@@ -36,7 +37,9 @@ export function MediaBody({ body, overlay }: { body: Body<'image' | 'video'>; ov
   const box = fitSize(body.width, body.height, MEDIA_BOX);
   return (
     <View style={[box, styles.media]}>
-      <Image source={body.src} style={StyleSheet.absoluteFill} contentFit="cover" recyclingKey={body.src} cachePolicy="memory-disk" transition={150} />
+      {body.kind === 'image'
+        ? <RetryImage key={body.src} src={body.src} style={StyleSheet.absoluteFill} />
+        : <Image source={body.src} style={StyleSheet.absoluteFill} contentFit="cover" recyclingKey={body.src} cachePolicy="memory-disk" transition={150} />}
       {body.kind === 'video' && (
         <View style={styles.center}>
           <View style={styles.play}>
@@ -72,7 +75,7 @@ export function LocalMedia({ file, children }: { file: LocalFile; children?: Rea
 export function StickerBody({ body }: { body: Body<'rich'> }) {
   const img = body.blocks[0];
   if (img?.t !== 'img') return null;
-  return <Image source={img.src} style={fitSize(img.width, img.height, STICKER_BOX)} contentFit="contain" recyclingKey={img.src} cachePolicy="memory-disk" />;
+  return <RetryImage key={img.src} src={img.src} style={fitSize(img.width, img.height, STICKER_BOX)} contentFit="contain" transition={0} />;
 }
 
 /**
@@ -134,7 +137,7 @@ const FILE_KINDS: [TileKind, LucideIcon, string[]][] = [
 ];
 
 /** 文件扩展名对应的色块种类和图标 */
-function fileKind(ext: string): [TileKind, LucideIcon] {
+export function fileKind(ext: string): [TileKind, LucideIcon] {
   const lower = ext.toLowerCase();
   const found = FILE_KINDS.find(([, , exts]) => exts.includes(lower));
   return found ? [found[0], found[1]] : ['other', File];

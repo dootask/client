@@ -3,7 +3,6 @@ import type { Msg } from '../../../sync/api/dialog';
 /** 消息里接口没有声明、显示和菜单要用的字段 */
 export interface MsgExtra {
   percentage?: number;
-  reply_num?: number;
   /** 标注人 */
   tag?: number;
   /** 设待办的人 */

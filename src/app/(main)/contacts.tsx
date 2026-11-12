@@ -1,5 +1,3 @@
-import { TabScreen } from '../../modules/shell';
+import { ContactsScreen } from '../../modules/contacts/ContactsScreen';
 
-export default function Screen() {
-  return <TabScreen label="shell:tab.contacts" />;
-}
+export default ContactsScreen;

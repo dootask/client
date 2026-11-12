@@ -92,6 +92,17 @@ export function quickMsgs(d: Dialog): { key: string; label: string }[] {
   return (d.quick_msgs ?? []).filter((item) => item.key && item.label && !UNSUPPORTED_QUICK.test(item.key));
 }
 
+export type AiQuickMsg = NonNullable<Dialog['quick_msgs']>[number];
+
+export function aiQuickMsgs(d: Dialog): AiQuickMsg[] {
+  return isAiBotDialog(d) ? (d.quick_msgs ?? []).filter(({ key }) => ['~ai-model-select', '~ai-session-create', '~ai-session-history'].includes(key)) : [];
+}
+
+export function aiModelLabel(item: AiQuickMsg, chosen?: string): string {
+  const value = chosen || item.config?.model || item.label;
+  return item.config?.models?.find((model) => model.value === value)?.label || value;
+}
+
 export type DialogCategory = 'project' | 'task' | 'user' | 'group' | 'bot' | 'mention';
 
 /** R7 会话属于哪个分类（「全部」「标注」不在这里判断） */
@@ -234,6 +245,13 @@ export function removeMsgs(list: readonly Msg[], ids: readonly number[]): Msg[] 
 
 /** 聊天页按分类筛选（同旧版分类条），值即服务端 msg_type 参数 */
 export type MsgFilterType = 'todo' | 'tag' | 'image' | 'file' | 'link';
+
+export const MSG_FILTER_TYPES: readonly MsgFilterType[] = ['todo', 'tag', 'image', 'file', 'link'];
+const HAS_TYPE: Record<MsgFilterType, keyof Dialog> = { todo: 'has_todo', tag: 'has_tag', image: 'has_image', file: 'has_file', link: 'has_link' };
+
+export function availableMsgTypes(dialog: Dialog, keep: MsgFilterType | null = null): MsgFilterType[] {
+  return MSG_FILTER_TYPES.filter((type) => !!dialog[HAS_TYPE[type]] || type === keep || (type === 'todo' && (dialog.todo_num ?? 0) > 0));
+}
 
 /** 消息是否属于这个分类，和服务端 msg_type 的条件一致 */
 export function matchesFilter(m: Msg, type: MsgFilterType): boolean {

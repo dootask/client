@@ -45,7 +45,7 @@ export function GroupBand() {
  * 分组里的行（同旧版 App ListRow）：左侧图标，主 / 副文字，右侧值、开关、箭头之一。
  * 有 onSwitch 为开关行（点整行也切换）；danger 为红字的危险操作（没有图标时居中）
  */
-export function ListItem({ icon, label, detail, value, trailing, chevron = false, switchValue, onSwitch, danger = false, disabled = false, onPress, onLongPress }: {
+export function ListItem({ icon, label, detail, value, trailing, chevron = false, switchValue, onSwitch, danger = false, disabled = false, onPress, onLongPress, testID }: {
   icon?: LucideIcon;
   label: string;
   detail?: string;
@@ -59,12 +59,13 @@ export function ListItem({ icon, label, detail, value, trailing, chevron = false
   disabled?: boolean;
   onPress?: () => void;
   onLongPress?: () => void;
+  testID?: string;
 }) {
   const { theme } = useUnistyles();
   const press = onPress ?? (onSwitch ? () => onSwitch(!switchValue) : undefined);
   const tone = disabled ? theme.colors.text4 : danger ? theme.colors.danger : undefined;
   return (
-    <Touchable disabled={disabled || (!press && !onLongPress)} onPress={press} onLongPress={onLongPress} style={({ pressed }) => styles.row(!!detail, pressed)}>
+    <Touchable testID={testID} disabled={disabled || (!press && !onLongPress)} onPress={press} onLongPress={onLongPress} style={({ pressed }) => styles.row(!!detail, pressed)}>
       {icon && <Icon icon={icon} color={tone ?? theme.colors.text2} size={theme.size.icon} />}
       <View style={styles.texts}>
         <Text style={styles.label(tone, danger && !icon)} numberOfLines={1}>{label}</Text>

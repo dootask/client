@@ -25,7 +25,7 @@ export interface MenuProps {
    * 自绘菜单（Web）的样式，同旧版两种下拉菜单：iview（默认）行高 32；
    * element 行高 36、描边，选中项加粗而不是打勾（消息分类下拉）
    */
-  look?: 'iview' | 'element';
+  look?: 'iview' | 'element' | 'dialog';
   /** 自绘菜单的最小宽，默认 menuMinWidth（旧版消息分类下拉更宽） */
   minWidth?: number;
   /** 自绘菜单的图标放在文字右侧（旧版会话右键菜单） */
@@ -69,6 +69,8 @@ export interface PopoverProps {
   gap?: number;
   /** 盖在默认气泡样式上（圆角、阴影、内边距照旧版各处的浮层） */
   panelStyle?: StyleProp<ViewStyle>;
+  /** 触发元素的 testID */
+  testID?: string;
   children: ReactNode | ((state: TouchState) => ReactNode);
 }
 

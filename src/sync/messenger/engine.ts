@@ -12,6 +12,7 @@ import {
   type DialogPatch,
   earlierCursor,
   hasEarlier,
+  isAiBotDialog,
   lastMsgPatch,
   matchesFilter,
   mergeDialog,
@@ -22,7 +23,7 @@ import {
 } from './rules';
 import { createStore } from 'zustand/vanilla';
 
-import { createMessengerStore, type MsgWindow, type OutboxItem, type StoredDialog, type UploadItem, type WithdrawnMsg } from './store';
+import { createMessengerStore, type MessengerState, type MsgSlice, type MsgThread, type MsgWindow, type OutboxItem, type StoredDialog, type UploadItem, type WithdrawnMsg } from './store';
 
 /** 引擎用到的接口，client 已绑定；测试时注入假的 */
 export interface MessengerApi {
@@ -31,6 +32,7 @@ export interface MessengerApi {
   one: (dialogId: number) => ReturnType<typeof dialogApi.one>;
   openUser: (userid: number) => ReturnType<typeof dialogApi.openUser>;
   msgList: (params: MsgListParams) => ReturnType<typeof dialogApi.msgList>;
+  msgOne: (msgId: number) => ReturnType<typeof dialogApi.msgOne>;
   msgLatest: (dialogs: { id: number; latest_id: number }[], take: number) => ReturnType<typeof dialogApi.msgLatest>;
   msgRead: (ids: Record<number, number>) => ReturnType<typeof dialogApi.msgRead>;
   msgUnread: (dialogId: number) => ReturnType<typeof dialogApi.msgUnread>;
@@ -71,6 +73,7 @@ export function bindMessengerApi(client: ApiClient, io: UploadIO): MessengerApi 
     one: (id) => dialogApi.one(client, id),
     openUser: (userid) => dialogApi.openUser(client, userid),
     msgList: (p) => dialogApi.msgList(client, p),
+    msgOne: (id) => dialogApi.msgOne(client, id),
     msgLatest: (d, take) => dialogApi.msgLatest(client, d, take),
     msgRead: (ids) => dialogApi.msgRead(client, ids),
     msgUnread: (id) => dialogApi.msgUnread(client, id),
@@ -103,9 +106,9 @@ export function bindMessengerApi(client: ApiClient, io: UploadIO): MessengerApi 
 
 /** 按账号隔离的小数据存储（键值存储里的 messenger.<userid>.<name>） */
 export interface MessengerKv {
-  get(name: 'sync' | 'beyond' | 'drafts' | 'outbox'): string | undefined;
-  set(name: 'sync' | 'beyond' | 'drafts' | 'outbox', value: string): void;
-  remove(name: 'sync' | 'beyond' | 'drafts' | 'outbox'): void;
+  get(name: 'sync' | 'beyond' | 'drafts' | 'outbox' | 'aiModels'): string | undefined;
+  set(name: 'sync' | 'beyond' | 'drafts' | 'outbox' | 'aiModels', value: string): void;
+  remove(name: 'sync' | 'beyond' | 'drafts' | 'outbox' | 'aiModels'): void;
 }
 
 export interface MessengerSocket {
@@ -135,6 +138,10 @@ const LIST_PAGE_SIZE = 100;
 /** 首次全量同步最多取这么多页（按最后消息时间倒序），更早的未读、待办会话靠 beyond 补 */
 const FULL_SYNC_PAGES = 10;
 const MSG_PAGE_SIZE = 50;
+
+/** 服务端按条件取的几段消息：分类筛选、回复线程 */
+const SLICES = ['filter', 'thread'] as const;
+type SliceKey = (typeof SLICES)[number];
 /** 每个会话缓存最新的这么多条 */
 const CACHE_MSGS = 50;
 const LATEST_TAKE = 25;
@@ -402,13 +409,14 @@ export function createMessenger(deps: MessengerDeps) {
   // ---------------------------------------------------------------------------
 
   const windowTimers = new Map<number, ReturnType<typeof setTimeout>>();
+  const windowWrites = new Map<number, Promise<void>>();
 
   function setWindow(dialogId: number, patch: Partial<MsgWindow>) {
     const prev = get().windows[dialogId] ?? { list: [], synced: false, loading: null };
     set({ windows: { ...get().windows, [dialogId]: { ...prev, ...patch } } });
-    if (patch.list && get().filter?.dialogId === dialogId) {
+    if (patch.list && SLICES.some((key) => get()[key]?.dialogId === dialogId)) {
       const before = new Set(prev.list);
-      syncFilter(dialogId, patch.list.filter((m) => !before.has(m)));
+      syncSlices(dialogId, patch.list.filter((m) => !before.has(m)));
     }
     if (patch.list && !windowTimers.has(dialogId)) {
       windowTimers.set(
@@ -421,16 +429,24 @@ export function createMessenger(deps: MessengerDeps) {
     }
   }
 
+  function persistWindow(dialogId: number) {
+    const write = (windowWrites.get(dialogId) ?? Promise.resolve()).then(() => writeWindow(dialogId));
+    windowWrites.set(dialogId, write);
+    return write.finally(() => { if (windowWrites.get(dialogId) === write) windowWrites.delete(dialogId); });
+  }
+
   /** 窗口在最新一端且和服务器对过时，把最新 CACHE_MSGS 条写进缓存 */
-  async function persistWindow(dialogId: number) {
+  async function writeWindow(dialogId: number) {
     const win = get().windows[dialogId];
+    const revision = windowRevisions.get(dialogId) ?? 0;
     if (!win?.synced || !atLatest(win.list)) return;
     const slice = win.list.slice(0, CACHE_MSGS);
     const below = win.list[CACHE_MSGS];
     if (below) slice[slice.length - 1] = { ...slice[slice.length - 1]!, prev_id: below.id };
     await deleteCachedMsgs(dialogId, new Set(slice.map((m) => m.id)));
+    if ((windowRevisions.get(dialogId) ?? 0) !== revision) return;
     await cache.putMany('messages', slice);
-    saveDialogs([{ id: dialogId, cached_msg_id: slice[0]?.id ?? 0 }]);
+    if ((windowRevisions.get(dialogId) ?? 0) === revision) saveDialogs([{ id: dialogId, cached_msg_id: slice[0]?.id ?? 0 }]);
   }
 
   function touchWindow(dialogId: number) {
@@ -486,6 +502,8 @@ export function createMessenger(deps: MessengerDeps) {
         }
       }
     }
+    // 筛选、线程按自己的范围收：窗口没在最新一端、没开窗口（直接打开线程页）时也要进去
+    syncSlices(dialogId, msgs);
     afterMsgs(dialogId, msgs);
   }
 
@@ -499,21 +517,23 @@ export function createMessenger(deps: MessengerDeps) {
   }
 
   const loadingKeys = new Set<string>();
+  const windowRevisions = new Map<number, number>();
 
   async function load(dialogId: number, kind: NonNullable<MsgWindow['loading']>, params: Omit<MsgListParams, 'dialog_id'>, apply: (list: Msg[], page: Msg[], time: number) => Msg[]) {
-    const key = `${dialogId}:${kind}`;
+    const revision = windowRevisions.get(dialogId) ?? 0;
+    const key = `${dialogId}:${kind}:${revision}`;
     if (loadingKeys.has(key)) return;
     loadingKeys.add(key);
     setWindow(dialogId, { loading: kind });
     try {
       const res = await api.msgList({ dialog_id: dialogId, take: MSG_PAGE_SIZE, ...params });
-      if (stopped || !get().windows[dialogId]) return;
+      if (stopped || !get().windows[dialogId] || (windowRevisions.get(dialogId) ?? 0) !== revision) return;
       setWindow(dialogId, { list: apply(get().windows[dialogId]!.list, res.list, res.time), synced: true });
       if (res.dialog) saveDialogs([res.dialog]);
       afterMsgs(dialogId, res.list);
     } finally {
       loadingKeys.delete(key);
-      if (get().windows[dialogId]?.loading === kind) setWindow(dialogId, { loading: null });
+      if ((windowRevisions.get(dialogId) ?? 0) === revision && get().windows[dialogId]?.loading === kind) setWindow(dialogId, { loading: null });
     }
   }
 
@@ -543,11 +563,13 @@ export function createMessenger(deps: MessengerDeps) {
 
   /** 打开会话：先显示缓存，再取最新一页 */
   async function openDialog(dialogId: number) {
+    const revision = windowRevisions.get(dialogId) ?? 0;
     set({ openId: dialogId });
     touchWindow(dialogId);
     if (!get().windows[dialogId]) {
       setWindow(dialogId, {});
       const cached = await cache.query<Msg>('messages', { index: 'dialog_id', equals: dialogId });
+      if ((windowRevisions.get(dialogId) ?? 0) !== revision) return;
       const win = get().windows[dialogId];
       if (win && !win.synced && win.list.length === 0 && cached.length) {
         set({ windows: { ...get().windows, [dialogId]: { ...win, list: upsertMsgs([], cached) } } });
@@ -556,74 +578,135 @@ export function createMessenger(deps: MessengerDeps) {
     await loadLatest(dialogId);
   }
 
+  /** 丢掉窗口和缓存里的消息重新取最新一页（AI 机器人单聊切换会话后，消息只属于当前会话） */
+  async function reloadDialog(dialogId: number) {
+    const revision = (windowRevisions.get(dialogId) ?? 0) + 1;
+    windowRevisions.set(dialogId, revision);
+    if (get().filter?.dialogId === dialogId) set({ filter: null });
+    setWindow(dialogId, { list: [], synced: false, loading: null });
+    saveDialogs([{ id: dialogId, cached_msg_id: 0 }]);
+    await windowWrites.get(dialogId);
+    await deleteCachedMsgs(dialogId);
+    if (windowRevisions.get(dialogId) !== revision) return;
+    await load(dialogId, 'latest', {}, (_list, page, time) => applyLatestPage([], page, time));
+  }
+
   // ---------------------------------------------------------------------------
   // 分类筛选（聊天页分类条）
   // ---------------------------------------------------------------------------
 
-  /** 每次换筛选加一，旧请求回来时丢掉 */
-  let filterSeq = 0;
+  /** 每次换筛选、换线程加一，旧请求回来时丢掉 */
+  const sliceSeq: Record<SliceKey, number> = { filter: 0, thread: 0 };
+
+  function patchSlice(key: SliceKey, patch: Partial<MsgSlice>) {
+    const slice = get()[key];
+    if (slice) set({ [key]: { ...slice, ...patch } } as Pick<MessengerState, SliceKey>);
+  }
+
+  /** 消息是否属于这一段 */
+  function inSlice(key: SliceKey, m: Msg) {
+    const { filter, thread } = get();
+    return key === 'filter' ? !!filter && matchesFilter(m, filter.type) : m.reply_id === thread?.msgId;
+  }
 
   /** 换分类（null 为看全部）：取该分类最新一页 */
   function setFilter(dialogId: number, type: MsgFilterType | null) {
-    const seq = ++filterSeq;
+    const seq = ++sliceSeq.filter;
     if (!type) {
       if (get().filter) set({ filter: null });
       return Promise.resolve();
     }
     set({ filter: { dialogId, type, list: [], earlier: 0, ready: false, loading: true } });
-    return loadFilter(seq, 0);
+    return loadSlice('filter', seq, 0);
   }
 
-  function loadFilterEarlier() {
-    const f = get().filter;
-    if (!f?.ready || f.loading || !f.earlier) return Promise.resolve();
-    set({ filter: { ...f, loading: true } });
-    return loadFilter(filterSeq, f.earlier);
+  /** 打开回复线程（F7）：取被回复的那条（窗口里有就直接用）和最新一页回复 */
+  function openThread(dialogId: number, msgId: number) {
+    const seq = ++sliceSeq.thread;
+    const root = get().windows[dialogId]?.list.find((m) => m.id === msgId) ?? null;
+    set({ thread: { dialogId, msgId, root, list: [], earlier: 0, ready: false, loading: true } });
+    const loadRoot = root
+      ? Promise.resolve()
+      : api.msgOne(msgId).then((msg) => {
+          if (seq === sliceSeq.thread) patchSlice('thread', { root: msg } as Partial<MsgThread>);
+        });
+    return Promise.all([loadRoot, loadSlice('thread', seq, 0)]).then(() => {});
   }
 
-  async function loadFilter(seq: number, prevId: number) {
-    const { dialogId, type } = get().filter!;
+  function closeThread() {
+    sliceSeq.thread++;
+    if (get().thread) set({ thread: null });
+  }
+
+  function loadEarlierIn(key: SliceKey) {
+    const slice = get()[key];
+    if (!slice?.ready || slice.loading || !slice.earlier) return Promise.resolve();
+    patchSlice(key, { loading: true });
+    return loadSlice(key, sliceSeq[key], slice.earlier);
+  }
+
+  async function loadSlice(key: SliceKey, seq: number, prevId: number) {
+    const { filter, thread } = get();
+    const query = key === 'filter' ? { dialog_id: filter!.dialogId, msg_type: filter!.type } : { dialog_id: thread!.dialogId, msg_id: thread!.msgId };
     try {
-      const res = await api.msgList({ dialog_id: dialogId, msg_type: type, take: MSG_PAGE_SIZE, ...(prevId ? { prev_id: prevId } : {}) });
-      const f = get().filter;
-      if (stopped || seq !== filterSeq || !f) return;
+      const res = await api.msgList({ ...query, take: MSG_PAGE_SIZE, ...(prevId ? { prev_id: prevId } : {}) });
+      const slice = get()[key];
+      if (stopped || seq !== sliceSeq[key] || !slice) return;
       // 这页最旧一条的 prev_id 只表示更早还有；从它的前一个 id 往前取，中间新标注、新设待办的也能取到
       const oldest = res.list[res.list.length - 1];
       const earlier = oldest && (oldest.prev_id ?? 0) > 0 ? oldest.id - 1 : 0;
-      set({ filter: { ...f, list: upsertMsgs(f.list, res.list), earlier, ready: true, loading: false } });
+      patchSlice(key, { list: upsertMsgs(slice.list, res.list), earlier, ready: true, loading: false });
     } catch (err) {
-      const f = get().filter;
-      if (seq === filterSeq && f) set({ filter: { ...f, loading: false } });
+      if (seq === sliceSeq[key]) patchSlice(key, { loading: false });
       throw err;
     }
   }
 
   /**
-   * 窗口里变化的消息同步到筛选：已在筛选里的更新，不再属于这个分类的去掉（取消标注、取消待办）；
-   * 新属于这个分类的，落在筛选已取到的范围内才加（更早的等往前翻时由服务端给）
+   * 窗口里变化的消息同步到筛选、线程：已在里面的更新，不再属于的去掉（取消标注、取消待办）；
+   * 新属于的，落在已取到的范围内才加（更早的等往前翻时由服务端给）。线程的被回复那条也跟着更新
    */
-  function syncFilter(dialogId: number, changed: readonly Msg[]) {
-    const f = get().filter;
-    if (!f?.ready || f.dialogId !== dialogId || changed.length === 0) return;
-    const ids = new Set(f.list.map((m) => m.id));
-    const add: Msg[] = [];
-    const drop: number[] = [];
-    for (const m of changed) {
-      if (matchesFilter(m, f.type)) {
-        if (ids.has(m.id) || m.id > f.earlier) add.push(m);
-      } else if (ids.has(m.id)) {
-        drop.push(m.id);
+  function syncSlices(dialogId: number, changed: readonly Msg[]) {
+    if (changed.length === 0) return;
+    for (const key of SLICES) {
+      const slice = get()[key];
+      if (!slice?.ready || slice.dialogId !== dialogId) continue;
+      const ids = new Set(slice.list.map((m) => m.id));
+      const add: Msg[] = [];
+      const drop: number[] = [];
+      for (const m of changed) {
+        if (inSlice(key, m)) {
+          if (ids.has(m.id) || m.id > slice.earlier) add.push(m);
+        } else if (ids.has(m.id)) {
+          drop.push(m.id);
+        }
       }
+      if (add.length || drop.length) patchSlice(key, { list: upsertMsgs(removeMsgs(slice.list, drop), add) });
     }
-    if (add.length || drop.length) set({ filter: { ...f, list: upsertMsgs(removeMsgs(f.list, drop), add) } });
+    const thread = get().thread;
+    const root = thread?.dialogId === dialogId && changed.find((m) => m.id === thread.msgId);
+    if (root) patchSlice('thread', { root } as Partial<MsgThread>);
   }
 
-  /** 消息被删除或撤回：从窗口和筛选里去掉 */
+  /** 新回复进来、回复被删：被回复那条的回复数跟着变（同旧前端 increaseMsgReplyNum） */
+  function bumpReplies(dialogId: number, replyId: number | null | undefined, delta: number) {
+    if (!replyId) return;
+    const pick = (m: Msg) => m.id === replyId;
+    const current = get().windows[dialogId]?.list.find(pick) ?? (get().thread?.msgId === replyId ? get().thread!.root : null);
+    if (!current) return;
+    setMsgs(dialogId, pick, { reply_num: Math.max(0, (current.reply_num ?? 0) + delta) });
+  }
+
+  /** 消息被删除或撤回：从窗口、筛选、线程里去掉 */
   function dropMsgs(dialogId: number, ids: readonly number[]) {
     const win = get().windows[dialogId];
+    const gone = [...(win?.list ?? []), ...(get().thread?.list ?? [])].filter((m) => m.dialog_id === dialogId && ids.includes(m.id));
     if (win) setWindow(dialogId, { list: removeMsgs(win.list, ids) });
-    const f = get().filter;
-    if (f?.dialogId === dialogId) set({ filter: { ...f, list: removeMsgs(f.list, ids) } });
+    for (const key of SLICES) {
+      const slice = get()[key];
+      if (slice?.dialogId === dialogId) patchSlice(key, { list: removeMsgs(slice.list, ids) });
+    }
+    for (const id of new Set(gone.map((m) => m.id))) bumpReplies(dialogId, gone.find((m) => m.id === id)!.reply_id, -1);
   }
 
   /** 打开期间收到过别人新消息的会话（R20 没加未读） */
@@ -631,9 +714,10 @@ export function createMessenger(deps: MessengerDeps) {
 
   function closeDialog(dialogId: number) {
     if (get().openId === dialogId) set({ openId: 0 });
-    if (get().filter?.dialogId === dialogId) {
-      filterSeq++;
-      set({ filter: null });
+    for (const key of SLICES) {
+      if (get()[key]?.dialogId !== dialogId) continue;
+      sliceSeq[key]++;
+      set({ [key]: null });
     }
     cancel(windowTimers.get(dialogId));
     windowTimers.delete(dialogId);
@@ -726,7 +810,8 @@ export function createMessenger(deps: MessengerDeps) {
   }
 
   function onPushMsg(msg: Msg, data: Record<string, unknown>, isAdd: boolean, silence: boolean) {
-    const exists = !!get().windows[msg.dialog_id]?.list.some((m) => m.id === msg.id);
+    const exists = !!get().windows[msg.dialog_id]?.list.some((m) => m.id === msg.id) || !!get().thread?.list.some((m) => m.id === msg.id);
+    if (!exists && isAdd) bumpReplies(msg.dialog_id, msg.reply_id, 1);
     const d = get().dialogs[msg.dialog_id];
     if (!exists && isAdd && msg.userid !== userId) {
       // R20 正在看的会话不加未读，由已读上报清掉；关闭时再和服务端对一次
@@ -777,12 +862,16 @@ export function createMessenger(deps: MessengerDeps) {
   const readQueue = new Map<number, number>();
   let readTimer: ReturnType<typeof setTimeout> | undefined;
 
-  /** 改窗口里的消息（已读、回应）；筛选里有不在窗口的同一条也改 */
+  /** 改窗口里的消息（已读、回应、回复数）；筛选、线程里有不在窗口的同一条也改 */
   function setMsgs(dialogId: number, pick: (m: Msg) => boolean, patch: Partial<Msg>) {
     const win = get().windows[dialogId];
     if (win?.list.some(pick)) setWindow(dialogId, { list: win.list.map((m) => (pick(m) ? { ...m, ...patch } : m)) });
-    const f = get().filter;
-    if (f?.dialogId === dialogId && f.list.some(pick)) set({ filter: { ...f, list: f.list.map((m) => (pick(m) ? { ...m, ...patch } : m)) } });
+    for (const key of SLICES) {
+      const slice = get()[key];
+      if (slice?.dialogId === dialogId && slice.list.some(pick)) patchSlice(key, { list: slice.list.map((m) => (pick(m) ? { ...m, ...patch } : m)) });
+    }
+    const root = get().thread?.root;
+    if (root?.dialog_id === dialogId && pick(root)) patchSlice('thread', { root: { ...root, ...patch } } as Partial<MsgThread>);
   }
 
   /** 消息出现在可见区域时调用 */
@@ -914,11 +1003,19 @@ export function createMessenger(deps: MessengerDeps) {
   }
 
   /** 发送文本：先进队列显示发送中，按顺序发出。返回本地 id */
-  function sendText(params: Pick<OutboxItem, 'dialog_id' | 'text' | 'md' | 'reply_id' | 'silence'>): string {
+  function sendText(params: Pick<OutboxItem, 'dialog_id' | 'text' | 'md' | 'reply_id' | 'silence' | 'model_name'>): string {
     const localId = `local-${now()}-${++localSeq}`;
-    setOutbox([...get().outbox, { localId, ...params, queuedAt: now(), state: 'sending' }]);
+    const dialog = get().dialogs[params.dialog_id];
+    const model_name = dialog && isAiBotDialog(dialog) ? get().aiModels[dialog.id] : undefined;
+    setOutbox([...get().outbox, { localId, ...params, model_name: params.model_name ?? model_name, queuedAt: now(), state: 'sending' }]);
     background(flushOutbox(), 'outbox');
     return localId;
+  }
+
+  function selectAiModel(dialogId: number, model: string) {
+    const aiModels = { ...get().aiModels, [dialogId]: model };
+    set({ aiModels });
+    kv.set('aiModels', JSON.stringify(aiModels));
   }
 
   function retrySend(localId: string) {
@@ -942,9 +1039,10 @@ export function createMessenger(deps: MessengerDeps) {
           continue;
         }
         try {
-          const msg = await api.sendText({ dialog_id: item.dialog_id, text: item.text, md: item.md, reply_id: item.reply_id, silence: item.silence });
+          const msg = await api.sendText({ dialog_id: item.dialog_id, text: item.text, md: item.md, reply_id: item.reply_id, silence: item.silence, model_name: item.model_name });
           set({ sentKeys: { ...get().sentKeys, [msg.id]: item.localId } });
           discardSend(item.localId);
+          bumpReplies(msg.dialog_id, msg.reply_id, 1);
           insertMsgs(msg.dialog_id, [msg], true);
           if (get().dialogs[msg.dialog_id]) saveDialogs([lastMsgPatch(msg)]);
           else background(fetchDialog(msg.dialog_id), 'fetch dialog');
@@ -1056,6 +1154,7 @@ export function createMessenger(deps: MessengerDeps) {
       const msg = msgOf(data);
       if (msg) {
         set({ sentKeys: { ...get().sentKeys, [msg.id]: item.localId } });
+        bumpReplies(msg.dialog_id, msg.reply_id, 1);
         insertMsgs(msg.dialog_id, [msg], true);
         if (get().dialogs[msg.dialog_id]) saveDialogs([lastMsgPatch(msg)]);
         else background(fetchDialog(msg.dialog_id), 'fetch dialog');
@@ -1169,6 +1268,7 @@ export function createMessenger(deps: MessengerDeps) {
       ready: true,
       dialogs: Object.fromEntries(dialogs.map((d) => [d.id, d])),
       drafts: parseJson<Record<number, string>>(kv.get('drafts')) ?? {},
+      aiModels: parseJson<Record<number, string>>(kv.get('aiModels')) ?? {},
       outbox: parseJson<OutboxItem[]>(kv.get('outbox')) ?? [],
     });
     unsubs.push(
@@ -1193,7 +1293,7 @@ export function createMessenger(deps: MessengerDeps) {
   /** 退出登录：清掉这个账号的缓存和小数据 */
   async function clear() {
     stop();
-    for (const name of ['sync', 'beyond', 'drafts', 'outbox'] as const) kv.remove(name);
+    for (const name of ['sync', 'beyond', 'drafts', 'outbox', 'aiModels'] as const) kv.remove(name);
     await cache.clear('messages');
     await cache.clear('dialogs');
   }
@@ -1209,13 +1309,18 @@ export function createMessenger(deps: MessengerDeps) {
     openUser,
     forgetDialogs,
     openDialog,
+    reloadDialog,
+    selectAiModel,
     closeDialog,
     loadLatest,
     loadEarlier,
     loadNewer,
     loadAround,
     setFilter,
-    loadFilterEarlier,
+    openThread,
+    closeThread,
+    loadFilterEarlier: () => loadEarlierIn('filter'),
+    loadThreadEarlier: () => loadEarlierIn('thread'),
     markRead,
     markDialog,
     clearDot,

@@ -44,6 +44,7 @@ type SendHow = 'auto' | 'silence' | 'md' | 'normal';
 export type ComposerMode = { kind: 'reply'; msg: Msg } | { kind: 'edit'; msg: Msg } | null;
 
 export interface ComposerHandle {
+  openFullInput: () => void;
   /** 在光标处插入（表情） */
   insert: (text: string) => void;
   /** 换掉输入框内容并聚焦（撤回后重新编辑） */
@@ -69,6 +70,8 @@ export interface ComposerProps {
   /** 不能录音的平台为 null */
   voice: VoiceInput | null;
   mode: ComposerMode;
+  /** 回复线程里（F7）：没有单独回复哪条时，发出的都回复这条；不在线程里为 0 */
+  threadId: number;
   onModeEnd: () => void;
   /** ↑ 编辑自己的上一条（Web）；有可编辑的消息时返回 true */
   onEditLast: () => boolean;
@@ -88,7 +91,7 @@ const msgHtml = (msg: Msg) => String((msg.msg as { text?: unknown } | null)?.tex
  * 编辑消息期间草稿先收起来，编辑完或取消后还原。群里回复别人时自动 @ 对方。
  * 内容多了可以展开全屏编辑（带格式）；带格式的内容在输入框里只读预览，点它、插表情、语音转文字都回到全屏编辑
  */
-export function useComposer({ dialogId, store, mode, onModeEnd, onEditLast, onSent, voice, pickerKeysRef, ref }: ComposerProps) {
+export function useComposer({ dialogId, store, mode, threadId, onModeEnd, onEditLast, onSent, voice, pickerKeysRef, ref }: ComposerProps) {
   const t = useT();
   const { theme } = useUnistyles();
   const messenger = useMessenger();
@@ -104,7 +107,10 @@ export function useComposer({ dialogId, store, mode, onModeEnd, onEditLast, onSe
   const replyTo = mode?.kind === 'reply' ? mode.msg : null;
   const replyName = useUser(replyTo?.userid ?? 0)?.nickname;
 
-  const saveDraft = (next: ComposeValue) => messenger?.setDraft(dialogId, next.text.trim() ? composeToHtml(next) : '');
+  // 线程里的输入不存草稿：草稿属于会话，线程页关掉就不要了
+  const saveDraft = (next: ComposeValue) => {
+    if (!threadId) messenger?.setDraft(dialogId, next.text.trim() ? composeToHtml(next) : '');
+  };
   // place：把输入框的光标放到 cursor（程序改了文字时）；编辑消息时的内容不是草稿
   const update = (next: ComposeValue, cursor: number, place: boolean) => {
     const current = store.get();
@@ -184,13 +190,14 @@ export function useComposer({ dialogId, store, mode, onModeEnd, onEditLast, onSe
 
   const sendEmoticon = (item: Emoticon, clear: boolean) => {
     if (!messenger) return;
-    messenger.sendText({ dialog_id: dialogId, text: emoticonHtml(item), reply_id: replyTo?.id });
+    messenger.sendText({ dialog_id: dialogId, text: emoticonHtml(item), reply_id: replyTo?.id ?? (threadId || undefined) });
     if (clear) update(EMPTY_COMPOSE, 0, true);
     if (replyTo) onModeEnd();
     onSent();
   };
 
   useImperativeHandle(ref, () => ({
+    openFullInput: () => openEditor(),
     insert,
     replace: (next) => {
       update(next, next.text.length, true);
@@ -254,7 +261,7 @@ export function useComposer({ dialogId, store, mode, onModeEnd, onEditLast, onSe
       return;
     }
     const md = how === 'md' || (how === 'auto' && looksLikeMarkdown(content));
-    messenger.sendText({ dialog_id: dialogId, text: md ? content.text.trim() : composeToHtml(content), md, reply_id: replyTo?.id, silence: how === 'silence' });
+    messenger.sendText({ dialog_id: dialogId, text: md ? content.text.trim() : composeToHtml(content), md, reply_id: replyTo?.id ?? (threadId || undefined), silence: how === 'silence' });
     update(EMPTY_COMPOSE, 0, true);
     onModeEnd();
     onSent();

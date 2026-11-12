@@ -36,9 +36,11 @@ export interface Attach {
   send: (files: PickedFile[], options?: SendOptions) => void;
 }
 
-export function useAttach({ dialogId, mode, onModeEnd, onSent }: {
+export function useAttach({ dialogId, mode, threadId, onModeEnd, onSent }: {
   dialogId: number;
   mode: ComposerMode;
+  /** 回复线程里（F7）发出的都回复这条，见 useComposer */
+  threadId: number;
   onModeEnd: () => void;
   onSent: () => void;
 }): Attach {
@@ -53,8 +55,8 @@ export function useAttach({ dialogId, mode, onModeEnd, onSent }: {
     const accepted = files.filter((file) => file.size <= FILE_MAX_SIZE);
     if (accepted.length === 0) return;
     // 正在回复时文件带上回复；编辑消息不受影响
-    const replyId = mode?.kind === 'reply' ? mode.msg.id : undefined;
-    if (replyId) onModeEnd();
+    const replyId = mode?.kind === 'reply' ? mode.msg.id : threadId || undefined;
+    if (mode?.kind === 'reply') onModeEnd();
     const ready = compress ? await Promise.all(accepted.map(compressPhoto)) : accepted;
     messenger.sendFiles({ dialog_id: dialogId, files: ready, reply_id: replyId, caption: caption.trim() ? composeToHtml({ text: caption.trim(), mentions: [] }) : undefined });
     onSent();

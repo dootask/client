@@ -1,4 +1,4 @@
-import { useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams, usePathname } from 'expo-router';
 import { AtSign, ChevronDown } from 'lucide-react-native';
 import { type ComponentProps, type ReactNode, type Ref, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, AppState, BackHandler, Keyboard, Text, View } from 'react-native';
@@ -7,10 +7,12 @@ import { useStore } from 'zustand';
 
 import { dateFormats, useLanguage, useT } from '../../../i18n';
 import type { Msg } from '../../../sync/api/dialog';
-import { atLatest, composerBlock, hasEarlier, htmlToCompose, type Emoticon, type WithdrawnMsg } from '../../../sync/messenger';
+import { atLatest, composerBlock, hasEarlier, htmlToCompose, isAiBotDialog, type Emoticon, type WithdrawnMsg } from '../../../sync/messenger';
 import { msgContent, type MsgBody, type Reaction } from '../../../sync/messenger/body';
 import { ChatView, type ChatViewHandle, type MessageRenderInfo, type ScrollToBottomInfo } from '../../../ui/chat';
 import { Icon } from '../../../ui/Icon';
+import { SidePage, useSplitView } from '../../../ui/layout';
+import { useShortcut } from '../../../ui/shortcuts';
 import { showToast } from '../../../ui/Toast';
 import { Touchable } from '../../../ui/Touchable';
 import { openMedia } from '../../media';
@@ -24,10 +26,13 @@ import { ChatDropZone } from './ChatDropZone';
 import { buildRows, type RowData } from './chatModel';
 import { Composer, type ComposerHandle, type ComposerMode } from './Composer';
 import { useComposeStore } from './composeStore';
+import { useReturnTab } from './useReturnTab';
 import { EmojiPanel } from './EmojiPanel';
 import { type ExtraSheet, useExtras } from './extras';
 import { QuickEmoticons } from './QuickEmoticons';
 import { QuickMsgBar } from './QuickMsgBar';
+import { AiComposeModal } from './AiComposeModal';
+import { useAiModels } from './useAiModels';
 import { countText, dayLabel } from './format';
 import { MessageActionMenu, type LongPressTarget } from './MessageActionMenu';
 import { MentionAccessory, type PickerKeys } from './MentionPicker';
@@ -95,19 +100,42 @@ type SheetContent =
 /** seq：每次打开换一个，弹层重新挂载、状态从头开始；visible 置 false 时内容留着放完关闭动画 */
 type SheetState = { seq: number; visible: boolean; content: SheetContent };
 
-/** 路由页：/messenger/[dialogId]?msg=消息 id（从搜索、回复跳过来时定位到这条） */
+/** at 每次改变，让同一条消息可以重复定位 */
 export function ChatRoute() {
-  const params = useLocalSearchParams<{ dialogId: string; msg?: string }>();
+  const params = useLocalSearchParams<{ dialogId: string; msg?: string; at?: string; reply?: string; from?: string }>();
   const dialogId = Number(params.dialogId) || 0;
+  const split = useSplitView();
+  useReturnTab(params.from, !split);
+  const pathname = usePathname();
+  // 退回栈底的列表（navigate 会在聊天页上再压一层，聊天页不卸载、会话一直算开着）
+  useShortcut('escape', () => router.dismissTo('/messenger'), { enabled: split && pathname === `/messenger/${dialogId}`, inInput: true });
   // 换会话时整页重建：输入栏草稿、定位、已读快照都按会话来
-  return <ChatScreen key={dialogId} dialogId={dialogId} msgId={Number(params.msg) || 0} />;
+  return <ChatScreen key={dialogId} dialogId={dialogId} msgId={Number(params.msg) || 0} threadId={0} locateAt={params.at} reply={params.reply === '1'} />;
+}
+
+/** 打开回复线程：/messenger/thread/[msgId]?dialogId=会话 id */
+const pushThread = (msg: Msg) => router.push({ pathname: '/messenger/thread/[msgId]', params: { msgId: msg.id, dialogId: msg.dialog_id } });
+
+/** 回复线程页（F7，旧版网页「回复消息」）：上面是被回复的那条和它的回复，输入栏发出的都回复这条 */
+export function ThreadRoute() {
+  const t = useT();
+  const params = useLocalSearchParams<{ msgId: string; dialogId: string }>();
+  const msgId = Number(params.msgId) || 0;
+  const dialogId = Number(params.dialogId) || 0;
+  const close = () => (router.canGoBack() ? router.back() : router.navigate(`/messenger/${dialogId}`));
+  return (
+    <SidePage title={t('messenger:thread.title')} onClose={close} drawer>
+      <ChatScreen key={msgId} dialogId={dialogId} msgId={0} threadId={msgId} reply={false} />
+    </SidePage>
+  );
 }
 
 /**
  * 聊天页：打开时依次定位到指定消息、第一条未读、上次看的位置，都没有就在底部；定位好之前列表不显示。
- * 看到的消息上报已读；有 @ 我的未读时右下角可以逐条跳过去
+ * 看到的消息上报已读；有 @ 我的未读时右下角可以逐条跳过去。
+ * threadId 不为 0 时是回复线程：只显示这条和它的回复，不开关会话、不记位置、不存草稿
  */
-function ChatScreen({ dialogId, msgId }: { dialogId: number; msgId: number }) {
+function ChatScreen({ dialogId, msgId, threadId, locateAt, reply }: { dialogId: number; msgId: number; threadId: number; locateAt?: string; reply: boolean }) {
   const t = useT();
   const { theme } = useUnistyles();
   const messenger = useMessenger();
@@ -118,6 +146,10 @@ function ChatScreen({ dialogId, msgId }: { dialogId: number; msgId: number }) {
   /** 服务器根地址（带结尾的 /）：消息里的相对地址、表情包图片按它拼 */
   const origin = `${server}/`;
   const dialog = useDialog(dialogId);
+  const aiModels = useAiModels();
+  const aiBot = !!dialog && isAiBotDialog(dialog);
+  const [aiCompose, setAiCompose] = useState(false);
+  const openAi = useCallback(() => { Keyboard.dismiss(); setAiCompose(true); }, [setAiCompose]);
   const block = dialog ? composerBlock(dialog, isAdmin) : null;
   const canSend = block == null;
   const win = useMessengerState((s) => s.windows[dialogId]);
@@ -126,17 +158,18 @@ function ChatScreen({ dialogId, msgId }: { dialogId: number; msgId: number }) {
   const withdrawn = useMessengerState((s) => s.withdrawn);
   const sentKeys = useMessengerState((s) => s.sentKeys);
   // 分类筛选：筛选期间列表只显示这一类，发送中的不显示（发消息会先退出筛选）
-  const filter = useMessengerState((s) => (s.filter?.dialogId === dialogId ? s.filter : null));
+  const filter = useMessengerState((s) => (!threadId && s.filter?.dialogId === dialogId ? s.filter : null));
+  const thread = useMessengerState((s) => (threadId && s.thread?.msgId === threadId ? s.thread : null));
   const chatRef = useRef<ChatViewHandle>(null);
   const composerRef = useRef<ComposerHandle>(null);
   // 输入栏内容：从草稿开始，输入栏和上方的候选浮层共用
-  const compose = useComposeStore(() => htmlToCompose(messenger?.store.getState().drafts[dialogId] ?? ''));
+  const compose = useComposeStore(() => htmlToCompose(threadId ? '' : (messenger?.store.getState().drafts[dialogId] ?? '')));
   const pickerKeysRef: PickerKeys = useRef(null);
 
   // 打开时的未读快照：上报已读会把会话上的这两项清掉
-  const [opening] = useState(() => ({ unreadOne: dialog?.unread_one ?? 0, mentions: dialog?.mention_ids ?? [] }));
+  const [opening] = useState(() => (threadId ? { unreadOne: 0, mentions: [] } : { unreadOne: dialog?.unread_one ?? 0, mentions: dialog?.mention_ids ?? [] }));
   const [mentions, setMentions] = useState<readonly number[]>(opening.mentions);
-  const [located, setLocated] = useState(false);
+  const [located, setLocated] = useState(!!threadId);
   const [mode, setMode] = useState<ComposerMode>(null);
   const menuHost = useRef<MenuHostHandle>(null);
   const [sheet, setSheet] = useState<SheetState | null>(null);
@@ -145,19 +178,31 @@ function ChatScreen({ dialogId, msgId }: { dialogId: number; msgId: number }) {
   const mentionSession = useMemo(() => actions?.mentionSession(dialogId, userId), [actions, dialogId, userId]);
 
   const list = win?.list;
-  const shown = filter ? filter.list : list;
-  const rows = useMemo(
-    () =>
-      filter
-        ? buildRows({ list: filter.list, outbox: NONE, uploads: NONE, withdrawn: NONE, sentKeys, dialogId, userId })
-        : buildRows({ list: list ?? [], outbox, uploads, withdrawn, sentKeys, dialogId, userId }),
-    [filter, list, outbox, uploads, withdrawn, sentKeys, dialogId, userId],
+  // 线程：回复从新到旧，回复都取完了最后接上被回复的那条（最旧）
+  const threadList = useMemo(
+    () => thread && (thread.root && !thread.earlier ? [...thread.list, { ...thread.root, prev_id: 0, next_id: 0 }] : thread.list),
+    [thread],
   );
+  const shown = threadList ?? (filter ? filter.list : list);
+  const rows = useMemo(() => {
+    if (threadList) {
+      const mine = <T extends { reply_id?: number }>(items: T[]) => items.filter((item) => item.reply_id === threadId);
+      return buildRows({ list: threadList, outbox: mine(outbox), uploads: mine(uploads), withdrawn: NONE, sentKeys, dialogId, userId });
+    }
+    return filter
+      ? buildRows({ list: filter.list, outbox: NONE, uploads: NONE, withdrawn: NONE, sentKeys, dialogId, userId })
+      : buildRows({ list: list ?? [], outbox, uploads, withdrawn, sentKeys, dialogId, userId });
+  }, [threadList, threadId, filter, list, outbox, uploads, withdrawn, sentKeys, dialogId, userId]);
   const byId = useMemo(() => new Map((shown ?? []).map((m) => [String(m.id), m])), [shown]);
 
-  // 打开、关闭会话；定位
+  // 打开、关闭会话；定位（locateAt 变了即重新定位）
   useEffect(() => {
     if (!messenger || !dialogId) return;
+    // 线程页叠在聊天页上，会话由下面的聊天页开着
+    if (threadId) {
+      messenger.openThread(dialogId, threadId).catch((err) => showToast(errorText(err)));
+      return () => messenger.closeThread();
+    }
     let cancelled = false;
     const target = msgId || opening.unreadOne || positions.get(dialogId) || 0;
     const opened = messenger.openDialog(dialogId).catch((err) => showToast(errorText(err)));
@@ -174,14 +219,20 @@ function ChatScreen({ dialogId, msgId }: { dialogId: number; msgId: number }) {
         });
         await Promise.race([scrolled, new Promise((resolve) => setTimeout(resolve, LOCATE_TIMEOUT))]);
       }
-      if (!cancelled) setLocated(true);
+      if (!cancelled) {
+        setLocated(true);
+        if (reply) {
+          const msg = messenger.store.getState().windows[dialogId]?.list.find((item) => item.id === msgId);
+          if (msg) setMode({ kind: 'reply', msg });
+        }
+      }
     };
     void locate();
     return () => {
       cancelled = true;
       messenger.closeDialog(dialogId);
     };
-  }, [messenger, dialogId, msgId, opening, errorText]);
+  }, [messenger, dialogId, msgId, threadId, locateAt, reply, opening, errorText]);
 
   // 没有定位目标时，有缓存就先显示，不等最新一页
   if (!located && !msgId && !opening.unreadOne && !positions.has(dialogId) && list && list.length > 0) setLocated(true);
@@ -199,8 +250,8 @@ function ChatScreen({ dialogId, msgId }: { dialogId: number; msgId: number }) {
   const seen = useCallback(() => {
     if (!located) return;
     const ids = visible.current;
-    // 筛选时只上报已读，不记位置、不划 @
-    if (filter) {
+    // 筛选、线程里只上报已读，不记位置、不划 @
+    if (filter || threadId) {
       reportRead();
       return;
     }
@@ -210,7 +261,7 @@ function ChatScreen({ dialogId, msgId }: { dialogId: number; msgId: number }) {
     else if (numeric.length) positions.set(dialogId, Math.min(...numeric));
     setMentions((prev) => (prev.some((id) => ids.includes(String(id))) ? prev.filter((id) => !ids.includes(String(id))) : prev));
     reportRead();
-  }, [located, filter, rows, dialogId, reportRead]);
+  }, [located, filter, threadId, rows, dialogId, reportRead]);
   const onVisibleChange = useCallback((ids: string[]) => {
     visible.current = ids;
     seen();
@@ -227,11 +278,16 @@ function ChatScreen({ dialogId, msgId }: { dialogId: number; msgId: number }) {
   // 跳到一条消息：筛选里没有它时先回到完整对话
   const jumpTo = useCallback(async (id: number, highlight = true) => {
     if (!messenger) return;
+    // 线程里只在线程内找（引用的都是被回复的那条）
+    if (threadId) {
+      await chatRef.current?.scrollToMessage(String(id), { highlight });
+      return;
+    }
     const f = messenger.store.getState().filter;
     if (f?.dialogId === dialogId && !f.list.some((m) => m.id === id)) await messenger.setFilter(dialogId, null);
     await messenger.loadAround(dialogId, id).catch((err) => showToast(errorText(err)));
     await chatRef.current?.scrollToMessage(String(id), { highlight });
-  }, [messenger, dialogId, errorText]);
+  }, [messenger, dialogId, threadId, errorText]);
 
   const onJump = useCallback((id: number) => void jumpTo(id), [jumpTo]);
 
@@ -267,8 +323,10 @@ function ChatScreen({ dialogId, msgId }: { dialogId: number; msgId: number }) {
     setMode({ kind: 'reply', msg });
   }, []);
   // useMessageMenus 只在选中菜单项时读取，不要求稳定
+  // 线程里不单独回复某条：发出的都回复被回复的那条
+  const canReply = canSend && !threadId;
   const handlers: MenuHandlers = {
-    onReply: canSend ? onReply : undefined,
+    onReply: canReply ? onReply : undefined,
     onEdit: canSend ? (msg: Msg) => setMode({ kind: 'edit', msg }) : undefined,
     onForward: (msg: Msg) => openSheet({ kind: 'forward', msgIds: [msg.id] }),
     onSelectMany: (msg: Msg) => {
@@ -361,10 +419,11 @@ function ChatScreen({ dialogId, msgId }: { dialogId: number; msgId: number }) {
     },
     onReact,
     onQuote: (id: number) => void jumpTo(id),
+    onThread: threadId ? undefined : pushThread,
     onLongPress: (row: RowRef, info: MessageRenderInfo<RowData>, msg: Msg, body: MsgBody) => {
       row.measureInWindow((x, y, width, height) => menuHost.current?.open({ anchor: { x, y, width, height }, info, msg, body }));
     },
-    onReply: canSend ? onReply : undefined,
+    onReply: canReply ? onReply : undefined,
     onHover: (msg: Msg) => {
       if (actions && !(msg.id in (messenger?.store.getState().favorites ?? {}))) actions.checkFavorite(msg.id).catch(() => {});
     },
@@ -383,7 +442,7 @@ function ChatScreen({ dialogId, msgId }: { dialogId: number; msgId: number }) {
           messenger?.forgetWithdrawn(item.id);
         }
       : undefined,
-  }), [canSend, dialog?.type, dialogId, t, userId, origin, theme, opening.unreadOne, menu, pendingMenu, uploadMenu, messenger, actions, onReact, jumpTo, onReply, openSheet, selection, selectDrag, onSelectLimit, showImage]);
+  }), [canSend, canReply, threadId, dialog?.type, dialogId, t, userId, origin, theme, opening.unreadOne, menu, pendingMenu, uploadMenu, messenger, actions, onReact, jumpTo, onReply, openSheet, selection, selectDrag, onSelectLimit, showImage]);
 
   const openHref = useOpenHref();
   const richHandlers = useMemo<RichHandlers>(() => ({
@@ -409,18 +468,18 @@ function ChatScreen({ dialogId, msgId }: { dialogId: number; msgId: number }) {
   const loading = win?.loading ?? null;
   const filtering = !!filter;
   const onLoadEarlier = useCallback(() => {
-    const load = filtering ? messenger?.loadFilterEarlier() : messenger?.loadEarlier(dialogId);
+    const load = threadId ? messenger?.loadThreadEarlier() : filtering ? messenger?.loadFilterEarlier() : messenger?.loadEarlier(dialogId);
     void load?.catch((err) => showToast(errorText(err)));
-  }, [messenger, dialogId, filtering, errorText]);
+  }, [messenger, dialogId, threadId, filtering, errorText]);
   const onLoadNewer = useCallback(() => void messenger?.loadNewer(dialogId).catch((err) => showToast(errorText(err))), [messenger, dialogId, errorText]);
   const onJumpToLatest = useCallback(async () => {
     await messenger?.loadLatest(dialogId).catch((err) => showToast(errorText(err)));
   }, [messenger, dialogId, errorText]);
   // 发出消息回到完整对话（同旧版 App），滚到底
   const onSent = useCallback(() => {
-    void messenger?.setFilter(dialogId, null);
+    if (!threadId) void messenger?.setFilter(dialogId, null);
     chatRef.current?.scrollToBottom();
-  }, [messenger, dialogId]);
+  }, [messenger, dialogId, threadId]);
   // 换分类时回到最新一端
   const filterType = filter?.type ?? null;
   const shownType = useRef(filterType);
@@ -451,12 +510,14 @@ function ChatScreen({ dialogId, msgId }: { dialogId: number; msgId: number }) {
     setMode({ kind: 'edit', msg: last.data.msg });
     return true;
   };
-  const attach = useAttach({ dialogId, mode, onModeEnd, onSent });
+  const attach = useAttach({ dialogId, mode, threadId, onModeEnd, onSent });
   const onConverted = useCallback((text: string) => composerRef.current?.insertText(text), []);
-  const voice = useVoiceInput({ dialogId, mode, onModeEnd, onSent, onConverted });
-  const extras = useExtras({ dialog, userId, openSheet });
+  const voice = useVoiceInput({ dialogId, mode, threadId, onModeEnd, onSent, onConverted });
+  const extras = useExtras({ dialog, userId, openSheet, aiEnabled: aiModels.groups.length > 0, openAi });
+  const openFullInput = useCallback(() => composerRef.current?.openFullInput(), []);
   // 加号面板按入口排数定高（同旧版 App）；Web 不打开加号面板
-  const panelHeights = useMemo(() => ({ more: morePanelHeight(theme, extras.length) }), [theme, extras.length]);
+  const moreHeight = morePanelHeight(theme, extras.length, aiBot);
+  const panelHeights = useMemo(() => ({ more: moreHeight }), [moreHeight]);
 
   const onStickerSearch = useCallback(() => openSheet({ kind: 'stickerSearch' }), [openSheet]);
   const nextMention = mentions.length ? Math.min(...mentions) : 0;
@@ -486,15 +547,15 @@ function ChatScreen({ dialogId, msgId }: { dialogId: number; msgId: number }) {
                 currentUserId={String(userId)}
                 renderMessage={renderMessage}
                 renderDay={rowTraits.dayLabels ? renderDay : undefined}
-                header={<ChatTopBar dialogId={dialogId} dialog={dialog} selection={selection} onJump={onJump} />}
+                header={!threadId && <ChatTopBar dialogId={dialogId} dialog={dialog} selection={selection} onJump={onJump} />}
                 composer={
                   <BottomBar selection={selection} onForward={forwardSelection} onMerge={mergeSelection} onFavorite={favoriteSelection}>
                     {block ? (
                       <ComposerNotice text={t(block === 'muted' ? 'messenger:chat.muted' : 'messenger:chat.disabled')} />
                     ) : (
                       <>
-                        {dialog && !mode && <QuickMsgBar dialog={dialog} onSent={onSent} />}
-                        <Composer ref={composerRef} dialogId={dialogId} store={compose} pickerKeysRef={pickerKeysRef} mentionSession={mentionSession} mode={mode} onModeEnd={onModeEnd} onEditLast={onEditLast} onSent={onSent} onStickerSearch={onStickerSearch} attach={attach} extras={extras} voice={CAN_RECORD ? voice : null} />
+                        {dialog && !mode && !threadId && <QuickMsgBar dialog={dialog} onSent={onSent} />}
+                        <Composer ref={composerRef} dialogId={dialogId} store={compose} pickerKeysRef={pickerKeysRef} mentionSession={mentionSession} mode={mode} threadId={threadId} onModeEnd={onModeEnd} onEditLast={onEditLast} onSent={onSent} onStickerSearch={onStickerSearch} attach={attach} extras={extras} voice={CAN_RECORD ? voice : null} />
                       </>
                     )}
                   </BottomBar>
@@ -521,7 +582,7 @@ function ChatScreen({ dialogId, msgId }: { dialogId: number; msgId: number }) {
                 }
                 panels={{
                   emoji: emojiPanel,
-                  more: <MorePanel attach={attach} extras={extras} />,
+                  more: <MorePanel attach={attach} extras={extras} aiBot={aiBot} onFullInput={openFullInput} />,
                 }}
                 panelHeights={panelHeights}
                 keyboardDragOffset={theme.size.touch + theme.spacing.xs * 2}
@@ -531,11 +592,11 @@ function ChatScreen({ dialogId, msgId }: { dialogId: number; msgId: number }) {
                 highlightColor={theme.colors.rowHighlight}
                 listHidden={!located}
                 loadingIndicator={loadingIndicator}
-                emptyContent={(filter ? filter.ready : win?.synced) ? <Text style={styles.empty}>{t('messenger:chat.empty')}</Text> : <ActivityIndicator color={theme.colors.text3} />}
-                hasEarlier={filter ? filter.ready && filter.earlier > 0 : !!win?.synced && hasEarlier(win.list)}
-                loadingEarlier={filter ? filter.ready && filter.loading : loading === 'earlier'}
+                emptyContent={(thread ? thread.ready : filter ? filter.ready : win?.synced) ? <Text style={styles.empty}>{t('messenger:chat.empty')}</Text> : <ActivityIndicator color={theme.colors.text3} />}
+                hasEarlier={thread ? thread.ready && thread.earlier > 0 : filter ? filter.ready && filter.earlier > 0 : !!win?.synced && hasEarlier(win.list)}
+                loadingEarlier={thread ? thread.ready && thread.loading : filter ? filter.ready && filter.loading : loading === 'earlier'}
                 onLoadEarlier={onLoadEarlier}
-                hasNewer={!filter && !!list && !atLatest(list)}
+                hasNewer={!filter && !threadId && !!list && !atLatest(list)}
                 loadingNewer={loading === 'newer'}
                 onLoadNewer={onLoadNewer}
                 onJumpToLatest={onJumpToLatest}
@@ -546,6 +607,7 @@ function ChatScreen({ dialogId, msgId }: { dialogId: number; msgId: number }) {
         <MenuHost ref={menuHost} group={dialog?.type === 'group'} userId={userId} menu={menu} onReact={onReact} />
       </RowContextValue.Provider>
       {attach.preview && <SendPreview {...attach.preview} onClose={attach.closePreview} onSend={attach.send} />}
+      {aiCompose && <AiComposeModal dialogId={dialogId} config={aiModels} draft={compose.get().value.text} quote={mode?.kind === 'reply' ? mode.msg : undefined} onClose={() => setAiCompose(false)} onApply={(value) => composerRef.current?.replace(value)} />}
       {sheet && <ChatSheet key={sheet.seq} dialogId={dialogId} content={sheet.content} visible={sheet.visible} onClose={closeSheet} onForwarded={selection.clear} onSent={onSent} onPickSticker={(item) => composerRef.current?.sendEmoticon(item, false)} />}
     </View>
   );

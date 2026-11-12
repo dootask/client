@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 
 import type { Dialog, Msg } from '../api/dialog';
 import {
+  aiModelLabel,
+  aiQuickMsgs,
   applyAroundPage,
   applyEarlierPage,
   applyLatestPage,
@@ -25,6 +27,7 @@ import {
   toUnix,
   unreadTotals,
   upsertMsgs,
+  type AiQuickMsg,
 } from './rules';
 
 const dialog = (over: Partial<Dialog> = {}): Dialog => ({ id: 1, type: 'group', group_type: 'user', name: 'g', last_at: '2026-11-01 10:00:00', ...over });
@@ -261,6 +264,92 @@ describe('B7 quickMsgs', () => {
     ];
     expect(quickMsgs(dialog({ quick_msgs: items })).map((i) => i.key)).toEqual(['manual-checkin', '/help']);
     expect(quickMsgs(dialog({}))).toEqual([]);
+  });
+});
+
+describe('H3 aiQuickMsgs', () => {
+  const ai = (over: Partial<Dialog> = {}) => dialog({ type: 'user', bot: 1, email: 'ai-openai@bot.system', ...over });
+  const commands: AiQuickMsg[] = [
+    { key: '~ai-session-history', label: '历史会话' },
+    { key: '~ai-model-select', label: '选择模型', config: { model: 'mini', models: [{ value: 'mini', label: 'Mini' }] } },
+    { key: '~ai-session-create', label: '新会话' },
+  ];
+
+  it('AI 机器人单聊只保留三个受支持的 ~ 命令，顺序和配置原样保留', () => {
+    const items: AiQuickMsg[] = [
+      commands[0]!, { key: '~unknown', label: '未知' }, commands[1]!,
+      { key: '/help', label: '帮助' }, { key: 'meeting-create', label: '会议' },
+      commands[2]!, { key: 'locat-checkin', label: '签到' },
+      { key: '~ai-model-select-extra', label: '相似指令' }, { key: 'ai-session-create', label: '缺少 ~' },
+      { key: ' ~ai-session-history', label: '前缀空白' }, { key: '~AI-session-history', label: '大小写不同' },
+      { key: '', label: '空 key' },
+    ];
+    const d = ai({ quick_msgs: items });
+    const before = structuredClone(d);
+    const result = aiQuickMsgs(d);
+    expect(result).toEqual(commands);
+    expect(result[1]).toBe(commands[1]);
+    expect(d).toEqual(before);
+    expect(quickMsgs(d).map(({ key }) => key)).not.toContain('~ai-model-select');
+  });
+
+  it.each<Partial<Dialog>>([
+    { type: 'group' }, { bot: 0 }, { bot: null }, { bot: undefined },
+    { email: undefined }, { email: null }, { email: '' },
+    { email: 'notice@bot.system' }, { email: 'ai-@bot.system' },
+    { email: 'ai-openai@other.system' }, { email: 'ai-openai@bot.system.extra' },
+    { email: 'ai-openai@nested@bot.system' },
+  ])('非 AI 机器人单聊不暴露命令：%j', (over) => {
+    expect(aiQuickMsgs(ai({ quick_msgs: commands, ...over }))).toEqual([]);
+  });
+
+  it.each(['ai-openai@bot.system', 'ai-deepseek@bot.system', 'ai-custom-model@bot.system'])('支持 AI 机器人邮箱 %s', (email) => {
+    expect(aiQuickMsgs(ai({ email, quick_msgs: commands }))).toEqual(commands);
+  });
+
+  it.each([undefined, null, []])('quick_msgs 为 %s 时返回空列表', (quick_msgs) => {
+    expect(aiQuickMsgs(ai({ quick_msgs }))).toEqual([]);
+  });
+});
+
+describe('H3 aiModelLabel', () => {
+  const item: AiQuickMsg = {
+    key: '~ai-model-select', label: '选择模型',
+    config: { model: 'default', models: [{ value: 'default', label: '默认模型' }, { value: 'chosen', label: '所选模型' }] },
+  };
+
+  it.each([
+    [undefined, '默认模型'], ['', '默认模型'], ['chosen', '所选模型'], ['default', '默认模型'], ['unknown', 'unknown'],
+  ])('选择值 %s 优先于配置默认值，显示 %s', (chosen, expected) => {
+    expect(aiModelLabel(item, chosen)).toBe(expected);
+  });
+
+  it('配置默认值没有匹配标签时返回默认值，不回退到按钮标签', () => {
+    expect(aiModelLabel({ ...item, config: { ...item.config, model: 'removed' } })).toBe('removed');
+  });
+
+  it.each([undefined, null, {}, { model: null }, { model: '' }, { models: null }])('配置 %j 没有模型时回退到按钮标签或显式选择值', (config) => {
+    const button = { key: '~ai-model-select', label: '选择模型', config };
+    expect(aiModelLabel(button)).toBe('选择模型');
+    expect(aiModelLabel(button, '')).toBe('选择模型');
+    expect(aiModelLabel(button, 'chosen')).toBe('chosen');
+  });
+
+  it('缺少默认模型时也能把回退的按钮标签映射为模型标签', () => {
+    expect(aiModelLabel({ ...item, label: 'chosen', config: { models: item.config!.models } })).toBe('所选模型');
+  });
+
+  it.each([undefined, null, []])('可选模型列表为 %s 时返回模型原值', (models) => {
+    expect(aiModelLabel({ ...item, config: { model: 'default', models } })).toBe('default');
+    expect(aiModelLabel({ ...item, config: { model: 'default', models } }, 'chosen')).toBe('chosen');
+  });
+
+  it('匹配到空标签时回退原值；不改变快捷消息或配置', () => {
+    const button: AiQuickMsg = { ...item, config: { model: 'default', models: [{ value: 'default', label: '' }] } };
+    const before = structuredClone(button);
+    expect(aiModelLabel(button)).toBe('default');
+    expect(button).toEqual(before);
+    expect(aiModelLabel({ key: '~ai-model-select', label: '' })).toBe('');
   });
 });
 

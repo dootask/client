@@ -26,6 +26,22 @@ const isDevVariant = process.env.APP_VARIANT === 'development';
 const appId = isDevVariant ? 'com.dootask.task.dev' : 'com.dootask.task';
 
 /**
+ * Android 厂商通道（华为、荣耀、小米、OPPO、vivo、魅族）客户端参数：默认读 push/android/vendors.json（同 resources/app），
+ * 结构同 doopush-react-native-sdk 插件的 android.vendors。参数编入 APK、绑定正式包名，不是机密；服务端密钥只在 DooPush 控制台。
+ * 私有部署用环境变量 DOOPUSH_VENDORS_FILE 指定自己的文件。文件里的 *File 字段（agconnect-services.json 等）是相对该 JSON 的路径
+ */
+function readPushVendors(): Record<string, Record<string, unknown>> {
+  const file = path.resolve(__dirname, process.env.DOOPUSH_VENDORS_FILE || 'push/android/vendors.json');
+  const vendors: Record<string, Record<string, unknown>> = JSON.parse(fs.readFileSync(file, 'utf8'));
+  for (const vendor of Object.values(vendors)) {
+    for (const [key, value] of Object.entries(vendor)) {
+      if (key.endsWith('File') && typeof value === 'string') vendor[key] = path.resolve(path.dirname(file), value);
+    }
+  }
+  return vendors;
+}
+
+/**
  * iOS 权限说明：每种语言一个 ios-locales/<lang>.json（生成 <lang>.lproj/InfoPlist.strings），
  * Info.plist 默认值取简体中文。.strings 不展开 $(PRODUCT_NAME)，文案里直接写 DooTask。
  * 语言与 CFBundleLocalizations 一致
@@ -110,8 +126,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     ['expo-audio', { microphonePermission: usage.NSMicrophoneUsageDescription, enableBackgroundPlayback: false }],
     // 远程推送由 DooPush 负责，expo-notifications 只用本地权限、角标和点击响应
     ['expo-notifications', { enableRemoteNotifications: false, enableBackgroundRemoteNotifications: false }],
-    // dev 变体用开发证书签名，推送环境须为 development；安卓厂商通道参数在 N9 接入
-    ['doopush-react-native-sdk', { ios: { mode: isDevVariant ? 'development' : 'production' } }],
+    // dev 变体用开发证书签名，推送环境须为 development；安卓厂商通道参数绑定正式包名，dev 变体不接（同 resources/app）
+    ['doopush-react-native-sdk', { ios: { mode: isDevVariant ? 'development' : 'production' }, ...(!isDevVariant && { android: { vendors: readPushVendors() } }) }],
     // Android 15 起短气泡会多换一行被裁掉，关掉 TextView 的 useBoundsForWidth
     './plugins/with-text-bounds',
   ],

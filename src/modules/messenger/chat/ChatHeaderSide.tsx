@@ -1,3 +1,4 @@
+import { router } from 'expo-router';
 import { Phone } from 'lucide-react-native';
 import { Text, View } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
@@ -6,6 +7,7 @@ import { useT } from '../../../i18n';
 import type { StoredDialog } from '../../../sync/messenger';
 import { DialogAvatar, UserAvatar } from '../../../ui/Avatar';
 import { IconButton } from '../../../ui/IconButton';
+import { Touchable } from '../../../ui/Touchable';
 import { useSession } from '../../session';
 import { useCallPeer } from './extras';
 
@@ -42,11 +44,11 @@ export function HeaderRight({ dialog }: { dialog: StoredDialog }) {
   return (
     <>
       {callPeer && <IconButton icon={Phone} label={t('messenger:call.entry')} onPress={callPeer} />}
-      <View style={styles.avatar}>
+      <Touchable style={styles.avatar} accessibilityLabel={t('messenger:group.info.title')} onPress={() => router.push({ pathname: '/messenger/info/[dialogId]', params: { dialogId: dialog.id } })}>
         {dialog.type === 'user'
           ? <UserAvatar uri={dialog.userimg} userid={dialog.dialog_user?.userid ?? 0} name={dialog.name ?? ''} bot={!!dialog.bot} size={theme.size.headerAvatar} />
           : <DialogAvatar uri={dialog.avatar} groupType={dialog.group_type} size={theme.size.headerAvatar} />}
-      </View>
+      </Touchable>
     </>
   );
 }

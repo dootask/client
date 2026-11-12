@@ -1,11 +1,12 @@
 import { X } from 'lucide-react-native';
 import type { ReactNode } from 'react';
-import { Modal, Pressable, Text, View } from 'react-native';
+import { KeyboardAvoidingView, Modal, Pressable, Text, View } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { useT } from '../i18n';
 import { Icon } from './Icon';
 import { Touchable } from './Touchable';
+import { ToastHost } from './Toast';
 
 export interface DooModalProps {
   visible: boolean;
@@ -18,6 +19,8 @@ export interface DooModalProps {
   width: number;
   /** 卡片固定高（如选择成员 620），不给按内容 */
   height?: number;
+  top?: number;
+  avoidKeyboard?: boolean;
   /** 铺满整屏：没有圆角和右上关闭（全屏页自己放取消 / 返回） */
   fullscreen?: boolean;
   /** 正文不加内边距（内容自己排版，如选择成员） */
@@ -32,13 +35,13 @@ export interface DooModalProps {
  * 旧版网页通用弹窗（DooModal）：遮罩上居中的圆角卡片，标题、正文、底部按钮；点遮罩不关。
  * 只在打开时渲染内容
  */
-export function DooModal({ visible, onClose, title, headerBottom, width, height, fullscreen = false, bare = false, footer, children, testID }: DooModalProps) {
+export function DooModal({ visible, onClose, title, headerBottom, width, height, top, avoidKeyboard = false, fullscreen = false, bare = false, footer, children, testID }: DooModalProps) {
   const t = useT();
   const { theme, rt } = useUnistyles();
   const narrow = rt.breakpoint === 'xs';
   return (
     <Modal visible={visible} transparent animationType="fade" statusBarTranslucent navigationBarTranslucent onRequestClose={onClose}>
-      <View style={styles.wrap(fullscreen, narrow)}>
+      <KeyboardAvoidingView enabled={avoidKeyboard} behavior="padding" style={styles.wrap(fullscreen, narrow, top)}>
         <Pressable style={styles.mask} accessible={false} />
         <View testID={testID} style={styles.card(fullscreen, width, height)}>
           {!fullscreen && (
@@ -48,38 +51,42 @@ export function DooModal({ visible, onClose, title, headerBottom, width, height,
           )}
           {!!title && (
             <View style={styles.header(headerBottom)}>
-              <Text style={styles.title} numberOfLines={1} accessibilityRole="header">{title}</Text>
+              <Text testID={testID && `${testID}-title`} style={styles.title} numberOfLines={1} accessibilityRole="header">{title}</Text>
             </View>
           )}
-          <View style={styles.body(bare, !!title)}>{children}</View>
+          <View style={styles.body(bare, !!title, height !== undefined)}>{children}</View>
           {footer && <View style={styles.footer(narrow)}>{footer}</View>}
         </View>
-      </View>
+        {visible && <ToastHost />}
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
 
 /** 弹窗底部按钮（旧版 DooButton）：宽屏高 36 的圆角块，窄屏高 48 的等分胶囊 */
-export function DooButton({ label, primary = false, disabled = false, minWidth, suffix, onPress }: {
+export function DooButton({ label, primary = false, tone, disabled = false, minWidth, suffix, onPress, testID }: {
   label: string;
   primary?: boolean;
+  tone?: 'danger' | 'warning';
   disabled?: boolean;
   /** 宽屏最窄，不给为 88（确认框文字短，是 68） */
   minWidth?: number;
   /** 文字后的附加内容（如快捷键提示） */
   suffix?: ReactNode;
   onPress: () => void;
+  testID?: string;
 }) {
   const { rt } = useUnistyles();
   const narrow = rt.breakpoint === 'xs';
   return (
     <Touchable
+      testID={testID}
       accessibilityRole="button"
       accessibilityLabel={label}
       aria-disabled={disabled}
       disabled={disabled}
       onPress={onPress}
-      style={({ pressed, hovered }) => styles.button(narrow, primary, disabled, hovered, pressed, minWidth)}
+      style={({ pressed, hovered }) => styles.button(narrow, primary, disabled, hovered, pressed, minWidth, tone)}
     >
       <Text style={styles.buttonText(narrow, primary)} numberOfLines={1}>{label}</Text>
       {suffix}
@@ -90,11 +97,11 @@ export function DooButton({ label, primary = false, disabled = false, minWidth, 
 const styles = StyleSheet.create((theme, rt) => {
   const m = theme.size.dooModal;
   return {
-    wrap: (fullscreen: boolean, narrow: boolean) => ({
+    wrap: (fullscreen: boolean, narrow: boolean, top: number | undefined) => ({
       flex: 1,
       alignItems: 'center',
-      justifyContent: 'center',
-      paddingTop: fullscreen ? 0 : rt.insets.top + m.wrapY,
+      justifyContent: top === undefined ? 'center' : 'flex-start',
+      paddingTop: fullscreen ? 0 : rt.insets.top + (top ?? m.wrapY),
       paddingBottom: fullscreen ? 0 : rt.insets.bottom + m.wrapY,
       paddingHorizontal: fullscreen ? 0 : narrow ? m.wrapXNarrow : m.wrapX,
     }),
@@ -116,8 +123,9 @@ const styles = StyleSheet.create((theme, rt) => {
     header: (bottom = m.headerBottom) => ({ paddingTop: m.headerTop, paddingHorizontal: m.headerX, paddingBottom: bottom }),
     title: { ...theme.typography.modalTitle, paddingRight: m.titleEnd, color: theme.colors.titleText },
     // 没有标题时正文顶部留出关闭按钮的位置
-    body: (bare: boolean, titled: boolean) =>
-      bare ? { flex: 1, minHeight: 0 } : { flexShrink: 1, minHeight: 0, paddingTop: titled ? m.bodyTop : m.closeTop + m.close - 2, paddingHorizontal: m.bodyX, paddingBottom: m.bodyBottom },
+    // bare 且卡片定高时正文铺满；不定高时随内容撑开（flex: 1 在原生端会把不定高的卡片压成 0）
+    body: (bare: boolean, titled: boolean, sized: boolean) =>
+      bare ? { flex: sized ? 1 : undefined, flexShrink: 1, minHeight: 0 } : { flexShrink: 1, minHeight: 0, paddingTop: titled ? m.bodyTop : m.closeTop + m.close - 2, paddingHorizontal: m.bodyX, paddingBottom: m.bodyBottom },
     footer: (narrow: boolean) => ({
       flexDirection: 'row',
       justifyContent: 'flex-end',
@@ -126,7 +134,7 @@ const styles = StyleSheet.create((theme, rt) => {
       paddingHorizontal: narrow ? m.footerXNarrow : m.footerX,
       paddingBottom: m.footerBottom,
     }),
-    button: (narrow: boolean, primary: boolean, disabled: boolean, hovered: boolean, pressed: boolean, minWidth = m.buttonMin) => ({
+    button: (narrow: boolean, primary: boolean, disabled: boolean, hovered: boolean, pressed: boolean, minWidth = m.buttonMin, tone?: 'danger' | 'warning') => ({
       height: narrow ? m.buttonNarrow : m.button,
       minWidth: narrow ? 0 : minWidth,
       flex: narrow ? 1 : undefined,
@@ -135,7 +143,7 @@ const styles = StyleSheet.create((theme, rt) => {
       alignItems: 'center',
       justifyContent: 'center',
       borderRadius: narrow ? m.buttonRadiusNarrow : theme.radius.block,
-      backgroundColor: primary ? theme.colors.primary : theme.colors.dooButton,
+      backgroundColor: primary ? (tone ? theme.colors[tone] : theme.colors.primary) : theme.colors.dooButton,
       opacity: disabled ? theme.opacity.disabled : narrow && pressed ? theme.opacity.pressedPrimary : 1,
       // 悬停提亮一点（旧版主色按钮叠 15% 白）
       boxShadow: !disabled && primary && hovered ? `inset 0px 0px 0px 100px ${theme.colors.dooButtonHover}` : undefined,

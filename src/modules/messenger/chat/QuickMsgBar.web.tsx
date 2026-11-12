@@ -1,34 +1,19 @@
-import { ScrollView, Text } from 'react-native';
+import { ScrollView } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
-import { quickMsgs, quickMsgHtml } from '../../../sync/messenger';
+import { aiQuickMsgs, quickMsgs } from '../../../sync/messenger';
 import type { Dialog } from '../../../sync/api/dialog';
-import { Touchable } from '../../../ui/Touchable';
-import { useMessenger } from '../hooks';
+import { QuickMsgItems } from './QuickMsgItems';
 
 /**
  * 机器人单聊的快捷消息（旧版网页 .chat-bottom-menu）：输入框正上方一排 26 高的胶囊，点击直接发出对应指令；
  * 宽屏灰底、与输入框左右对齐，窄屏在浅灰输入条上用白底；没有悬停效果
  */
 export function QuickMsgBar({ dialog, onSent }: { dialog: Dialog; onSent: () => void }) {
-  const messenger = useMessenger();
-  const items = quickMsgs(dialog);
-  if (!messenger || items.length === 0) return null;
+  if (quickMsgs(dialog).length + aiQuickMsgs(dialog).length === 0) return null;
   return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.bar} contentContainerStyle={styles.row}>
-      {items.map((item) => (
-        <Touchable
-          key={item.key}
-          accessibilityRole="button"
-          onPress={() => {
-            messenger.sendText({ dialog_id: dialog.id, text: quickMsgHtml(item) });
-            onSent();
-          }}
-          style={styles.item}
-        >
-          <Text style={styles.label} numberOfLines={1}>{item.label}</Text>
-        </Touchable>
-      ))}
+    <ScrollView testID="ai-quickbar" horizontal showsHorizontalScrollIndicator={false} style={styles.bar} contentContainerStyle={styles.row}>
+      <QuickMsgItems dialog={dialog} onSent={onSent} itemStyle={styles.item} labelStyle={styles.label} />
     </ScrollView>
   );
 }

@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { View } from 'react-native';
 import { GestureDetector, usePanGesture } from 'react-native-gesture-handler';
 import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
-import { StyleSheet, useUnistyles } from 'react-native-unistyles';
+import { StyleSheet, UnistylesRuntime, useUnistyles } from 'react-native-unistyles';
 import { scheduleOnRN } from 'react-native-worklets';
 
 import { useBreakpoint } from '../theme';
@@ -11,6 +11,11 @@ import { resizeCursor } from './resizeCursor';
 /** 列表和详情是否左右并排（中屏、宽屏）；窄屏是两级页，列表由路由的首页自己渲染 */
 export function useSplitView(): boolean {
   return useBreakpoint() !== 'xs';
+}
+
+/** 同 useSplitView，给组件外的导航函数用 */
+export function isSplitView(): boolean {
+  return UnistylesRuntime.breakpoint !== 'xs';
 }
 
 /**

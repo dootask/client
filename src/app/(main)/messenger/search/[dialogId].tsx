@@ -1,1 +1,1 @@
-export { WipRoute as default } from '../../../../modules/shell';
+export { SearchRoute as default } from '../../../../modules/messenger';

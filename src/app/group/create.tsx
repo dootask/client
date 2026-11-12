@@ -1,1 +1,1 @@
-export { WipRoute as default } from '../../modules/shell';
+export { CreateGroupRoute as default } from '../../modules/messenger/group/CreateGroupScreen';

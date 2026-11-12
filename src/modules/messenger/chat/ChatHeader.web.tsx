@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { ChevronLeft, CircleCheckBig, Ellipsis } from 'lucide-react-native';
+import { ChevronLeft, CircleCheckBig } from 'lucide-react-native';
 import { useMemo } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
@@ -13,6 +13,7 @@ import { Tag } from '../../../ui/Tag';
 import { Touchable } from '../../../ui/Touchable';
 import { useSession } from '../../session';
 import { useNow } from '../clock';
+import { ChatMenu, openChatInfo } from '../group/ChatMenu.web';
 import { useMessengerState, useUser } from '../hooks';
 import { OnlineAvatar } from '../OnlineAvatar';
 import { countText, onlineText } from './format';
@@ -22,7 +23,6 @@ import { MSG_TYPE_ICONS, MSG_TYPE_LABELS, useMsgTypes } from './msgTypes';
  * Web 聊天页标题栏（同旧版网页 DialogWrapper 的 dialog-nav）。
  * 宽屏：高 68，左侧会话头像，右边标题行（标签、名称、群人数、机器人 / 全员 / 部门标签）和分类条，最右「…」。
  * 窄屏：灰底，返回键（旁边是其他会话的未读）、居中标题和在线状态、右侧「…」，分类条单独一行。
- * 「…」的菜单项（搜索消息、群组设置等）随 N6 会话信息接上
  */
 export function ChatHeader({ dialogId, dialog }: { dialogId: number; dialog: StoredDialog | undefined }) {
   const { theme } = useUnistyles();
@@ -35,13 +35,13 @@ export function ChatHeader({ dialogId, dialog }: { dialogId: number; dialog: Sto
       <View testID="chat-header" style={styles.wide}>
         {dialog && (
           <View style={styles.block}>
-            <View style={styles.avatar}>
+            <Touchable style={styles.avatar} onPress={() => openChatInfo(dialog)}>
               {dialog.type === 'group' ? (
                 <DialogAvatar uri={dialog.avatar} groupType={dialog.group_type} size={theme.size.avatar.list} />
               ) : (
                 <OnlineAvatar uri={dialog.userimg} userid={dialog.dialog_user?.userid ?? 0} name={dialog.name ?? ''} bot={!!dialog.bot} size={theme.size.avatar.list} />
               )}
-            </View>
+            </Touchable>
             <View style={styles.titleCol(true)}>
               <Title dialog={dialog} />
               {types}
@@ -53,9 +53,7 @@ export function ChatHeader({ dialogId, dialog }: { dialogId: number; dialog: Sto
             <Icon icon={CircleCheckBig} color={theme.colors.success} size={theme.size.chatHeadDone} />
           </View>
         )}
-        <View style={styles.menu}>
-          <Icon icon={Ellipsis} color={theme.colors.regularText} size={theme.size.icon} />
-        </View>
+        <ChatMenu dialog={dialog} style={styles.menu} />
       </View>
     );
   }
@@ -75,9 +73,7 @@ export function ChatHeader({ dialogId, dialog }: { dialogId: number; dialog: Sto
           </View>
         )}
         <BackButton dialogId={dialogId} />
-        <View style={[styles.cell, styles.cellRight]}>
-          <Icon icon={Ellipsis} color={theme.colors.regularText} size={theme.size.icon} />
-        </View>
+        <ChatMenu dialog={dialog} style={[styles.cell, styles.cellRight]} />
       </View>
       {types}
     </View>
@@ -90,13 +86,13 @@ function Title({ dialog }: { dialog: StoredDialog }) {
   const info = dialog.type === 'group' && (dialog.group_type === 'project' || dialog.group_type === 'task') ? dialog.group_info : null;
   const people = dialog.type === 'group' ? (dialog.people_user ?? 0) : 0;
   return (
-    <View style={styles.titleRow}>
+    <Touchable style={styles.titleRow} onPress={() => openChatInfo(dialog)}>
       {info?.deleted_at ? <Tag text={t('messenger:tag.deleted')} danger style={styles.tagBefore} /> : info?.archived_at ? <Tag text={t('messenger:tag.archived')} style={styles.tagBefore} textStyle={styles.tagText} /> : null}
       <Text testID="chat-title" style={styles.title} numberOfLines={1}>{dialog.name}</Text>
       {people > 0 && <Text testID="chat-people" style={styles.people}>({people})</Text>}
       {!!dialog.bot && <Tag text={t('messenger:tag.bot')} style={styles.tagAfter} textStyle={styles.tagText} />}
       {dialog.group_type === 'all' ? <Tag text={t('messenger:tag.all')} style={styles.tagAfter} textStyle={styles.tagText} /> : dialog.group_type === 'department' ? <Tag text={t('messenger:tag.department')} style={styles.tagAfter} textStyle={styles.tagText} /> : null}
-    </View>
+    </Touchable>
   );
 }
 
@@ -154,7 +150,7 @@ function TypeBar({ dialog, wide }: { dialog: StoredDialog; wide: boolean }) {
         const active = type === selected;
         const count = type === 'todo' ? todoNum : 0;
         return (
-          <Touchable key={key} testID={`chat-type-${key}`} accessibilityRole="tab" aria-selected={active} onPress={() => select(type)} style={styles.type(wide, active)}>
+          <Touchable key={key} testID={`chat-type-${key}`} accessibilityRole="tab" aria-selected={active} onPress={() => type === null ? select(null) : router.push({ pathname: '/messenger/media/[dialogId]', params: { dialogId: dialog.id, type } })} style={styles.type(wide, active)}>
             <View style={styles.typeIcon(wide)}>
               <Icon icon={MSG_TYPE_ICONS[key]} color={theme.palette.msgType[key]} size={wide ? theme.size.chatTypeIcon : theme.size.chatTypeIconNarrow} />
             </View>

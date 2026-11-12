@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
+import { assistantRunStream, conversationOpen, sendCompose } from './assistant';
+import { sendText, sessionCreate, sessionList, sessionOpen, sessionRename } from './dialog';
 import { ApiError } from './errors';
 import { compareVersion, serverVersion, systemSetting } from './system';
 import { captcha, editData, login, loginErrorCode, myInfo, needCode } from './user';
@@ -77,6 +79,49 @@ describe('user api', () => {
   it('captcha 返回 key 与图片', async () => {
     const { client } = setup([{ ret: 1, msg: '', data: { sensitive: false, key: 'k', img: 'data:image/png;base64,xx' } }]);
     expect(await captcha(client)).toMatchObject({ key: 'k', img: 'data:image/png;base64,xx' });
+  });
+});
+
+describe('AI 会话接口', () => {
+  const session = { id: 3, dialog_id: 10, title: '主题', is_open: 1, created_at: '2026-11-12 10:00:00' };
+  it('创建、打开与改名使用对应接口并校验会话字段', async () => {
+    const { client, calls } = setup([session, session, { ...session, title: '新主题' }].map((data) => ({ ret: 1, data })));
+    expect(await sessionCreate(client, 10)).toMatchObject({ id: 3, dialog_id: 10 });
+    expect(await sessionOpen(client, 3)).toMatchObject({ is_open: 1 });
+    expect(await sessionRename(client, 3, '新主题')).toMatchObject({ title: '新主题' });
+    expect(calls[0]!.url).toContain('/dialog/session/create?');
+    expect(calls[1]!.url).toContain('session_id=3');
+    expect(calls[2]!.init.method).toBe('POST');
+    expect(JSON.parse(calls[2]!.init.body as string)).toEqual({ session_id: 3, title: '新主题' });
+  });
+  it('历史分页兼容 PHP 数字键列表；发送提问携带选中的模型', async () => {
+    const { client, calls } = setup([
+      { ret: 1, data: { current_page: 1, last_page: 2, data: { 5: session } } },
+      { ret: 1, data: { id: 20, dialog_id: 10, userid: 1, type: 'text', msg: { text: '提问' }, created_at: '2026-11-12 10:00:00' } },
+    ]);
+    expect(await sessionList(client, { dialog_id: 10, page: 1, pagesize: 50 })).toMatchObject({ current_page: 1, last_page: 2, data: [{ id: 3 }] });
+    await sendText(client, { dialog_id: 10, text: '提问', model_name: 'model-a' });
+    expect(JSON.parse(calls[1]!.init.body as string)).toEqual({ dialog_id: 10, text: '提问', model_name: 'model-a' });
+  });
+  it('助手首次打开允许空会话，发送返回文本、图片及过程部分', async () => {
+    const userMessage = { id: 1, conversation_id: 2, role: 'user', status: 'done', parts: [{ type: 'text', text: '请写周报' }, { type: 'image', path: 'uploads/a.png' }] };
+    const reply = { id: 2, conversation_id: 2, role: 'assistant', status: 'running', parts: [{ type: 'reasoning', text: '分析' }, { type: 'tool', name: 'search', status: 'done' }, { type: 'text', text: '**周报**' }] };
+    const { client, calls } = setup([
+      { ret: 1, data: { conversation: null, messages: [], run: null } },
+      { ret: 1, data: { conversation: { id: 2 }, user_message: userMessage, message: reply, run: { events_url: '/events' } } },
+    ]);
+    expect(await conversationOpen(client, '10')).toMatchObject({ conversation: null, messages: [] });
+    const params = { scope_ref: '10', model_type: 'openai', model_name: 'model-a', text: '请写周报', images: ['uploads/a.png'], system: '写作助手', locale: 'zh' };
+    expect(await sendCompose(client, params)).toMatchObject({ user_message: userMessage, message: reply });
+    expect(JSON.parse(calls[1]!.init.body as string)).toEqual({ ...params, kind: 'compose', scope: 'message' });
+  });
+  it('助手流使用 message_id，顶层 null 归一化后仍视为已经结束', async () => {
+    const { client, calls } = setup([{ ret: 1, data: null }, { ret: 1, data: { events_url: '/events' } }, { ret: 1, data: { events_url: 123 } }]);
+    expect(await assistantRunStream(client, 8)).toBeNull();
+    expect(await assistantRunStream(client, 8)).toBe('/events');
+    expect(calls[0]!.url).toContain('message_id=8');
+    expect(calls[0]!.url).not.toContain('dialog_msg_id');
+    await expect(assistantRunStream(client, 8)).rejects.toMatchObject({ kind: 'invalid' });
   });
 });
 

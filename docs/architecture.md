@@ -118,6 +118,7 @@ ios-locales/      iOS 权限说明（InfoPlist.strings 各语言）
 - **WebSocket**：`open` 后记 `fd`；带 `msgId` 的消息回 `receipt`；按 `type` 分发给各 store；断线指数退避重连，重连和回到前台后按最后同步时间增量补齐
 - **存储**：token、服务器地址、偏好存键值；会话、联系人、项目列表存结构化缓存，冷启动先画缓存再后台更新；消息按会话分页，只把打开的会话加载进内存；任务、文件等按需拉取，不做离线
 - **未读和角标只由数据层计算**：会话列表、Tab 红点、App 角标、桌面托盘都从同一个 selector 取值
+- **推送与通知（N9）**：App 用 DooPush SDK 注册设备，`push/device` 按「服务器 + 登录 token」绑定，换账号、退出时用旧 token 解绑；点击推送（含冷启动）按 `dialog_id:msg_id` 去重后打开会话；退到后台时把未读总数写进 App 角标。前台新消息由 `messenger.onIncoming` 发出，是否提醒、标题和摘要由 `sync/messenger/notify.ts` 统一算（静默、本人、正看着的会话不提醒），网页弹浏览器通知并在标签页标题带未读数，App 弹顶部横幅（ui-spec 第 5 节）。安卓厂商通道配置在 `push/android/`，只打进正式版
 
 ## 7. 布局、导航与交互
 

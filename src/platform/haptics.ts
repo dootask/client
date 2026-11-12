@@ -6,6 +6,8 @@ export const haptics = {
   light: () => void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {}),
   /** 开始录音 */
   medium: () => void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {}),
+  /** 收到新消息的前台横幅（旧版 setVibrate） */
+  notify: () => void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {}),
   /** 切换分段、勾选、选项 */
   selection: () => void Haptics.selectionAsync().catch(() => {}),
 };

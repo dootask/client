@@ -1,6 +1,7 @@
 import { contactsApi, dialogApi, projectApi, usersApi } from '../../../sync/api';
 import type { Dialog } from '../../../sync/api/dialog';
 import type { UserBasic } from '../../../sync/api/users';
+import { departmentGroups } from '../../../sync/contacts/model';
 import type { StoredDialog } from '../../../sync/messenger';
 import { api } from '../../session';
 
@@ -124,15 +125,7 @@ async function teamProjects(): Promise<PickProject[]> {
  */
 export async function loadSources(noDepartment: string): Promise<PickSources> {
   const [data, projects] = await Promise.all([contactsApi.departments(api), teamProjects()]);
-  const list = data.departments;
-  const departments = list.map((dept, index): PickDepartment => {
-    const level = dept.level ?? 0;
-    const ids = [dept.id];
-    for (let i = index + 1; i < list.length && (list[i]!.level ?? 0) > level; i++) ids.push(list[i]!.id);
-    return { id: dept.id, name: dept.name ?? '', level, count: dept.total_count ?? 0, ids };
-  });
-  const rest = data.no_department_count ?? 0;
-  if (rest > 0) departments.push({ id: 0, name: noDepartment, level: 0, count: rest, ids: [0] });
+  const departments = departmentGroups(data).map(({ id, name, level, count, ids }): PickDepartment => ({ id, name: id === 0 ? noDepartment : name, level, count, ids }));
   return { total: data.total ?? 0, departments, projects };
 }
 

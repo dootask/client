@@ -1,4 +1,3 @@
-import { Image } from 'expo-image';
 import { ChevronDown, ChevronRight, Square, SquareCheck } from 'lucide-react-native';
 import { createContext, useContext, useState, type ReactNode } from 'react';
 import { ScrollView, Text, View, type StyleProp, type TextStyle } from 'react-native';
@@ -15,6 +14,7 @@ import { CodeBlock } from './CodeBlock';
 import { MathBlock } from './MathBlock';
 import { fitSize, INLINE_IMAGE_BOX, STICKER_BOX } from './media';
 import { richTraits } from './richTraits';
+import { RetryImage } from './RetryImage';
 import { rowTraits } from './rowTraits';
 
 /** 气泡里文字的配色：自己与对方的气泡底色不同 */
@@ -39,6 +39,8 @@ export interface BubbleTone {
   mentionMe?: TextStyle;
   /** 点了填进输入栏的命令（机器人帮助里的 /help 等）的字色，没有时同链接 */
   fill?: string;
+  bodyStyle?: TextStyle;
+  paragraphGap?: number;
 }
 
 export interface RichHandlers {
@@ -65,7 +67,7 @@ export function RichBlocks({ blocks, tone, compact = false }: {
   compact?: boolean;
 }) {
   return (
-    <View style={styles.blocks(compact)}>
+    <View style={[styles.blocks(compact), !compact && tone.paragraphGap !== undefined && { gap: tone.paragraphGap }]}>
       {blocks.map((block, index) => (
         <BlockView key={index} block={block} tone={tone} first={index === 0} />
       ))}
@@ -76,10 +78,10 @@ export function RichBlocks({ blocks, tone, compact = false }: {
 function BlockView({ block, tone, first }: { block: Block; tone: BubbleTone; first: boolean }) {
   const t = useT();
   const { theme, rt } = useUnistyles();
-  const body = rowTraits.body(theme, rt.breakpoint === 'xs');
+  const body = tone.bodyStyle ?? rowTraits.body(theme, rt.breakpoint === 'xs');
   switch (block.t) {
     case 'p':
-      return <Runs runs={block.runs} tone={tone} style={[styles.body, { color: tone.text }]} />;
+      return <Runs runs={block.runs} tone={tone} style={[body, { color: tone.text }]} />;
     case 'h':
       return (
         <Runs
@@ -148,13 +150,11 @@ function InlineImage({ block, tone }: { block: ImageBlock; tone: BubbleTone }) {
   const box = fitSize(block.width, block.height, block.emoticon ? STICKER_BOX : INLINE_IMAGE_BOX);
   const onPress = block.url && onPressImage ? () => onPressImage(block) : undefined;
   const image = (
-    <Image
-      source={block.src}
+    <RetryImage
+      key={block.src}
+      src={block.src}
       style={[box, styles.image, !block.emoticon && { backgroundColor: tone.overlay }]}
       contentFit={block.emoticon ? 'contain' : 'cover'}
-      recyclingKey={block.src}
-      cachePolicy="memory-disk"
-      transition={150}
       accessibilityLabel={block.alt}
     />
   );
@@ -192,15 +192,15 @@ function ListItemView({ item, tone }: { item: ListItem; tone: BubbleTone }) {
       break;
     }
     case 'ordered':
-      marker = <Text style={[styles.body, { color: tone.muted }]}>{item.num}.</Text>;
+      marker = <Text style={[styles.body, tone.bodyStyle, { color: tone.muted }]}>{item.num}.</Text>;
       break;
     default:
-      marker = <Text style={[styles.body, { color: tone.muted }]}>•</Text>;
+      marker = <Text style={[styles.body, tone.bodyStyle, { color: tone.muted }]}>•</Text>;
   }
   const done = item.mark === 'checked';
   return (
     <View style={styles.listItem(item.indent ?? 0)}>
-      <View style={styles.listMarker}>{marker}</View>
+      <View style={[styles.listMarker, tone.bodyStyle && { height: tone.bodyStyle.lineHeight }]}>{marker}</View>
       <View style={styles.listBody}>
         <RichBlocks blocks={item.blocks} tone={done ? { ...tone, text: tone.muted } : tone} compact />
       </View>

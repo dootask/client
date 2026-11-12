@@ -35,12 +35,13 @@ interface Entry {
  * 聊天机器人回复的 Run 事件流（对照主仓库 utils/ai-agent/run-watcher.js）：进行中的回复显示时订阅，
  * 事件归约成 parts 写进 live（消息 id → 实时内容）。订阅按引用计数，没人看时关掉；结束后以消息里保存的 parts 为准
  */
-export function createAiRuns({ open, origin, eventsUrl }: {
+export function createAiRuns({ open, origin, eventsUrl, onSettled }: {
   open: OpenSse;
   /** 服务器地址（拼相对的事件地址） */
   origin: () => string;
   /** 回复的事件流地址（相对地址，带凭证）；已结束为 null */
   eventsUrl: (msgId: number) => Promise<string | null>;
+  onSettled?: (msgId: number) => void;
 }) {
   const live = createStore<Record<number, LiveRun>>()(() => ({}));
   const entries = new Map<number, Entry>();
@@ -77,14 +78,14 @@ export function createAiRuns({ open, origin, eventsUrl }: {
         entry.close = null;
         flush(msgId, entry);
         // 等待确认或连接中断：从游标续传；结束了就停。连着几次没有新事件（已结束、已过期）也停，最终内容由消息更新推送
-        if (terminal) return;
+        if (terminal) { onSettled?.(msgId); return; }
         if (received > 0) {
           entry.retries = 0;
           connect(msgId, entry, url);
         } else if (entry.retries < MAX_RETRIES) {
           entry.retries++;
           entry.retryTimer = setTimeout(() => connect(msgId, entry, url), RETRY_MS * entry.retries);
-        }
+        } else { onSettled?.(msgId); }
       },
     );
   }
@@ -94,7 +95,8 @@ export function createAiRuns({ open, origin, eventsUrl }: {
     entry.starting = true;
     const path = await eventsUrl(msgId).catch(() => null);
     entry.starting = false;
-    if (!path || entries.get(msgId) !== entry) return;
+    if (entries.get(msgId) !== entry) return;
+    if (!path) { onSettled?.(msgId); return; }
     connect(msgId, entry, /^https?:\/\//i.test(path) ? path : `${origin().replace(/\/+$/, '')}/${path.replace(/^\/+/, '')}`);
   }
 
@@ -112,7 +114,7 @@ export function createAiRuns({ open, origin, eventsUrl }: {
     return () => {
       if (released) return;
       released = true;
-      if (--own.refs === 0) drop(msgId);
+      if (--own.refs === 0 && entries.get(msgId) === own) drop(msgId);
     };
   }
 

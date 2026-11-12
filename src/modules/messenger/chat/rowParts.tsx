@@ -47,6 +47,8 @@ export interface RowContext {
   onReactionList: (reactions: readonly Reaction[], symbol: string) => void;
   /** 点回复引用：跳到原消息 */
   onQuote: (id: number) => void;
+  /** 点「N 条回复」：打开回复线程（F7）；线程里没有 */
+  onThread?: (msg: Msg) => void;
   /** 点译文：换语言、重新翻译 */
   onTranslation: (msg: Msg) => void;
   /** 群里点自己消息的已读圆环：已读名单 */

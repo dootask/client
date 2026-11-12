@@ -85,7 +85,7 @@ function TopCard({ dialogId, msgId, pinnerId, onJump }: { dialogId: number; msgI
 }
 
 /** 待办条：「我有 n 条未完成」和可横向滚动的摘要胶囊；条数跟着会话的 todo_num 变，变了重新拉列表 */
-function TodoStrip({ dialogId, todoNum, onJump }: { dialogId: number; todoNum: number; onJump: (msgId: number) => void }) {
+export function TodoStrip({ dialogId, todoNum, onJump }: { dialogId: number; todoNum: number; onJump: (msgId: number) => void }) {
   const t = useT();
   const wide = useSplitView();
   const actions = useMsgActions();

@@ -2,11 +2,15 @@ import { openDatabaseAsync } from 'expo-sqlite';
 
 import { APP_CACHE_NAME, APP_CACHE_VERSION, appCacheSchema } from './appSchema';
 import { openSqliteCache } from './sqlite';
-import type { StructuredCache } from './types';
+import type { CacheSchema, StructuredCache } from './types';
 
 /** 原生端：expo-sqlite */
 export async function openAppCache(): Promise<StructuredCache> {
-  const db = await openDatabaseAsync(`${APP_CACHE_NAME}.db`);
+  return openCache(APP_CACHE_NAME, appCacheSchema, APP_CACHE_VERSION);
+}
+
+export async function openCache(name: string, schema: CacheSchema, version: number): Promise<StructuredCache> {
+  const db = await openDatabaseAsync(`${name}.db`);
   await db.execAsync('PRAGMA journal_mode = WAL');
   return openSqliteCache(
     {
@@ -18,7 +22,7 @@ export async function openAppCache(): Promise<StructuredCache> {
       transaction: (task) => db.withTransactionAsync(task),
       close: () => db.closeAsync(),
     },
-    appCacheSchema,
-    APP_CACHE_VERSION,
+    schema,
+    version,
   );
 }

@@ -11,7 +11,7 @@ import { shortcutLabel } from '../../../ui/shortcuts';
 import { Touchable } from '../../../ui/Touchable';
 import { isGroup, pickKey, pickName, type Picked } from './pickerData';
 import { PickAvatar } from './pickerParts';
-import { isMemberKey, type PageKey, type PickerRow, type SourceItem, usePicker } from './usePicker';
+import { isMemberKey, type MemberPickerOptions, type PageKey, type PickerRow, type SourceItem, usePicker } from './usePicker';
 
 const rowKey = (row: PickerRow) => row.id;
 const rowType = (row: PickerRow) => row.type;
@@ -25,15 +25,15 @@ type Picker = ReturnType<typeof usePicker>;
  * 窄屏铺满整屏：首页入口逐级进入部门、项目，底部已选头像串（点开已选列表）和确定。
  * 点「确定」交给 onSubmit，弹窗不关
  */
-export function DialogPicker(props: { visible: boolean; title: string; max: number; onSubmit: (picked: Picked[]) => void; onClose: () => void }) {
+export function DialogPicker(props: { visible: boolean; title: string; max: number; onSubmit: (picked: Picked[]) => void; onClose: () => void } & MemberPickerOptions) {
   // 每次打开都是新的状态
   return props.visible ? <PickerModal {...props} /> : null;
 }
 
-function PickerModal({ title, max, onSubmit, onClose }: { title: string; max: number; onSubmit: (picked: Picked[]) => void; onClose: () => void }) {
+function PickerModal({ title, max, onSubmit, onClose, ...options }: { title: string; max: number; onSubmit: (picked: Picked[]) => void; onClose: () => void } & MemberPickerOptions) {
   const { rt, theme } = useUnistyles();
   const [narrow] = useState(rt.breakpoint === 'xs');
-  const picker = usePicker({ title, max, root: narrow ? 'home' : 'recent', flat: !narrow });
+  const picker = usePicker({ title, max, root: narrow ? 'home' : 'recent', flat: !narrow, ...options });
   const [showSelected, setShowSelected] = useState(false);
   const submit = () => picker.selected.length > 0 && onSubmit(picker.selected);
 
@@ -129,9 +129,9 @@ function WidePicker({ picker, title, max, onClose, onSubmit }: { picker: Picker;
     ({ item }: { item: PickerRow }) => {
       if (item.type === 'header') return <GroupHeader title={item.title} narrow={false} />;
       if (item.type === 'source') return <SourceRow item={item} word={word} kb={item.id === kbId} narrow={false} onOpen={picker.openSource} />;
-      return <PickRow item={item.item} word={word} on={picker.selectedKeys.has(pickKey(item.item))} kb={item.id === kbId} narrow={false} onToggle={toggle} />;
+      return <PickRow item={item.item} word={word} on={picker.selectedKeys.has(pickKey(item.item))} disabled={picker.disabledKeys.has(pickKey(item.item))} kb={item.id === kbId} narrow={false} onToggle={toggle} />;
     },
-    [word, kbId, picker.selectedKeys, picker.openSource, toggle],
+    [word, kbId, picker.selectedKeys, picker.openSource, toggle, picker.disabledKeys],
   );
 
   const meta = word
@@ -286,9 +286,9 @@ function NarrowPicker({ picker, max, showSelected, setShowSelected, onClose, onS
     ({ item }: { item: PickerRow }) => {
       if (item.type === 'header') return <GroupHeader title={item.title} narrow />;
       if (item.type === 'source') return <SourceRow item={item} word={word} kb={false} narrow indexed={false} onOpen={picker.openSource} />;
-      return <PickRow item={item.item} word={word} on={picker.selectedKeys.has(pickKey(item.item))} kb={false} narrow indexed={letters.length > 0} onToggle={picker.toggle} />;
+      return <PickRow item={item.item} word={word} on={picker.selectedKeys.has(pickKey(item.item))} disabled={picker.disabledKeys.has(pickKey(item.item))} kb={false} narrow indexed={letters.length > 0} onToggle={picker.toggle} />;
     },
-    [word, picker.selectedKeys, picker.openSource, picker.toggle, letters.length],
+    [word, picker.selectedKeys, picker.openSource, picker.toggle, letters.length, picker.disabledKeys],
   );
 
   return (
@@ -534,20 +534,21 @@ function Highlight({ text, word, narrow }: { text: string; word: string; narrow:
 }
 
 /** 一个人或群：选中铺浅主色，右边是圆形勾选 */
-const PickRow = memo(function PickRow({ item, word, on, kb, narrow, indexed = false, onToggle }: {
+const PickRow = memo(function PickRow({ item, word, on, kb, narrow, indexed = false, disabled = false, onToggle }: {
   item: Picked;
   word: string;
   on: boolean;
   kb: boolean;
   narrow: boolean;
   indexed?: boolean;
+  disabled?: boolean;
   onToggle: (item: Picked) => void;
 }) {
   const t = useT();
   const { theme } = useUnistyles();
   const sub = isGroup(item) ? t('messenger:picker.people', { n: item.people }) : item.sub;
   return (
-    <Touchable accessibilityRole="checkbox" aria-checked={on} onPress={() => onToggle(item)} style={({ hovered, pressed }) => styles.row(narrow, on, kb || hovered, pressed, 0, indexed)}>
+    <Touchable accessibilityRole="checkbox" aria-checked={on} disabled={disabled} onPress={() => onToggle(item)} style={({ hovered, pressed }) => [styles.row(narrow, on, kb || hovered, pressed, 0, indexed), disabled && { opacity: theme.opacity.disabled }]}>
       {({ hovered }) => (
         <>
           <PickAvatar item={item} size={narrow ? theme.size.avatar.lg : theme.size.avatar.pick} />

@@ -27,6 +27,7 @@ export type GroupApi = ReturnType<typeof bindGroupApi>;
  * 返回值是服务端的提示语
  */
 export function createGroupActions(api: GroupApi, messenger: Messenger) {
+  // 变更已成功，读取失败不能把已提交的操作标成失败。
   const refetch = (dialogId: number) => messenger.fetchDialog(dialogId).catch(() => {});
 
   return {
@@ -46,16 +47,10 @@ export function createGroupActions(api: GroupApi, messenger: Messenger) {
       return { dialogId: dialog.id, msg };
     },
 
-    /** 改群名；admin 见 groupApi.edit */
-    async rename(dialogId: number, name: string, admin: boolean) {
-      const { dialog, msg } = await api.edit(dialogId, { name: name.trim() }, admin);
-      messenger.patchDialog(dialog);
-      return msg;
-    },
-
-    async setAvatar(dialogId: number, image64: string, admin: boolean) {
-      const avatar = await api.uploadAvatar(image64);
-      const { dialog, msg } = await api.edit(dialogId, { avatar }, admin);
+    /** 改群名、头像；admin 见 groupApi.edit */
+    async edit(dialogId: number, params: { name?: string; image64?: string }, admin: boolean) {
+      const avatar = params.image64 ? await api.uploadAvatar(params.image64) : undefined;
+      const { dialog, msg } = await api.edit(dialogId, { ...(params.name !== undefined ? { name: params.name.trim() } : {}), ...(avatar ? { avatar } : {}) }, admin);
       messenger.patchDialog(dialog);
       return msg;
     },
@@ -75,12 +70,16 @@ export function createGroupActions(api: GroupApi, messenger: Messenger) {
     /** 任命 / 罢免群管理员 */
     async setDeputy(dialogId: number, userid: number, deputy: boolean) {
       const msg = await api.setDeputy(dialogId, userid, deputy);
+      const ids = messenger.store.getState().dialogs[dialogId]?.deputy_ids ?? [];
+      messenger.patchDialog({ id: dialogId, deputy_ids: deputy ? [...new Set([...ids, userid])] : ids.filter((id) => id !== userid) });
       await refetch(dialogId);
       return msg;
     },
 
     async transfer(dialogId: number, userid: number) {
       const msg = await api.transfer(dialogId, userid);
+      const ids = messenger.store.getState().dialogs[dialogId]?.deputy_ids ?? [];
+      messenger.patchDialog({ id: dialogId, owner_id: userid, deputy_ids: ids.filter((id) => id !== userid) });
       await refetch(dialogId);
       return msg;
     },

@@ -141,10 +141,14 @@ export function createMsgActions(api: MsgActionsApi, messenger: Messenger) {
       });
     },
 
-    /** 会话当前置顶的消息：窗口里有就直接用，没有再向服务端要 */
+    /** 消息原文：窗口里有就直接用，置顶查置顶接口，其余按消息定位查询 */
     async topMsg(dialogId: number, msgId: number): Promise<Msg | null> {
       const local = store.getState().windows[dialogId]?.list.find((m) => m.id === msgId);
-      return local ?? api.msgTopInfo(dialogId);
+      if (local) return local;
+      if (store.getState().dialogs[dialogId]?.top_msg_id === msgId) return api.msgTopInfo(dialogId);
+      // 服务端把 take 对半取整，至少取 2 条才能包含定位目标
+      const page = await api.msgList({ dialog_id: dialogId, position_id: msgId, take: 2 });
+      return page.list.find((m) => m.id === msgId) ?? null;
     },
 
     readList: (msgId: number) => api.msgReadList(msgId),

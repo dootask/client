@@ -27,7 +27,9 @@ export const userBasicSchema = z.looseObject({
   /** 拼音首字母（大写），成员列表分组用 */
   az: str.nullish(),
   /** 所在部门：搜索、成员列表带 with_department 时才有 */
-  department_info: z.array(z.looseObject({ name: str })).nullish(),
+  department_info: z.array(z.looseObject({ id: num.optional(), name: str, owner_userid: num.nullish() })).nullish(),
+  department: z.array(num).nullish(),
+  tags: z.array(str).nullish(),
   /** 部门名（逗号分隔）：users/basic 带 */
   department_name: str.nullish(),
 });
@@ -71,10 +73,10 @@ export async function search(client: ApiClient, key: string, { bots = false, tak
 export const MEMBER_PAGE = 100;
 
 /** 成员列表的一页：按拼音排序，不含机器人，带所在部门。departments 为部门 id（含下级），project_id 为项目，都不给是全部成员 */
-export async function memberPage(client: ApiClient, { departments, project_id, page }: { departments?: readonly number[]; project_id?: number; page: number }) {
+export async function memberPage(client: ApiClient, { departments, project_id, page, key }: { departments?: readonly number[]; project_id?: number; page: number; key?: string }) {
   const keys = departments ? { departments: departments.join(',') } : project_id ? { project_id } : {};
   const { data } = await requestParsed(client, 'users/search', z.looseObject({ data: phpList(userBasicSchema), current_page: num, last_page: num, total: num }), {
-    data: { keys, sorts: { az: 'asc' }, page, pagesize: MEMBER_PAGE, with_department: 1 },
+    data: { keys: { ...keys, ...(key ? { key } : {}) }, sorts: { az: 'asc' }, page, pagesize: MEMBER_PAGE, with_department: 1, state: 1 },
   });
   return data;
 }
@@ -132,6 +134,11 @@ export const botSchema = z.looseObject({
   webhook_events: phpList(str).nullish(),
 });
 export type Bot = z.output<typeof botSchema>;
+
+export async function botList(client: ApiClient) {
+  const { data } = await requestParsed(client, 'users/bot/list', z.looseObject({ list: phpList(botSchema) }));
+  return data.list;
+}
 
 export async function botInfo(client: ApiClient, botId: number) {
   const { data } = await requestParsed(client, 'users/bot/info', botSchema, { data: { id: botId } });

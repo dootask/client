@@ -87,9 +87,11 @@ export interface VoiceInput {
  * 手指滑到哪个按钮上就选中哪个（震一下），滑出按钮回到发送，以松手时的位置为准。
  * 锁定后继续录，之后在浮层里点取消、转文字或发送。语音和文件同一个发送队列，正在回复时带上回复
  */
-export function useVoiceInput({ dialogId, mode: composerMode, onModeEnd, onSent, onConverted }: {
+export function useVoiceInput({ dialogId, mode: composerMode, threadId, onModeEnd, onSent, onConverted }: {
   dialogId: number;
   mode: ComposerMode;
+  /** 回复线程里（F7）发出的都回复这条，见 useComposer */
+  threadId: number;
   onModeEnd: () => void;
   onSent: () => void;
   /** 转好的文字（放进输入框） */
@@ -112,9 +114,9 @@ export function useVoiceInput({ dialogId, mode: composerMode, onModeEnd, onSent,
   const onTargetLayout = useCallback((target: TargetZone, rect: Rect) => {
     targetRects.current[target] = rect;
   }, []);
-  const latest = useRef({ messenger, dialogId, composerMode, onModeEnd, onSent, onConverted, errorText });
+  const latest = useRef({ messenger, dialogId, composerMode, threadId, onModeEnd, onSent, onConverted, errorText });
   useLayoutEffect(() => {
-    latest.current = { messenger, dialogId, composerMode, onModeEnd, onSent, onConverted, errorText };
+    latest.current = { messenger, dialogId, composerMode, threadId, onModeEnd, onSent, onConverted, errorText };
   });
 
   // 停止录音后才能再次准备，否则原生报已准备
@@ -155,12 +157,12 @@ export function useVoiceInput({ dialogId, mode: composerMode, onModeEnd, onSent,
       if (action !== 'cancel') showToast(t(duration < TAP_DURATION ? 'messenger:record.hold' : 'messenger:record.tooShort'));
       return;
     }
-    const { messenger: current, dialogId: id, composerMode: mode, onModeEnd: endMode, onSent: sent, onConverted: converted, errorText: describe } = latest.current;
+    const { messenger: current, dialogId: id, composerMode: mode, threadId: thread, onModeEnd: endMode, onSent: sent, onConverted: converted, errorText: describe } = latest.current;
     if (!current) return;
     const file = await recordedFile(uri);
     if (action === 'send') {
-      const replyId = mode?.kind === 'reply' ? mode.msg.id : undefined;
-      if (replyId) endMode();
+      const replyId = mode?.kind === 'reply' ? mode.msg.id : thread || undefined;
+      if (mode?.kind === 'reply') endMode();
       current.sendRecord({ dialog_id: id, file, duration, reply_id: replyId });
       sent();
       return;

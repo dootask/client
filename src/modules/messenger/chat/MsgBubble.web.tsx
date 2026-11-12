@@ -24,6 +24,7 @@ import { CardHostContext } from './cards/cardMsg';
 import { FileCard, isStickerBody, LocalMedia, MessageBody, RecordBody, StickerBody } from './MessageBody';
 import { msgExtra } from './msgExtra';
 import { Dimmed, MyTodosContext, OPENABLE, ReadMark, SelectCheckContext, type Touch, Understanding, UploadProgress, pendingMsg, useName, useRowContext } from './rowParts';
+import { openProfile } from '../user/navigation';
 
 /*
  * 旧版网页的消息行：头像在两侧（自己的在右），群里名字在气泡上方；
@@ -45,9 +46,9 @@ function MsgFrame({ own, userid, name: showName, text, foot, children }: { own: 
   return (
     <View testID={own ? 'msg-row-own' : 'msg-row'} style={styles.row(own)}>
       {check}
-      <View style={styles.avatar}>
+      <Touchable testID="msg-avatar" disabled={userid <= 0} accessibilityLabel={name} onPress={() => openProfile(userid)} style={styles.avatar}>
         <UserAvatar uri={user?.userimg} userid={userid} name={name} bot={!!user?.bot} size={theme.size.avatar.msg} />
-      </View>
+      </Touchable>
       <View style={styles.view(own, text)}>
         {showName && <Text testID="msg-name" style={styles.name} numberOfLines={1}>{name}</Text>}
         {children}
@@ -114,10 +115,13 @@ function ReplyQuote({ reply, own }: { reply: ReplyInfo; own: boolean }) {
 function ForwardQuote({ userid, own }: { userid: number; own: boolean }) {
   const name = useName(userid);
   return (
-    <View style={styles.quote}>
+    <Touchable testID="msg-forward" disabled={userid <= 0} accessibilityRole="button" onPress={(event) => {
+      event.stopPropagation();
+      openProfile(userid);
+    }} style={styles.quote}>
       <View style={styles.quoteBar(own)} />
       <Text style={styles.quoteName(own)} numberOfLines={1}>{name}</Text>
-    </View>
+    </Touchable>
   );
 }
 
@@ -169,12 +173,15 @@ function Foot({ msg, own }: { msg: Msg; own: boolean }) {
   return (
     <>
       {!!replyNum && (
-        <View style={styles.footItem}>
+        <Touchable disabled={!ctx.onThread} onPress={() => ctx.onThread?.(msg)} accessibilityRole="button" style={styles.footItem}>
           <Icon icon={MessageCircle} color={theme.colors.primary} size={theme.size.msgFootIcon} />
           <Text style={styles.replyNum}>{t('messenger:chat.replies', { n: replyNum })}</Text>
-        </View>
+        </Touchable>
       )}
-      {!!tag && <FootIcon icon={Tag} />}
+      {!!tag && <Touchable testID="msg-tag-person" accessibilityRole="button" accessibilityLabel={t('messenger:action.tag')} onPress={(event) => {
+        event.stopPropagation();
+        openProfile(tag);
+      }}><FootIcon icon={Tag} /></Touchable>}
       {!!todo && <FootIcon icon={ClipboardCheck} color={mine ? theme.colors.warning : todoDone ? theme.colors.primary : undefined} />}
       {!!modify && <FootIcon icon={PencilLine} />}
       <FootTime createdAt={msg.created_at} />

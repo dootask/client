@@ -11,6 +11,8 @@ export interface LayerConfirmOptions {
   okLabel: string;
   cancelLabel: string;
   onOk: () => void;
+  tone?: 'danger' | 'warning';
+  centered?: boolean;
 }
 
 /** 同一时间只有一个确认框；后开的替换先开的 */
@@ -52,15 +54,15 @@ export function LayerConfirmHost() {
           {narrow ? (
             <Text style={styles.titleNarrow} accessibilityRole="header">{options.title}</Text>
           ) : (
-            <View style={styles.head}>
-              <QuestionIcon />
+            <View style={[styles.head, options.centered && styles.centered]}>
+              <QuestionIcon warning={!!options.tone} />
               <Text style={styles.title} accessibilityRole="header">{options.title}</Text>
             </View>
           )}
-          {!!options.message && <Text style={narrow ? styles.messageNarrow : styles.message}>{options.message}</Text>}
+          {!!options.message && <Text style={[narrow ? styles.messageNarrow : styles.message, options.centered && styles.centeredMessage]}>{options.message}</Text>}
           <View style={styles.footer(narrow)}>
             <DooButton label={options.cancelLabel} minWidth={buttonMin} onPress={close} />
-            <DooButton label={options.okLabel} primary minWidth={buttonMin} onPress={ok} />
+            <DooButton label={options.okLabel} primary tone={options.tone} minWidth={buttonMin} onPress={ok} />
           </View>
         </View>
       </View>
@@ -69,14 +71,14 @@ export function LayerConfirmHost() {
 }
 
 /** 宽屏标题前的图标：圆圈填色、问号描白（旧版 iView 确认框的实心图标，路径取自 lucide circle-question-mark） */
-function QuestionIcon() {
+function QuestionIcon({ warning }: { warning: boolean }) {
   const { theme } = useUnistyles();
   const { icon } = theme.size.layer;
   return (
     <View style={styles.icon}>
       <Svg width={icon} height={icon} viewBox="0 0 24 24" fill="none" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
         <Circle cx={12} cy={12} r={10} fill={theme.colors.ivuWarning} stroke={theme.colors.ivuWarning} />
-        <Path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" stroke={theme.colors.onPrimary} />
+        <Path d={warning ? 'M12 7v6' : 'M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3'} stroke={theme.colors.onPrimary} />
         <Path d="M12 17h.01" stroke={theme.colors.onPrimary} />
       </Svg>
     </View>
@@ -109,6 +111,8 @@ const styles = StyleSheet.create((theme, rt) => {
             boxShadow: theme.shadow.modal,
           },
     head: { flexDirection: 'row', alignItems: 'center', minHeight: l.head, paddingRight: l.headEnd },
+    centered: { justifyContent: 'center' },
+    centeredMessage: { paddingLeft: 0, textAlign: 'center' },
     icon: { marginHorizontal: l.iconSide },
     title: { ...theme.typography.layerTitle, flexShrink: 1, marginLeft: l.iconGap, color: theme.colors.titleText },
     message: { ...theme.typography.layerMessage, paddingLeft: l.messageIndent, color: theme.colors.regularText },

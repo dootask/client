@@ -1,9 +1,7 @@
 import type { LucideIcon } from 'lucide-react-native';
-import {
-  Brain, Check, ChevronDown, ChevronRight, Circle, CircleAlert, CircleCheck, CircleDashed, CircleDot, CircleStop, CircleX, Folder, ShieldAlert, Wrench,
-} from 'lucide-react-native';
-import { memo, useEffect, useLayoutEffect, useRef, useState, type ComponentRef } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
+import { Check, ChevronDown, ChevronRight, Circle, CircleCheck, CircleDot, CircleStop, Folder, ShieldAlert } from 'lucide-react-native';
+import { memo, useEffect, useLayoutEffect, useState } from 'react';
+import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
@@ -18,6 +16,8 @@ import { ShimmerText } from '../../../ui/ShimmerText';
 import { showToast } from '../../../ui/Toast';
 import { api, useErrorText } from '../../session';
 import { useMessengerInstance } from '../service';
+import type { AiActions, AiCtx, T } from './aiProcessModel';
+import { ProcessGroup } from './AiProcess';
 import type { BubbleTone } from './RichText';
 import { RichBlocks } from './RichText';
 
@@ -27,30 +27,8 @@ const TIPS = [
   'messenger:ai.tip6', 'messenger:ai.tip7', 'messenger:ai.tip8', 'messenger:ai.tip9', 'messenger:ai.tip10',
 ] as const;
 const TIP_MS = 5000;
-/** 停在底部的判定余量 */
-const AT_END_SLOP = 8;
 
-type T = ReturnType<typeof useT>;
-
-/** 发起人的操作：停止、确认、卡片动作；失败弹提示 */
-interface Actions {
-  stop: () => void;
-  resume: (confirmId: string, approved: boolean) => Promise<void>;
-  dismissCard: (cardId: string) => Promise<void>;
-}
-
-interface Ctx {
-  t: T;
-  tone: BubbleTone;
-  mine: boolean;
-  /** 没有消息 ID（如预览）时为空，只能看 */
-  actions: Actions | null;
-  /** 展开 / 收起前调用 expectResize，展开状态变化的那次提交里调用 settleResize：高度变化保持顶部不动 */
-  expectResize: () => void;
-  settleResize: () => void;
-}
-
-function useActions(msgId: number | undefined, t: T): Actions | null {
+function useActions(msgId: number | undefined, t: T): AiActions | null {
   const errorText = useErrorText();
   const runs = useMessengerInstance((s) => s.runs);
   if (!msgId) return null;
@@ -74,7 +52,7 @@ export const AiBodyView = memo(function AiBodyView({ body, tone, msgId }: { body
   const t = useT();
   const { ref, expect, settle } = useKeepTop();
   const actions = useActions(msgId, t);
-  const ctx: Ctx = { t, tone, mine: body.mine, actions, expectResize: expect, settleResize: settle };
+  const ctx: AiCtx = { t, tone, mine: body.mine, actions, expectResize: expect, settleResize: settle };
   const active = body.status === 'running' || body.status === 'waiting_confirm';
   return (
     <View ref={ref} style={styles.body}>
@@ -86,7 +64,7 @@ export const AiBodyView = memo(function AiBodyView({ body, tone, msgId }: { body
   );
 });
 
-function BlockView({ block, ctx }: { block: AiBlock; ctx: Ctx }) {
+function BlockView({ block, ctx }: { block: AiBlock; ctx: AiCtx }) {
   switch (block.t) {
     case 'process':
       return <ProcessGroup block={block} ctx={ctx} />;
@@ -102,7 +80,7 @@ function BlockView({ block, ctx }: { block: AiBlock; ctx: Ctx }) {
 }
 
 /** 进行中的状态行：等待确认 / 轮换提示；发起人可停止 */
-function StatusLine({ status, showTips, ctx }: { status: AiBody['status']; showTips: boolean; ctx: Ctx }) {
+function StatusLine({ status, showTips, ctx }: { status: AiBody['status']; showTips: boolean; ctx: AiCtx }) {
   const { t, tone, mine, actions } = ctx;
   const { theme } = useUnistyles();
   const [tip, setTip] = useState(0);
@@ -130,159 +108,8 @@ function StatusLine({ status, showTips, ctx }: { status: AiBody['status']; showT
   );
 }
 
-/** 进行中每秒走一次的耗时；没有开始时间时从第一次看到算起 */
-function useElapsed(live: boolean, startedAt: number): number {
-  const [seen] = useState(() => Date.now());
-  const [now, setNow] = useState(() => Date.now());
-  useEffect(() => {
-    if (!live) return undefined;
-    const timer = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(timer);
-  }, [live]);
-  return now - (startedAt || seen);
-}
-
-function formatElapsed(ms: number): string {
-  const total = Math.max(0, Math.floor(ms / 1000));
-  const h = Math.floor(total / 3600);
-  const m = Math.floor((total % 3600) / 60);
-  const s = total % 60;
-  if (h > 0) return `${h}h ${m}m ${s}s`;
-  return m > 0 ? `${m}m ${s}s` : `${s}s`;
-}
-
-function rowTitle(row: AiRow, t: T): string {
-  if (row.kind === 'reasoning') return t(row.state === 'running' ? 'messenger:ai.thinking' : 'messenger:ai.thought');
-  return row.name;
-}
-
-/** 执行过程组：进行中展开，结束后收起；可手动展开 / 收起 */
-function ProcessGroup({ block, ctx }: { block: Extract<AiBlock, { t: 'process' }>; ctx: Ctx }) {
-  const { t, tone, settleResize } = ctx;
-  const { theme } = useUnistyles();
-  const [manual, setManual] = useState<boolean | null>(null);
-  const open = manual ?? block.live;
-  useLayoutEffect(() => settleResize(), [settleResize, open]);
-  const elapsed = useElapsed(block.live, block.startedAt);
-  let title: string;
-  if (block.live) title = elapsed < 1000 ? t('messenger:ai.executing') : `${t('messenger:ai.executing')} · ${formatElapsed(elapsed)}`;
-  else if (block.toolCount > 0 && (block.items.length > 1 || block.failedCount > 0)) {
-    title = block.failedCount > 0
-      ? t('messenger:ai.toolFailed', { n: block.toolCount, failed: block.failedCount })
-      : t('messenger:ai.toolCount', { n: block.toolCount });
-  } else if (block.items.length === 1) title = rowTitle(block.items[0]!, t);
-  else title = t('messenger:ai.handled');
-  const failed = !block.live && block.failedCount > 0;
-  return (
-    <View style={[styles.group, { backgroundColor: tone.overlay }]}>
-      <Pressable
-        onPress={() => {
-          haptics.selection();
-          ctx.expectResize();
-          setManual(!open);
-        }}
-        style={({ pressed }) => [styles.groupHead, pressed && styles.pressed]}
-      >
-        {block.live
-          ? <ActivityIndicator size="small" color={tone.muted} style={styles.spinner} />
-          : <Icon icon={failed ? CircleAlert : CircleCheck} color={failed ? theme.colors.warning : tone.muted} size={theme.size.ai.icon} />}
-        <Text style={[styles.footnote, styles.flex, { color: tone.muted }]} numberOfLines={1}>{title}</Text>
-        <Icon icon={open ? ChevronDown : ChevronRight} color={tone.muted} size={theme.size.ai.icon} />
-      </Pressable>
-      {open && <ProcessRows items={block.items} live={block.live} ctx={ctx} />}
-    </View>
-  );
-}
-
-/**
- * 执行过程的各行：超过最大高度时框内滚动。
- * 打开时停在最新一行；进行中新增行时，停在底部就跟着到底，往上翻着看时不打扰
- */
-function ProcessRows({ items, live, ctx }: { items: AiRow[]; live: boolean; ctx: Ctx }) {
-  const scrollRef = useRef<ComponentRef<typeof ScrollView>>(null);
-  const atEnd = useRef(true);
-  const shown = useRef(false);
-  return (
-    <ScrollView
-      ref={scrollRef}
-      style={styles.groupScroll}
-      contentContainerStyle={styles.groupRows}
-      nestedScrollEnabled
-      scrollEventThrottle={32}
-      onScroll={({ nativeEvent: { contentOffset, contentSize, layoutMeasurement } }) => {
-        atEnd.current = contentOffset.y + layoutMeasurement.height >= contentSize.height - AT_END_SLOP;
-      }}
-      onContentSizeChange={() => {
-        if (!shown.current || (live && atEnd.current)) scrollRef.current?.scrollToEnd({ animated: false });
-        shown.current = true;
-      }}
-    >
-      {items.map((row) => <ProcessRow key={row.key} row={row} ctx={ctx} />)}
-    </ScrollView>
-  );
-}
-
-const ROW_ICONS: Record<AiRow['state'], LucideIcon> = {
-  running: CircleDashed, done: CircleCheck, error: CircleX, confirming: CircleDot, skipped: Circle,
-};
-
-/** 一行思考或工具：标题 · 摘要，点开看全文 / 参数与结果 */
-function ProcessRow({ row, ctx }: { row: AiRow; ctx: Ctx }) {
-  const { t, tone, settleResize } = ctx;
-  const { theme } = useUnistyles();
-  const [open, setOpen] = useState(false);
-  useLayoutEffect(() => settleResize(), [settleResize, open]);
-  const expandable = !!(row.detail || row.result);
-  let icon = row.kind === 'reasoning' ? Brain : ROW_ICONS[row.state];
-  if (row.kind === 'tool' && row.state === 'done') icon = Wrench;
-  const color = row.state === 'error' ? tone.danger : tone.muted;
-  return (
-    <View>
-      <Pressable
-        disabled={!expandable}
-        onPress={() => {
-          ctx.expectResize();
-          setOpen(!open);
-        }}
-        style={({ pressed }) => [styles.row, pressed && styles.pressed]}
-      >
-        {row.state === 'running' && row.kind === 'tool'
-          ? <ActivityIndicator size="small" color={tone.muted} style={styles.spinner} />
-          : <Icon icon={icon} color={color} size={theme.size.ai.icon - 2} />}
-        <Text style={[styles.footnote, styles.flex, { color: tone.text }]} numberOfLines={open ? undefined : 1}>
-          {rowTitle(row, t)}
-          {!!row.summary && !open && <Text style={{ color: tone.muted }}> · {row.summary}</Text>}
-        </Text>
-      </Pressable>
-      {open && (
-        <View style={styles.rowDetail}>
-          {row.kind === 'reasoning' ? (
-            <Text style={[styles.footnote, { color: tone.muted }]}>{row.detail}</Text>
-          ) : (
-            <>
-              {!!row.detail && <CodeBox label={t('messenger:ai.args')} text={row.detail} tone={tone} />}
-              {!!row.result && <CodeBox label={t('messenger:ai.result')} text={row.result} tone={tone} />}
-            </>
-          )}
-        </View>
-      )}
-    </View>
-  );
-}
-
-function CodeBox({ label, text, tone }: { label: string; text: string; tone: BubbleTone }) {
-  return (
-    <View style={styles.codeWrap}>
-      <Text style={[styles.caption2, { color: tone.muted }]}>{label}</Text>
-      <ScrollView horizontal style={[styles.code, { backgroundColor: tone.overlay }]} contentContainerStyle={styles.codeContent}>
-        <Text style={[styles.codeText, { color: tone.text }]} selectable>{text}</Text>
-      </ScrollView>
-    </View>
-  );
-}
-
 /** 需要确认的操作：工具行 + 确认面板；发起人确认或取消，其他人只能看到等待 */
-function ConfirmBlock({ row, risk, confirm, ctx }: { row?: AiRow; risk: boolean; confirm: AiConfirm; ctx: Ctx }) {
+function ConfirmBlock({ row, risk, confirm, ctx }: { row?: AiRow; risk: boolean; confirm: AiConfirm; ctx: AiCtx }) {
   const { t, tone, mine, actions } = ctx;
   const { theme } = useUnistyles();
   const [submitting, setSubmitting] = useState<'approve' | 'reject' | null>(null);
@@ -351,7 +178,7 @@ function ConfirmBlock({ row, risk, confirm, ctx }: { row?: AiRow; risk: boolean;
 const PLAN_ICONS: Record<string, LucideIcon> = { completed: CircleCheck, in_progress: CircleDot };
 
 /** 执行计划：完成前展开，完成后收起 */
-function PlanBlock({ block, ctx }: { block: Extract<AiBlock, { t: 'plan' }>; ctx: Ctx }) {
+function PlanBlock({ block, ctx }: { block: Extract<AiBlock, { t: 'plan' }>; ctx: AiCtx }) {
   const { t, tone, settleResize } = ctx;
   const { theme } = useUnistyles();
   const [manual, setManual] = useState<boolean | null>(null);
@@ -395,7 +222,7 @@ function PlanBlock({ block, ctx }: { block: Extract<AiBlock, { t: 'plan' }>; ctx
   );
 }
 
-function CardView({ card, ctx }: { card: AiCard; ctx: Ctx }) {
+function CardView({ card, ctx }: { card: AiCard; ctx: AiCtx }) {
   const { tone } = ctx;
   if (card.card === 'fallback') return <RichBlocks blocks={card.blocks} tone={tone} />;
   return (
@@ -407,7 +234,7 @@ function CardView({ card, ctx }: { card: AiCard; ctx: Ctx }) {
 }
 
 /** 任务列表卡片：状态圈、名称、备注（打开任务、切换状态等任务模块做好后接上） */
-function TaskRows({ rows, ctx }: { rows: AiTaskRow[]; ctx: Ctx }) {
+function TaskRows({ rows, ctx }: { rows: AiTaskRow[]; ctx: AiCtx }) {
   const { tone } = ctx;
   const { theme } = useUnistyles();
   return (
@@ -426,7 +253,7 @@ function TaskRows({ rows, ctx }: { rows: AiTaskRow[]; ctx: Ctx }) {
 }
 
 /** 批量建任务预览：发起人可取消（批量创建等任务模块做好后接上）；已创建的列出结果 */
-function BatchCard({ card, ctx }: { card: Extract<AiCard, { card: 'batch' }>; ctx: Ctx }) {
+function BatchCard({ card, ctx }: { card: Extract<AiCard, { card: 'batch' }>; ctx: AiCtx }) {
   const { t, tone, mine, actions } = ctx;
   const { theme } = useUnistyles();
   const [submitting, setSubmitting] = useState(false);
@@ -498,21 +325,14 @@ const styles = StyleSheet.create((theme) => ({
   caption2: { ...theme.typography.caption2 },
   codeText: { ...theme.typography.aiCode },
   status: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm, minHeight: theme.size.ai.status, minWidth: theme.size.ai.minWidth },
-  /** small 在 Android 上是 20，缩成与图标一样大 */
-  spinner: { width: theme.size.ai.icon, height: theme.size.ai.icon, transform: [{ scale: 0.8 }] },
   stop: {
     flexDirection: 'row', alignItems: 'center', gap: theme.spacing.xs,
     height: theme.size.ai.status, borderRadius: theme.radius.pill, paddingHorizontal: theme.spacing.sm,
   },
   group: { borderRadius: theme.radius.block, overflow: 'hidden', minWidth: theme.size.ai.minWidth },
   groupHead: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm, minHeight: theme.size.ai.groupHead, paddingHorizontal: theme.spacing.md },
-  groupScroll: { maxHeight: theme.size.ai.scrollMax },
   groupRows: { paddingHorizontal: theme.spacing.md, paddingBottom: theme.spacing.sm, gap: 2 },
   row: { flexDirection: 'row', alignItems: 'flex-start', gap: theme.spacing.sm, paddingVertical: theme.size.ai.rowPadY },
-  rowDetail: { paddingLeft: theme.size.ai.rowIndent, paddingBottom: theme.spacing.xs, gap: theme.spacing.xs },
-  codeWrap: { gap: 2 },
-  code: { borderRadius: theme.radius.bubbleTight, maxHeight: theme.size.ai.scrollMax },
-  codeContent: { padding: theme.spacing.sm },
   confirm: { borderWidth: 1, borderRadius: theme.radius.block, padding: theme.spacing.md, gap: theme.spacing.sm, minWidth: theme.size.ai.minWidth },
   confirmHead: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm },
   badge: {

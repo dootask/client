@@ -20,6 +20,8 @@ export interface DateFormats {
   monthDay: (d: Date) => string;
   /** 年月日（跨年） */
   full: (d: Date) => string;
+  /** 年月（按月分组的标题） */
+  yearMonth: (d: Date) => string;
 }
 
 const cache = new Map<Language, DateFormats>();
@@ -32,7 +34,8 @@ export function dateFormats(language: Language): DateFormats {
     const time = new Intl.DateTimeFormat(tag, { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
     const monthDay = new Intl.DateTimeFormat(tag, { month: 'short', day: 'numeric' });
     const full = new Intl.DateTimeFormat(tag, { year: 'numeric', month: 'short', day: 'numeric' });
-    formats = { time: (d) => time.format(d), monthDay: (d) => monthDay.format(d), full: (d) => full.format(d) };
+    const yearMonth = new Intl.DateTimeFormat(tag, { year: 'numeric', month: 'long' });
+    formats = { time: (d) => time.format(d), monthDay: (d) => monthDay.format(d), full: (d) => full.format(d), yearMonth: (d) => yearMonth.format(d) };
     cache.set(language, formats);
   }
   return formats;

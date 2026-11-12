@@ -6,6 +6,7 @@ export * from './errors';
 export * as fileApi from './file';
 export * as groupApi from './group';
 export * as projectApi from './project';
+export * as pushApi from './push';
 export * as reportApi from './report';
 export * as systemApi from './system';
 export * as userApi from './user';

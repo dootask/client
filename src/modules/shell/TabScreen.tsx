@@ -1,4 +1,5 @@
 import { router } from 'expo-router';
+import type { ReactNode } from 'react';
 import { View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
@@ -13,7 +14,7 @@ import { MAIN_TABS, type MainTab, SETTINGS_TAB } from './tabs';
  * 还没重写的 Tab：导航栏 + 「开发中」占位。
  * 窄屏没有侧栏，设置入口放在仪表盘的导航栏右上角
  */
-export function TabScreen({ label }: { label: MainTab['label'] }) {
+export function TabScreen({ label, right }: { label: MainTab['label']; right?: ReactNode }) {
   const t = useT();
   const split = useSplitView();
   const showSettings = !split && label === MAIN_TABS[0]?.label;
@@ -21,7 +22,7 @@ export function TabScreen({ label }: { label: MainTab['label'] }) {
     <View style={styles.root}>
       <PageHeader
         title={t(label)}
-        right={showSettings && <IconButton icon={SETTINGS_TAB.icon} label={t(SETTINGS_TAB.label)} onPress={() => router.navigate(SETTINGS_TAB.href)} />}
+        right={right ?? (showSettings && <IconButton icon={SETTINGS_TAB.icon} label={t(SETTINGS_TAB.label)} onPress={() => router.navigate(SETTINGS_TAB.href)} />)}
       />
       <PlaceholderScreen title={t(label)} subtitle={t('wip')} />
     </View>

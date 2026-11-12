@@ -1,4 +1,4 @@
-import { useT } from '../../i18n';
+import { useT, type Translate } from '../../i18n';
 import type { Preview, PreviewLabel, PreviewStatus } from '../../sync/messenger/preview';
 
 const LABELS = {
@@ -30,16 +30,14 @@ const STATUS = {
   aiThinking: 'messenger:status.aiThinking',
 } as const satisfies Record<PreviewStatus, string>;
 
+export function previewText(preview: Preview, t: Translate): string {
+  const labels = preview.labels.map((l) => `[${t(LABELS[l])}]`).join('');
+  const body = preview.status ? t(STATUS[preview.status]) : preview.text;
+  return `${labels}${labels && body ? ' ' : ''}${body}`;
+}
+
 /** 摘要文字：翻译后的 [标签] 加正文，放在 Text 里用 */
 export function PreviewText({ preview }: { preview: Preview }) {
   const t = useT();
-  const labels = preview.labels.map((l) => `[${t(LABELS[l])}]`).join('');
-  const body = preview.status ? t(STATUS[preview.status]) : preview.text;
-  return (
-    <>
-      {labels}
-      {labels && body ? ' ' : ''}
-      {body}
-    </>
-  );
+  return <>{previewText(preview, t)}</>;
 }

@@ -1,19 +1,19 @@
 import { FlashList, type FlashListRef } from '@shopify/flash-list';
 import { Building2, ChevronLeft, Layers, Search } from 'lucide-react-native';
 import { useCallback, useRef, useState } from 'react';
-import { ActivityIndicator, type GestureResponderEvent, Text, View } from 'react-native';
+import { ActivityIndicator, Text, View } from 'react-native';
 import Animated, { SlideInLeft, SlideInRight } from 'react-native-reanimated';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { useT } from '../../../i18n';
-import { haptics } from '../../../platform/haptics';
 import { Icon } from '../../../ui/Icon';
+import { LetterIndex } from '../../../ui/LetterIndex';
 import { Sheet } from '../../../ui/layout';
 import { SearchField } from '../../../ui/SearchField';
 import { Touchable } from '../../../ui/Touchable';
 import { pickKey, type Picked } from './pickerData';
 import { EntryPanel, MemberBar, PickerFooter, PickRow, SectionHeader, SelectedSheet, SourceRow } from './pickerParts';
-import { isMemberKey, type PageKey, type PickerRow, usePicker } from './usePicker';
+import { isMemberKey, type MemberPickerOptions, type PageKey, type PickerRow, usePicker } from './usePicker';
 
 const PAGE_SLIDE = 250;
 
@@ -25,16 +25,22 @@ const rowType = (row: PickerRow) => row.type;
  * 任何一级都能搜（成员、最近会话里的群、部门和项目）。人和群都能选，最多 max 个；点「确定」交给 onSubmit，弹层不关。
  * 返回键、下拉、点遮罩先退出搜索、退回上一级
  */
-export function DialogPicker({ visible, title, max, onSubmit, onClose }: {
+type DialogPickerProps = {
   visible: boolean;
   title: string;
   max: number;
   onSubmit: (picked: Picked[]) => void;
   onClose: () => void;
-}) {
+} & MemberPickerOptions;
+
+export function DialogPicker(props: DialogPickerProps) {
+  return props.visible ? <PickerContent {...props} /> : null;
+}
+
+function PickerContent({ visible, title, max, onSubmit, onClose, ...options }: DialogPickerProps) {
   const t = useT();
   const { theme } = useUnistyles();
-  const picker = usePicker({ title, max, root: 'home', flat: false });
+  const picker = usePicker({ title, max, root: 'home', flat: false, ...options });
   const { selected, selectedKeys, toggle, pages, page, depth, word, view, openSource, titleOf } = picker;
   const [showSelected, setShowSelected] = useState(false);
   const listRef = useRef<FlashListRef<PickerRow>>(null);
@@ -43,17 +49,11 @@ export function DialogPicker({ visible, title, max, onSubmit, onClose }: {
     ? `${t('messenger:picker.people', { n: picker.memberInfo.total })}${picker.memberInfo.count > 0 ? ` · ${t('messenger:picker.selected')} ${picker.memberInfo.count}` : ''}`
     : null;
 
-  // 字母索引：点或拖到字母，列表滚到那一组
-  const letterRows = view.letters ? view.rows.flatMap((row, index) => (row.type === 'header' ? [{ title: row.title, index }] : [])) : [];
-  const letterAt = useRef('');
-  const onLetter = (event: GestureResponderEvent) => {
-    const index = Math.floor(event.nativeEvent.locationY / theme.size.pickLetter);
-    const target = letterRows[Math.max(0, Math.min(letterRows.length - 1, index))];
-    if (!target || target.title === letterAt.current) return;
-    letterAt.current = target.title;
-    listRef.current?.scrollToIndex({ index: target.index, animated: false });
-    haptics.selection();
-  };
+  const letters = view.letters ? view.rows.flatMap((row) => row.type === 'header' ? [row.title] : []) : [];
+  const onLetter = useCallback((letter: string) => {
+    const index = view.rows.findIndex((row) => row.type === 'header' && row.title === letter);
+    if (index >= 0) void listRef.current?.scrollToIndex({ index, animated: false });
+  }, [view.rows]);
 
   // 返回键、下拉、点遮罩：先退出搜索、退回上一级
   const back = () => {
@@ -80,9 +80,9 @@ export function DialogPicker({ visible, title, max, onSubmit, onClose }: {
           />
         );
       }
-      return <PickRow item={item.item} word={word} on={selectedKeys.has(pickKey(item.item))} onToggle={toggle} />;
+      return <PickRow item={item.item} word={word} on={selectedKeys.has(pickKey(item.item))} disabled={picker.disabledKeys.has(pickKey(item.item))} onToggle={toggle} />;
     },
-    [word, selectedKeys, toggle, openSource],
+    [word, selectedKeys, toggle, openSource, picker.disabledKeys],
   );
 
   const homeHeader = page === 'home' && !word;
@@ -140,28 +140,9 @@ export function DialogPicker({ visible, title, max, onSubmit, onClose }: {
                 </View>
               ) : undefined
             }
-            contentContainerStyle={letterRows.length > 0 ? styles.withIndex : undefined}
+            contentContainerStyle={letters.length > 0 ? styles.withIndex : undefined}
           />
-          {letterRows.length > 1 && (
-            <View style={styles.index} pointerEvents="box-none">
-              <View
-                onStartShouldSetResponder={() => true}
-                onResponderGrant={onLetter}
-                onResponderMove={onLetter}
-                onResponderRelease={() => {
-                  letterAt.current = '';
-                }}
-              >
-                <View pointerEvents="none">
-                  {letterRows.map((letter) => (
-                    <Text key={letter.title} style={styles.letter} allowFontScaling={false}>
-                      {letter.title}
-                    </Text>
-                  ))}
-                </View>
-              </View>
-            </View>
-          )}
+          <LetterIndex letters={letters} onSelect={onLetter} />
         </Animated.View>
         <PickerFooter selected={selected} max={max} onOpen={() => setShowSelected(true)} onSubmit={() => onSubmit(selected)} />
       </Sheet>
@@ -196,21 +177,4 @@ const styles = StyleSheet.create((theme) => ({
   loading: { marginVertical: theme.spacing.xxl },
   empty: { alignItems: 'center', gap: theme.spacing.sm, paddingTop: theme.size.pickEmptyTop, paddingHorizontal: theme.spacing.lg },
   emptyText: { ...theme.typography.subhead, color: theme.colors.text3 },
-  index: {
-    position: 'absolute',
-    right: theme.size.pickLetterInset,
-    top: 0,
-    bottom: 0,
-    width: theme.size.pickLetterWidth,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  letter: {
-    ...theme.typography.caption2,
-    height: theme.size.pickLetter,
-    lineHeight: theme.size.pickLetter,
-    width: theme.size.pickLetterWidth,
-    textAlign: 'center',
-    color: theme.colors.primaryText,
-  },
 }));

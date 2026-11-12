@@ -19,7 +19,8 @@ export interface MainNavProps {
 /** 主框架的导航，三种形态共用同一份 Tab 数据；切换靠 expo-router 的无头 Tabs，URL 和形态无关 */
 export function MainNav({ variant, badges, onReselect }: MainNavProps) {
   const item = (tab: MainTab) => (
-    <TabTrigger key={tab.name} name={tab.name} asChild>
+    // 底部 Tab 只在各 Tab 首页显示，切过去总是回到首页：返回到别的 Tab 时，上一个 Tab 里推入的页面（如聊天）还留在栈里
+    <TabTrigger key={tab.name} name={tab.name} asChild resetOnFocus={variant === 'tabs'}>
       <NavItem tab={tab} variant={variant} badge={badges?.[tab.name] ?? ''} onReselect={onReselect} />
     </TabTrigger>
   );

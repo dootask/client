@@ -9,7 +9,7 @@ import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { useT } from '../../i18n';
 import { dialogApi } from '../../sync/api';
 import type { SearchItem } from '../../sync/api/dialog';
-import { useSplitView } from '../../ui/layout';
+import { isSplitView, useSplitView } from '../../ui/layout';
 import { CompactBar, LargeTitle, ScrollOffsetProvider, TrackedScrollView } from '../../ui/LargeHeader';
 import { showToast } from '../../ui/Toast';
 import { api, useErrorText } from '../session';
@@ -43,8 +43,12 @@ function useOpenRouteId(): number {
   return match ? Number(match[1]) : 0;
 }
 
+/**
+ * 打开会话。中屏、宽屏退回到唯一的聊天页换会话：盖在上面的资料卡、成员抽屉等一并关掉（navigate 只会在它们上面再压一层）；
+ * 窄屏聊天整页推入，返回回到来处
+ */
 export function openDialogRoute(id: number, msgId?: number) {
-  router.navigate({ pathname: '/messenger/[dialogId]', params: msgId ? { dialogId: String(id), msg: String(msgId) } : { dialogId: String(id) } });
+  (isSplitView() ? router.dismissTo : router.navigate)({ pathname: '/messenger/[dialogId]', params: msgId ? { dialogId: String(id), msg: String(msgId) } : { dialogId: String(id) } });
 }
 
 /**

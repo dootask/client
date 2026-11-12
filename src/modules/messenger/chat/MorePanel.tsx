@@ -1,5 +1,5 @@
 import { Image } from 'expo-image';
-import { Camera, FolderOpen, Images } from 'lucide-react-native';
+import { Camera, FolderOpen, Images, Maximize2 } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import { FlatList, ScrollView, Text, View } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
@@ -24,9 +24,9 @@ const COLUMNS = 4;
 const BASE_COUNT = CAN_CAPTURE ? 3 : 2;
 
 /** 面板高度（同旧版 App）：一排最近照片 + 两排入口（只有一排时按一排），更多入口往下滚 */
-export function morePanelHeight(theme: AppTheme, extraCount: number): number {
-  const rows = Math.min(2, Math.ceil((BASE_COUNT + extraCount) / COLUMNS));
-  const strip = HAS_RECENT_PHOTOS ? theme.spacing.md + theme.size.photoThumb : 0;
+export function morePanelHeight(theme: AppTheme, extraCount: number, aiBot = false): number {
+  const rows = Math.min(2, Math.ceil(((aiBot ? 2 : BASE_COUNT) + extraCount) / COLUMNS));
+  const strip = HAS_RECENT_PHOTOS && !aiBot ? theme.spacing.md + theme.size.photoThumb : 0;
   const cell = theme.size.moreEntry + theme.spacing.sm + theme.typography.caption.lineHeight + theme.spacing.xl;
   return strip + theme.spacing.xl + rows * cell;
 }
@@ -35,20 +35,21 @@ export function morePanelHeight(theme: AppTheme, extraCount: number): number {
  * 加号面板（App）：上方最近照片（点选带序号，选了之后出现原图、预览、发送），下方相册、拍摄、文件入口。
  * 后面接投票、接龙等按会话类型给的入口。点入口先收起面板再打开系统选择器或弹层；整块上下滚
  */
-export function MorePanel({ attach, extras }: { attach: Attach; extras: Extra[] }) {
+export function MorePanel({ attach, extras, aiBot = false, onFullInput }: { attach: Attach; extras: Extra[]; aiBot?: boolean; onFullInput?: () => void }) {
   const t = useT();
   const { theme } = useUnistyles();
   const controller = useChat();
   const pick = (source: PickSource) => () => attach.pick(source);
   const entries: Extra[] = [
-    { key: 'media', icon: Images, label: t('messenger:chat.album'), onPress: pick('media') },
-    ...(CAN_CAPTURE ? [{ key: 'capture', icon: Camera, label: t('messenger:chat.capture'), onPress: pick('capture') }] : []),
+    ...(!aiBot ? [{ key: 'media', icon: Images, label: t('messenger:chat.album'), onPress: pick('media') }] : []),
+    ...(CAN_CAPTURE && !aiBot ? [{ key: 'capture', icon: Camera, label: t('messenger:chat.capture'), onPress: pick('capture') }] : []),
     { key: 'file', icon: FolderOpen, label: t('messenger:chat.file'), onPress: pick('file') },
     ...extras,
+    ...(aiBot && onFullInput ? [{ key: 'fullInput', icon: Maximize2, label: t('messenger:chat.fullInput'), onPress: onFullInput }] : []),
   ];
   return (
     <ScrollView style={styles.root} keyboardShouldPersistTaps="handled">
-      {HAS_RECENT_PHOTOS && (
+      {HAS_RECENT_PHOTOS && !aiBot && (
         <PhotoStrip
           onSend={(files, original) => {
             controller.closePanel();

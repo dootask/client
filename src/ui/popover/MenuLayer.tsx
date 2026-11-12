@@ -409,9 +409,9 @@ const styles = StyleSheet.create((theme) => ({
   row: (look: MenuLook, active: boolean) => ({
     flexDirection: "row",
     alignItems: "center",
-    height: look === "element" ? theme.size.menuRowRoomy : theme.size.menuRow,
+    height: look === "dialog" ? theme.size.group.menuRow : look === "element" ? theme.size.menuRowRoomy : theme.size.menuRow,
     paddingHorizontal:
-      look === "element" ? theme.size.menuPadXRoomy : theme.size.menuPadX,
+      look === "dialog" ? theme.size.group.menuPad : look === "element" ? theme.size.menuPadXRoomy : theme.size.menuPadX,
     gap: theme.spacing.sm,
     backgroundColor: active
       ? look === "element"

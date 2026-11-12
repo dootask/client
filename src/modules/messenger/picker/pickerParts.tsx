@@ -42,10 +42,11 @@ function Highlight({ text, word }: { text: string; word: string }) {
 }
 
 /** 一个人或群：选中整行铺浅主色 */
-export const PickRow = memo(function PickRow({ item, word, on, onToggle }: { item: Picked; word: string; on: boolean; onToggle: (item: Picked) => void }) {
+export const PickRow = memo(function PickRow({ item, word, on, disabled = false, onToggle }: { item: Picked; word: string; on: boolean; disabled?: boolean; onToggle: (item: Picked) => void }) {
   const sub = usePickSub(item);
+  const { theme } = useUnistyles();
   return (
-    <Touchable accessibilityRole="checkbox" aria-checked={on} onPress={() => onToggle(item)} style={({ pressed }) => styles.row(on, pressed)}>
+    <Touchable accessibilityRole="checkbox" aria-checked={on} disabled={disabled} onPress={() => onToggle(item)} style={({ pressed }) => [styles.row(on, pressed), disabled && { opacity: theme.opacity.disabled }]}>
       <View style={styles.rowMain}>
         <PickAvatar item={item} size={40} />
         <View style={styles.texts}>

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { bodyImages } from './gallery';
+import { bodyImages, bodyPictures } from './gallery';
 
 const img = (url?: string) => ({ t: 'img' as const, src: 's', width: 1, height: 1, url, emoticon: !url });
 
@@ -21,5 +21,12 @@ describe('bodyImages', () => {
 
   it('其他消息没有', () => {
     expect(bodyImages({ kind: 'file', name: 'f', ext: 'txt', size: 1, url: 'u' })).toEqual([]);
+  });
+});
+
+describe('bodyPictures', () => {
+  it('带上缩略图', () => {
+    expect(bodyPictures({ kind: 'image', src: 't', width: 1, height: 1, url: 'a' })).toEqual([{ src: 't', url: 'a' }]);
+    expect(bodyPictures({ kind: 'rich', blocks: [img('a'), img()] })).toEqual([{ src: 's', url: 'a' }]);
   });
 });
