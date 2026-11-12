@@ -4,10 +4,10 @@ import { Icon, type LucideIcon } from './Icon';
 import { Touchable } from './Touchable';
 
 /** 导航栏等处的图标按钮：触控区按平台最小尺寸，按下降透明度，悬停叠一层底色 */
-export function IconButton({ icon, label, onPress }: { icon: LucideIcon; label: string; onPress: () => void }) {
+export function IconButton({ icon, label, onPress, testID }: { icon: LucideIcon; label: string; onPress: () => void; testID?: string }) {
   const { theme } = useUnistyles();
   return (
-    <Touchable accessibilityRole="button" accessibilityLabel={label} onPress={onPress} style={({ pressed, hovered }) => styles.button(pressed, hovered)}>
+    <Touchable testID={testID} accessibilityRole="button" accessibilityLabel={label} onPress={onPress} style={({ pressed, hovered }) => styles.button(pressed, hovered)}>
       <Icon icon={icon} color={theme.colors.text} size={theme.size.icon} />
     </Touchable>
   );

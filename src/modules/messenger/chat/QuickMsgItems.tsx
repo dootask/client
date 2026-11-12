@@ -1,39 +1,25 @@
 import { Check } from 'lucide-react-native';
-import { useState } from 'react';
 import { ScrollView, Text, type StyleProp, type TextStyle } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { useT } from '../../../i18n';
-import { dialogApi } from '../../../sync/api';
 import type { Dialog } from '../../../sync/api/dialog';
 import { aiModelLabel, aiQuickMsgs, quickMsgs, quickMsgHtml } from '../../../sync/messenger';
 import { Icon } from '../../../ui/Icon';
 import { Popover } from '../../../ui/popover';
-import { showToast } from '../../../ui/Toast';
 import { Touchable, type TouchableProps } from '../../../ui/Touchable';
-import { api, useErrorText } from '../../session';
 import { useMessenger, useMessengerState } from '../hooks';
 import { AiSessionHistory } from './AiSessionHistory';
+import { useAiSession } from './useAiSession';
 
-export function QuickMsgItems({ dialog, onSent, itemStyle, labelStyle, quickStyle, quickLabelStyle }: { dialog: Dialog; onSent: () => void; itemStyle: TouchableProps['style']; labelStyle: StyleProp<TextStyle>; quickStyle?: TouchableProps['style']; quickLabelStyle?: StyleProp<TextStyle> }) {
+/** 网页快捷消息条的各项：AI 会话的模型、新会话、历史在前，机器人快捷指令在后（App 的 AI 入口在导航栏，见 ChatHeader） */
+export function QuickMsgItems({ dialog, onSent, itemStyle, labelStyle }: { dialog: Dialog; onSent: () => void; itemStyle: TouchableProps['style']; labelStyle: StyleProp<TextStyle> }) {
   const t = useT();
   const { theme } = useUnistyles();
   const messenger = useMessenger();
   const selected = useMessengerState((s) => s.aiModels[dialog.id]);
-  const errorText = useErrorText();
-  const [history, setHistory] = useState(false);
-  const [creating, setCreating] = useState(false);
+  const session = useAiSession(dialog, onSent);
   if (!messenger) return null;
-  const create = async () => {
-    if (creating) return;
-    setCreating(true);
-    try {
-      await dialogApi.sessionCreate(api, dialog.id);
-      await messenger.reloadDialog(dialog.id);
-      onSent();
-    } catch (err) { showToast(errorText(err)); }
-    finally { setCreating(false); }
-  };
   return (
     <>
       {aiQuickMsgs(dialog).map((item) => {
@@ -51,14 +37,14 @@ export function QuickMsgItems({ dialog, onSent, itemStyle, labelStyle, quickStyl
           </Popover>;
         }
         const isNew = item.key === '~ai-session-create';
-        return <Touchable key={item.key} testID={isNew ? 'ai-new-session' : 'ai-history'} accessibilityRole="button" disabled={isNew && creating} onPress={isNew ? () => void create() : () => setHistory(true)} style={itemStyle}>
+        return <Touchable key={item.key} testID={isNew ? 'ai-new-session' : 'ai-history'} accessibilityRole="button" disabled={isNew && session.creating} onPress={isNew ? () => void session.create() : session.openHistory} style={itemStyle}>
           <Text style={labelStyle}>{isNew ? t('messenger:ai.newSession') : t('messenger:ai.history')}</Text>
         </Touchable>;
       })}
-      {quickMsgs(dialog).map((item) => <Touchable key={item.key} accessibilityRole="button" style={quickStyle ?? itemStyle} onPress={() => { messenger.sendText({ dialog_id: dialog.id, text: quickMsgHtml(item) }); onSent(); }}>
-        <Text style={quickLabelStyle ?? labelStyle} numberOfLines={1}>{item.label}</Text>
+      {quickMsgs(dialog).map((item) => <Touchable key={item.key} accessibilityRole="button" style={itemStyle} onPress={() => { messenger.sendText({ dialog_id: dialog.id, text: quickMsgHtml(item) }); onSent(); }}>
+        <Text style={labelStyle} numberOfLines={1}>{item.label}</Text>
       </Touchable>)}
-      {history && <AiSessionHistory dialog={dialog} visible onClose={() => setHistory(false)} onChanged={onSent} />}
+      {session.history && <AiSessionHistory dialog={dialog} visible onClose={session.closeHistory} onChanged={onSent} />}
     </>
   );
 }

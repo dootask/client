@@ -1,15 +1,19 @@
 import { router } from 'expo-router';
-import { Phone } from 'lucide-react-native';
-import { Text, View } from 'react-native';
+import { ClockFading, MessageCirclePlus, Phone } from 'lucide-react-native';
+import { Text, View, type StyleProp, type TextStyle } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { useT } from '../../../i18n';
-import type { StoredDialog } from '../../../sync/messenger';
+import { aiModelLabel, aiQuickMsgs, type StoredDialog } from '../../../sync/messenger';
 import { DialogAvatar, UserAvatar } from '../../../ui/Avatar';
 import { IconButton } from '../../../ui/IconButton';
+import { Menu } from '../../../ui/popover';
 import { Touchable } from '../../../ui/Touchable';
 import { useSession } from '../../session';
+import { useMessenger, useMessengerState } from '../hooks';
+import { AiSessionHistory } from './AiSessionHistory';
 import { useCallPeer } from './extras';
+import { useAiSession } from './useAiSession';
 
 type Tone = 'default' | 'success' | 'danger';
 
@@ -49,6 +53,43 @@ export function HeaderRight({ dialog }: { dialog: StoredDialog }) {
           ? <UserAvatar uri={dialog.userimg} userid={dialog.dialog_user?.userid ?? 0} name={dialog.name ?? ''} bot={!!dialog.bot} size={theme.size.headerAvatar} />
           : <DialogAvatar uri={dialog.avatar} groupType={dialog.group_type} size={theme.size.headerAvatar} />}
       </Touchable>
+    </>
+  );
+}
+
+/** AI 会话导航栏副标题（同旧版 App）：当前模型名，点开菜单切换，当前项打勾；不是 AI 会话返回 null */
+export function AiModelSubtitle({ dialog, style }: { dialog: StoredDialog; style: StyleProp<TextStyle> }) {
+  const t = useT();
+  const messenger = useMessenger();
+  const selected = useMessengerState((s) => s.aiModels[dialog.id]);
+  const item = aiQuickMsgs(dialog).find(({ key }) => key === '~ai-model-select');
+  if (!item || !messenger) return null;
+  const active = selected || item.config?.model;
+  const items = (item.config?.models ?? []).map((model) => ({
+    label: model.label,
+    checked: model.value === active,
+    onSelect: () => { if (model.value !== active) messenger.selectAiModel(dialog.id, model.value); },
+  }));
+  return (
+    <Menu items={items} accessibilityLabel={t('messenger:ai.selectModel')}>
+      <Text testID="ai-model-trigger" style={style} numberOfLines={1}>{aiModelLabel(item, selected)}</Text>
+    </Menu>
+  );
+}
+
+/** 有会话管理（新会话、历史）的 AI 会话，导航栏右侧换成 AiHeaderRight */
+export const hasAiSessions = (dialog: StoredDialog) => aiQuickMsgs(dialog).some(({ key }) => key !== '~ai-model-select');
+
+/** AI 会话导航栏右侧（同旧版 App，代替会话头像）：时钟 = 历史会话，气泡加号 = 开启新会话 */
+export function AiHeaderRight({ dialog, onSessionChanged }: { dialog: StoredDialog; onSessionChanged: () => void }) {
+  const t = useT();
+  const session = useAiSession(dialog, onSessionChanged);
+  const keys = aiQuickMsgs(dialog).map(({ key }) => key);
+  return (
+    <>
+      {keys.includes('~ai-session-history') && <IconButton testID="ai-history" icon={ClockFading} label={t('messenger:ai.history')} onPress={session.openHistory} />}
+      {keys.includes('~ai-session-create') && <IconButton testID="ai-new-session" icon={MessageCirclePlus} label={t('messenger:ai.newSession')} onPress={() => void session.create()} />}
+      {session.history && <AiSessionHistory dialog={dialog} visible onClose={session.closeHistory} onChanged={onSessionChanged} />}
     </>
   );
 }

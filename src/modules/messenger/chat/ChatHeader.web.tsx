@@ -24,7 +24,8 @@ import { MSG_TYPE_ICONS, MSG_TYPE_LABELS, useMsgTypes } from './msgTypes';
  * 宽屏：高 68，左侧会话头像，右边标题行（标签、名称、群人数、机器人 / 全员 / 部门标签）和分类条，最右「…」。
  * 窄屏：灰底，返回键（旁边是其他会话的未读）、居中标题和在线状态、右侧「…」，分类条单独一行。
  */
-export function ChatHeader({ dialogId, dialog }: { dialogId: number; dialog: StoredDialog | undefined }) {
+// onSessionChanged 只有 App 导航栏用（网页的 AI 会话入口在输入框上方），这里和 App 同签名、不取用
+export function ChatHeader({ dialogId, dialog }: { dialogId: number; dialog: StoredDialog | undefined; onSessionChanged: () => void }) {
   const { theme } = useUnistyles();
   const wide = useSplitView();
   const completed = !!dialog && dialog.type === 'group' && dialog.group_type === 'task' && !!dialog.group_info?.complete_at;

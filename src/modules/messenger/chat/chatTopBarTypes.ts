@@ -7,4 +7,6 @@ export interface ChatTopBarProps {
   dialog: StoredDialog | undefined;
   selection: Selection;
   onJump: (msgId: number) => void;
+  /** AI 会话开了新会话或切到历史会话后（App 导航栏里的入口用；网页入口在输入框上方） */
+  onSessionChanged: () => void;
 }

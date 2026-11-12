@@ -12,17 +12,17 @@ import { Touchable } from '../../../ui/Touchable';
 import { socket } from '../../session';
 import { useNow } from '../clock';
 import { useMessengerState, useUser } from '../hooks';
-import { HeaderRight, HeaderTags } from './ChatHeaderSide';
+import { AiHeaderRight, AiModelSubtitle, hasAiSessions, HeaderRight, HeaderTags } from './ChatHeaderSide';
 import { countText, onlineText } from './format';
 
 /** 断线超过这么久才显示「连接中」，短暂重连不闪 */
 const CONNECTING_DELAY = 1500;
 
 /**
- * 聊天页导航栏：返回（窄屏，旁边是其他会话的未读）、标题和标签、副标题（群人数 / 对方在线状态 / 连接中）、右侧（会话头像；App 另有电话按钮）。
+ * 聊天页导航栏：返回（窄屏，旁边是其他会话的未读）、标题和标签、副标题（群人数 / 对方在线状态 / AI 模型 / 连接中）、右侧（会话头像，能打电话时另有电话按钮；AI 会话换成历史和新会话）。
  * 两侧同宽，标题始终居中；会话数据还没到（深链打开）时只有返回。children 排在导航栏下面、同一块底色里（App 的分类条和横条）
  */
-export function ChatHeader({ dialogId, dialog, children }: { dialogId: number; dialog: StoredDialog | undefined; children?: ReactNode }) {
+export function ChatHeader({ dialogId, dialog, onSessionChanged, children }: { dialogId: number; dialog: StoredDialog | undefined; onSessionChanged: () => void; children?: ReactNode }) {
   const split = useSplitView();
   return (
     <View style={styles.root}>
@@ -40,7 +40,7 @@ export function ChatHeader({ dialogId, dialog, children }: { dialogId: number; d
           </Touchable>
         )}
         <View style={[styles.side, styles.sideRight]}>
-          {dialog && <HeaderRight dialog={dialog} />}
+          {dialog && (hasAiSessions(dialog) ? <AiHeaderRight dialog={dialog} onSessionChanged={onSessionChanged} /> : <HeaderRight dialog={dialog} />)}
         </View>
       </View>
       {children}
@@ -92,7 +92,7 @@ function Subtitle({ dialog }: { dialog: StoredDialog }) {
     if (!dialog.people) return null;
     return <Text style={styles.subtitle} numberOfLines={1}>{t('messenger:chat.members', { n: dialog.people })}</Text>;
   }
-  if (dialog.bot) return null;
+  if (dialog.bot) return <AiModelSubtitle dialog={dialog} style={styles.subtitle} />;
   return <PeerOnline userid={dialog.dialog_user?.userid ?? 0} />;
 }
 

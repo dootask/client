@@ -547,7 +547,7 @@ function ChatScreen({ dialogId, msgId, threadId, locateAt, reply }: { dialogId: 
                 currentUserId={String(userId)}
                 renderMessage={renderMessage}
                 renderDay={rowTraits.dayLabels ? renderDay : undefined}
-                header={!threadId && <ChatTopBar dialogId={dialogId} dialog={dialog} selection={selection} onJump={onJump} />}
+                header={!threadId && <ChatTopBar dialogId={dialogId} dialog={dialog} selection={selection} onJump={onJump} onSessionChanged={onSent} />}
                 composer={
                   <BottomBar selection={selection} onForward={forwardSelection} onMerge={mergeSelection} onFavorite={favoriteSelection}>
                     {block ? (

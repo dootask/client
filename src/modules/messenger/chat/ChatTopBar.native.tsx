@@ -12,11 +12,11 @@ import type { ChatTopBarProps } from './chatTopBarTypes';
 import type { Selection } from './selection';
 
 /** App 聊天页顶部：多选时换成「已选 n 条」+ 右侧「取消」，返回键退出多选，横条不显示 */
-export function ChatTopBar({ dialogId, dialog, selection, onJump }: ChatTopBarProps) {
+export function ChatTopBar({ dialogId, dialog, selection, onJump, onSessionChanged }: ChatTopBarProps) {
   const active = useStore(selection.store, (s) => s.active);
   if (active) return <SelectionHeader selection={selection} />;
   return (
-    <ChatHeader dialogId={dialogId} dialog={dialog}>
+    <ChatHeader dialogId={dialogId} dialog={dialog} onSessionChanged={onSessionChanged}>
       <ChatBanners dialog={dialog} onJump={onJump} />
     </ChatHeader>
   );
