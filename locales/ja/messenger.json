@@ -493,5 +493,23 @@
   },
   "math": {
     "title": "数式"
+  },
+  "profile": {
+    "info": "個人情報",
+    "profession": "役職/職名",
+    "department": "部署",
+    "email": "メールアドレス",
+    "birthday": "誕生日",
+    "tags": "パーソナルタグ",
+    "manageTags": "管理",
+    "addTag": "ラベルを追加",
+    "myGroups": "マイグループ",
+    "commonGroups": "共通グループ",
+    "works": "プロジェクトとタスク",
+    "count": "{{n}}件",
+    "chat": "チャットを開始",
+    "createGroup": "グループを作成",
+    "sendEmail": "メールを送る",
+    "bot": "ボット"
   }
 }

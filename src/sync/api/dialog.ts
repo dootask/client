@@ -41,6 +41,10 @@ export const dialogSchema = z.looseObject({
   name: str.optional(),
   avatar: str.nullish(),
   owner_id: num.nullish(),
+  /** 群管理员 */
+  deputy_ids: phpList(num).nullish(),
+  /** OKR 群关联的 OKR id（项目、任务群看 group_info） */
+  link_id: num.nullish(),
   top_msg_id: num.nullish(),
   top_userid: num.nullish(),
   top_at: str.nullish(),
@@ -58,6 +62,7 @@ export const dialogSchema = z.looseObject({
   people: num.nullish(),
   /** 群成员里的真人数（不含机器人），聊天页标题显示 */
   people_user: num.nullish(),
+  people_bot: num.nullish(),
   todo_num: num.nullish(),
   last_msg: lastMsgSchema.nullish(),
   pinyin: str.nullish(),

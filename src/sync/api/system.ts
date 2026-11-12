@@ -46,3 +46,15 @@ export function compareVersion(a: string, b: string): number {
   }
   return 0;
 }
+
+/**
+ * 上传图片（base64，带 data:image/... 前缀），返回地址。
+ * fit 为 cover 时裁成 width×height（头像），percentage 时按比例缩到不超过（举报截图）
+ */
+export async function imageUpload(client: ApiClient, image64: string, { width, height, fit }: { width: number; height: number; fit: 'cover' | 'percentage' }) {
+  const { data } = await requestParsed(client, 'system/imgupload', z.looseObject({ url: z.string() }), {
+    method: 'post',
+    data: { image64, width, height, whcut: fit },
+  });
+  return data.url;
+}

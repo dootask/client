@@ -493,5 +493,23 @@
   },
   "math": {
     "title": "Rumus matematika"
+  },
+  "profile": {
+    "info": "Informasi Pribadi",
+    "profession": "Posisi/Jabatan",
+    "department": "Departemen",
+    "email": "Email",
+    "birthday": "Tanggal lahir",
+    "tags": "Tag pribadi",
+    "manageTags": "Kelola",
+    "addTag": "Tambahkan Label",
+    "myGroups": "Grup Saya",
+    "commonGroups": "Grup bersama",
+    "works": "Proyek dan Tugas",
+    "count": "{{n}}",
+    "chat": "Mulai Obrolan",
+    "createGroup": "Buat grup",
+    "sendEmail": "Kirim email",
+    "bot": "Bot"
   }
 }

@@ -3,7 +3,7 @@ import { create } from 'zustand';
 
 import { fileIO } from '../../platform/files';
 import { usersApi } from '../../sync/api';
-import { bindMessengerApi, bindMsgActionsApi, createMessenger, createMsgActions, type Messenger, type MsgActions } from '../../sync/messenger';
+import { bindGroupApi, bindMessengerApi, bindMsgActionsApi, createGroupActions, createMessenger, createMsgActions, type GroupActions, type Messenger, type MsgActions } from '../../sync/messenger';
 import { kv, KV_KEYS, openAppCache, type StructuredCache } from '../../sync/storage';
 import { createUserDirectory, type UserDirectory } from '../../sync/users';
 import { api, onGone, socket, useSession, type SessionState } from '../session';
@@ -11,9 +11,10 @@ import { api, onGone, socket, useSession, type SessionState } from '../session';
 const KV_NAMES = ['sync', 'beyond', 'drafts', 'outbox'] as const;
 
 /** 当前账号的消息数据层和用户目录，未登录为 null。界面通过 hooks 读，不直接用 */
-export const useMessengerInstance = create<{ messenger: Messenger | null; actions: MsgActions | null; users: UserDirectory | null }>()(() => ({
+export const useMessengerInstance = create<{ messenger: Messenger | null; actions: MsgActions | null; group: GroupActions | null; users: UserDirectory | null }>()(() => ({
   messenger: null,
   actions: null,
+  group: null,
   users: null,
 }));
 
@@ -42,7 +43,7 @@ function switchTo(owner: string) {
       const { messenger: previous, users: previousUsers } = useMessengerInstance.getState();
       previousUsers?.stop();
       if (previous) {
-        useMessengerInstance.setState({ messenger: null, actions: null, users: null });
+        useMessengerInstance.setState({ messenger: null, actions: null, group: null, users: null });
         previous.stop();
         socket.disconnect();
       }
@@ -73,7 +74,7 @@ function switchTo(owner: string) {
         log: console.warn,
       });
       const users = createUserDirectory({ fetchBasic: (ids) => usersApi.basic(api, ids), cache, log: console.warn });
-      useMessengerInstance.setState({ messenger, actions: createMsgActions(bindMsgActionsApi(api), messenger), users });
+      useMessengerInstance.setState({ messenger, actions: createMsgActions(bindMsgActionsApi(api), messenger), group: createGroupActions(bindGroupApi(api), messenger), users });
       await messenger.start();
       socket.connect();
     })

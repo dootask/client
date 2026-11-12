@@ -2,6 +2,7 @@ export { bindMessengerApi, createMessenger, type IncomingMessage, type Messenger
 export * from './rules';
 export { createMessengerStore, type MessengerState, type MsgWindow, type OutboxItem, type StoredDialog, type UploadItem, type Translation } from './store';
 export { createMsgActions, type MsgActions, type MsgActionsApi, bindMsgActionsApi } from './actions';
+export { bindGroupApi, createGroupActions, type GroupActions, type GroupApi } from './groupActions';
 export type { WithdrawnMsg } from './store';
 export * from './compose';
 export type { MentionCandidate, MentionGroup, MentionGroupKind, MentionSession } from './mention';

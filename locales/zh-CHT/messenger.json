@@ -493,5 +493,23 @@
   },
   "math": {
     "title": "數學公式"
+  },
+  "profile": {
+    "info": "個人資訊",
+    "profession": "職位/職稱",
+    "department": "部門",
+    "email": "郵箱",
+    "birthday": "生日",
+    "tags": "個性標籤",
+    "manageTags": "管理",
+    "addTag": "添加標籤",
+    "myGroups": "我的群組",
+    "commonGroups": "共同群組",
+    "works": "項目與任務",
+    "count": "{{n}}個",
+    "chat": "開始聊天",
+    "createGroup": "創建群組",
+    "sendEmail": "發郵件",
+    "bot": "機器人"
   }
 }

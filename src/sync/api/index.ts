@@ -3,6 +3,7 @@ export * as contactsApi from './contacts';
 export * as dialogApi from './dialog';
 export * from './errors';
 export * as fileApi from './file';
+export * as groupApi from './group';
 export * as projectApi from './project';
 export * as reportApi from './report';
 export * as systemApi from './system';

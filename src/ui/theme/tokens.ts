@@ -460,6 +460,8 @@ const typography = {
   previewMenu: font(17, 22, '400'),
   previewRate: font(14, 19, '600'),
   previewCounter: font(14, 30, '400'),
+  /** App 设置、资料页的分组标题（旧版 App ListSection） */
+  sectionTitle: font(16, 22, '700'),
   /** Web 聊天页置顶卡片的正文、待办条标签和胶囊（旧版网页） */
   topContent: font(14, 22, '400'),
   todoLabel: font(14, 22, '500'),
@@ -729,6 +731,10 @@ const size = {
   /** 未读角标的最小宽高（旧版 iView 角标） */
   badge: 20,
   badgePadding: 6,
+  /** 列表行、资料行里上下两行文字的间距 */
+  listLineGap: 2,
+  /** 资料页：文字占位条、标签占位的高度 */
+  profile: { blankBar: 10, chipBlank: 28 },
   /** 分类胶囊、列表顶部搜索框的高度 */
   chip: 30,
   searchField: 36,

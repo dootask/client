@@ -493,5 +493,23 @@
   },
   "math": {
     "title": "수식"
+  },
+  "profile": {
+    "info": "개인 정보",
+    "profession": "직위/직함",
+    "department": "부서",
+    "email": "이메일",
+    "birthday": "생일",
+    "tags": "개성 태그",
+    "manageTags": "관리",
+    "addTag": "레이블 추가",
+    "myGroups": "내 그룹",
+    "commonGroups": "공동 그룹",
+    "works": "프로젝트 및 작업",
+    "count": "{{n}}개",
+    "chat": "채팅 시작",
+    "createGroup": "그룹 생성",
+    "sendEmail": "이메일 보내기",
+    "bot": "봇"
   }
 }

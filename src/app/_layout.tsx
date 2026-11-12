@@ -70,6 +70,12 @@ function Routes() {
         {/* 长文阅读（App 整页推入；网页在新标签页打开，同旧版 /single/file/msg）、公式查看（App） */}
         <Stack.Screen name="msg-detail/[msgId]" />
         <Stack.Screen name="math" />
+        {/* 用户资料、标签、共同群组、项目与任务，建群（App 整页推入，盖住 Tab；网页见各自的弹窗） */}
+        <Stack.Screen name="user/[userid]/index" />
+        <Stack.Screen name="user/[userid]/tags" />
+        <Stack.Screen name="user/[userid]/groups" />
+        <Stack.Screen name="user/[userid]/works" />
+        <Stack.Screen name="group/create" />
       </Stack.Protected>
       <Stack.Protected guard={!inside} redirectTo={entry}>
         <Stack.Screen name="(auth)" options={NO_ANIMATION} />

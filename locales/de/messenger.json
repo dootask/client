@@ -493,5 +493,23 @@
   },
   "math": {
     "title": "Mathematische Formel"
+  },
+  "profile": {
+    "info": "Persönliche Informationen",
+    "profession": "Position/Titel",
+    "department": "Abteilung",
+    "email": "E-Mail",
+    "birthday": "Geburtstag",
+    "tags": "Persönliche Tags",
+    "manageTags": "Verwalten",
+    "addTag": "Label hinzufügen",
+    "myGroups": "Meine Gruppen",
+    "commonGroups": "Gemeinsame Gruppe",
+    "works": "Projekte und Aufgaben",
+    "count": "{{n}}",
+    "chat": "Chat starten",
+    "createGroup": "Gruppe erstellen",
+    "sendEmail": "E-Mail senden",
+    "bot": "Bot"
   }
 }

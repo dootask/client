@@ -493,5 +493,23 @@
   },
   "math": {
     "title": "数学公式"
+  },
+  "profile": {
+    "info": "个人信息",
+    "profession": "职位/职称",
+    "department": "部门",
+    "email": "邮箱",
+    "birthday": "生日",
+    "tags": "个性标签",
+    "manageTags": "管理",
+    "addTag": "添加标签",
+    "myGroups": "我的群组",
+    "commonGroups": "共同群组",
+    "works": "项目与任务",
+    "count": "{{n}}个",
+    "chat": "开始聊天",
+    "createGroup": "创建群组",
+    "sendEmail": "发邮件",
+    "bot": "机器人"
   }
 }

@@ -16,6 +16,9 @@ export const useMessenger = () => useMessengerInstance((s) => s.messenger);
 /** 长按菜单里改动消息的操作（置顶、标注、待办、转发、翻译、转文字） */
 export const useMsgActions = () => useMessengerInstance((s) => s.actions);
 
+/** 群资料与成员管理（会话信息页、成员页、建群） */
+export const useGroupActions = () => useMessengerInstance((s) => s.group);
+
 /** 订阅消息数据层的状态；selector 要返回稳定引用（或配合 useShallow） */
 export function useMessengerState<T>(selector: (state: MessengerState) => T): T {
   const messenger = useMessenger();

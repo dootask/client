@@ -28,6 +28,8 @@ export const userBasicSchema = z.looseObject({
   az: str.nullish(),
   /** 所在部门：搜索、成员列表带 with_department 时才有 */
   department_info: z.array(z.looseObject({ name: str })).nullish(),
+  /** 部门名（逗号分隔）：users/basic 带 */
+  department_name: str.nullish(),
 });
 export type UserBasic = z.output<typeof userBasicSchema>;
 
@@ -75,4 +77,72 @@ export async function memberPage(client: ApiClient, { departments, project_id, p
     data: { keys, sorts: { az: 'asc' }, page, pagesize: MEMBER_PAGE, with_department: 1 },
   });
   return data;
+}
+
+/** 个性标签（users/tags/*），按认可数排序；can_edit、can_delete 由服务端按查看者算 */
+export const userTagSchema = z.looseObject({
+  id: num,
+  name: str,
+  created_by: num,
+  created_by_name: str.nullish(),
+  recognition_total: num,
+  recognized: z.boolean(),
+  can_edit: z.boolean(),
+  can_delete: z.boolean(),
+});
+export type UserTag = z.output<typeof userTagSchema>;
+
+const tagsSchema = z.looseObject({ list: phpList(userTagSchema), top: phpList(userTagSchema), total: num });
+export type UserTags = z.output<typeof tagsSchema>;
+
+/** 资料页的扩展信息：生日、简介、前 10 个标签，works_visible 为能否看对方的工作 */
+export async function extra(client: ApiClient, userid: number) {
+  const schema = z.looseObject({
+    birthday: str.nullish(),
+    introduction: str.nullish(),
+    personal_tags: phpList(userTagSchema),
+    personal_tags_total: num,
+    works_visible: z.boolean().nullish(),
+  });
+  const { data } = await requestParsed(client, 'users/extra', schema, { data: { userid } });
+  return data;
+}
+
+export async function tags(client: ApiClient, userid: number) {
+  const { data } = await requestParsed(client, 'users/tags/lists', tagsSchema, { data: { userid } });
+  return data;
+}
+
+/** 增、改、删、认可（再点取消）标签，都返回最新的整份标签 */
+export type TagAction = { type: 'add'; userid: number; name: string } | { type: 'update'; tag_id: number; name: string } | { type: 'delete' | 'recognize'; tag_id: number };
+
+export async function tagAction(client: ApiClient, { type, ...params }: TagAction) {
+  const { data, msg } = await requestParsed(client, `users/tags/${type}`, tagsSchema, { method: 'post', data: params });
+  return { tags: data, msg };
+}
+
+/** 机器人资料（只有主人和改系统机器人的管理员能取） */
+export const botSchema = z.looseObject({
+  id: num,
+  name: str,
+  avatar: str.nullish(),
+  system_name: str.nullish(),
+  clear_day: num,
+  webhook_url: str.nullish(),
+  webhook_events: phpList(str).nullish(),
+});
+export type Bot = z.output<typeof botSchema>;
+
+export async function botInfo(client: ApiClient, botId: number) {
+  const { data } = await requestParsed(client, 'users/bot/info', botSchema, { data: { id: botId } });
+  return data;
+}
+
+/** 改机器人：只传要改的字段；clear_day、webhook_* 只有主人能改 */
+export async function botEdit(
+  client: ApiClient,
+  params: { id: number; dialog_id: number; name?: string; avatar?: string; clear_day?: number; webhook_url?: string; webhook_events?: string[] },
+) {
+  const { data, msg } = await requestParsed(client, 'users/bot/edit', botSchema, { method: 'post', data: params });
+  return { bot: data, msg };
 }

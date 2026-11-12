@@ -493,5 +493,23 @@
   },
   "math": {
     "title": "Formule mathématique"
+  },
+  "profile": {
+    "info": "Informations personnelles",
+    "profession": "Poste/Titre",
+    "department": "Département",
+    "email": "E-mail",
+    "birthday": "Date de naissance",
+    "tags": "Étiquettes personnelles",
+    "manageTags": "Gérer",
+    "addTag": "Ajouter une étiquette",
+    "myGroups": "Mes groupes",
+    "commonGroups": "Groupe commun",
+    "works": "Projets et tâches",
+    "count": "{{n}}",
+    "chat": "Démarrer le chat",
+    "createGroup": "Créer un groupe",
+    "sendEmail": "Envoyer un e-mail",
+    "bot": "Bot"
   }
 }

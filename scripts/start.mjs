@@ -2,10 +2,11 @@
 // 端口固定：开发包里记着 Metro 的外网地址，换了端口就连不上，所以被占用时直接报错退出，不换端口。
 // 外网地址：EXPO_PACKAGER_PROXY_URL 优先；没设时按 VSCODE_PROXY_URI 的 {{port}} 模板推导；
 // 都没有就由 Expo 自己取局域网地址。Expo 只从命令行环境读这个变量，写在 .env 文件里不生效。
+// 并行开发的 worktree 用 METRO_PORT 换端口（只给网页开发页用，开发包仍连 2210）。
 import { spawn } from 'node:child_process';
 import net from 'node:net';
 
-const PORT = 2210;
+const PORT = Number(process.env.METRO_PORT) || 2210;
 
 function isPortFree(port) {
   return new Promise((resolve) => {
